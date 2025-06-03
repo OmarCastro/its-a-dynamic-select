@@ -1,5 +1,5 @@
 #!/usr/bin/env -S node --input-type=module
-/* eslint-disable camelcase, jsdoc/require-jsdoc, jsdoc/require-param-description */
+/* eslint-disable camelcase, max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
 /*
 This file is purposely large to easily move the code to multiple projects, its build code, not production.
 To help navigate this file is divided by sections:
@@ -34,6 +34,16 @@ const projectPathURL = new URL('../', import.meta.url)
 const pathFromProject = (path) => new URL(path, projectPathURL).pathname
 process.chdir(pathFromProject('.'))
 let updateDevServer = () => {}
+
+const configuration = {
+  bundleDistName: 'dynamic-select.element.js',
+}
+
+configuration.minfiedBundleDistName ??= (({ bundleDistName: distName }) => {
+  if (distName.endsWith('.min.js')) { return distName }
+  if (distName.endsWith('.js')) { return distName.replace(/\.[^/.]+$/, '') + '.min.js' }
+  return distName + '.min.js'
+})(configuration)
 
 // @section 2 tasks
 
@@ -117,17 +127,29 @@ await main()
 
 async function execDevEnvironment ({ openBrowser = false } = {}) {
   await openDevServer({ openBrowser })
-  await Promise.all([execlintCodeOnChanged(), execTests()])
-  await execBuild()
+  await Promise.all([execlintCodeOnChanged(), buildTest()])
+  await execTests()
+  await buildDocs()
 
-  const watcher = watchDirs(
-    new URL('src', projectPathURL).pathname,
-    new URL('docs', projectPathURL).pathname
-  )
+  const srcPath = pathFromProject('src')
+  const docsPath = pathFromProject('docs')
+
+  const watcher = watchDirs(srcPath, docsPath)
 
   for await (const change of watcher) {
-    console.log(`file "${change.filename}" changed`)
-    await Promise.all([execBuild(), execTests()])
+    const { filenames } = change
+    console.log(`files "${filenames}" changed`)
+    let tasks = []
+    if (filenames.some(name => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
+      tasks = [buildTest, execTests, buildDocs]
+    } else {
+      tasks = [buildTest, buildDocs]
+    }
+
+    for (const task of tasks) {
+      await task()
+    }
+
     updateDevServer()
     await execlintCodeOnChanged()
   }
@@ -137,60 +159,70 @@ async function execTests () {
   const COVERAGE_DIR = 'reports/coverage'
   const REPORTS_TMP_DIR = 'reports/.tmp'
   const COVERAGE_TMP_DIR = `${REPORTS_TMP_DIR}/coverage`
+  const FINAL_COVERAGE_TMP_DIR = `${COVERAGE_TMP_DIR}/final`
   const COVERAGE_BACKUP_DIR = 'reports/coverage.bak'
+
+  const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
+  const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec,d}.{js,ts}" --exclude="src/entrypoint/node.js"'
+  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/image-comparison.element.min.js'
 
   logStartStage('test', 'run tests')
 
-  await cmdSpawn('TZ=UTC npx c8 --all --include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec}.{js,ts}" --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit --reporter json-summary --reporter json --reporter lcov playwright test')
+  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit ${COVERAGE_REPORTERS} playwright test`)
 
-  await rm_rf('reports/.tmp/coverage/final')
-  await mkdir_p('reports/.tmp/coverage/final')
-  await cp_R('.tmp/coverage', 'reports/.tmp/coverage/final/tmp')
-  await cp_R('reports/.tmp/coverage/ui/tmp', 'reports/.tmp/coverage/final/tmp')
-
-  await cmdSpawn('TZ=UTC npx c8 --report-dir reports/.tmp/coverage/ui report -r lcov -r json-summary --include build/docs/dist/color-wheel.element.min.js')
-  logStage('merge coverage reports')
-  await cmdSpawn("TZ=UTC npx c8 --report-dir reports/.tmp/coverage/final report -r lcov -r json-summary --include 'src/*.ts' --include 'src/*.js' --include 'build/docs/dist/color-wheel.element.min.js'")
+  await rm_rf(FINAL_COVERAGE_TMP_DIR)
+  await mkdir_p(FINAL_COVERAGE_TMP_DIR)
+  await cp_R('.tmp/coverage', `${FINAL_COVERAGE_TMP_DIR}/tmp`)
+  const uiTestsExecuted = existsSync('reports/.tmp/coverage/ui/tmp')
+  if (uiTestsExecuted) {
+    await cp_R('reports/.tmp/coverage/ui/tmp', FINAL_COVERAGE_TMP_DIR)
+    await cmdSpawn(`TZ=UTC npx c8  --all ${UI_COVERAGE_INCLUDES} ${COVERAGE_REPORTERS} --report-dir reports/.tmp/coverage/ui report`)
+    logStage('merge unit & ui coverage reports')
+  }
+  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} ${UI_COVERAGE_INCLUDES} ${COVERAGE_REPORTERS} --report-dir reports/.tmp/coverage/final report`)
 
   if (existsSync(COVERAGE_DIR)) {
     await rm_rf(COVERAGE_BACKUP_DIR)
     await mv(COVERAGE_DIR, COVERAGE_BACKUP_DIR)
   }
   await mv(COVERAGE_TMP_DIR, COVERAGE_DIR)
-  const rmTmp = rm_rf(REPORTS_TMP_DIR)
-  const rmBak = rm_rf(COVERAGE_BACKUP_DIR)
+  logStage('cleanup coverage info')
 
+  await Promise.allSettled([
+    rm_rf(REPORTS_TMP_DIR),
+    rm_rf(COVERAGE_BACKUP_DIR),
+  ])
   logStage('build badges')
 
-  const badges = [
+  await Promise.allSettled([
     makeBadgeForCoverages(pathFromProject('reports/coverage/unit')),
-    makeBadgeForCoverages(pathFromProject('reports/coverage/ui')),
     makeBadgeForCoverages(pathFromProject('reports/coverage/final')),
     makeBadgeForTestResult(pathFromProject('reports/test-results')),
     makeBadgeForLicense(pathFromProject('reports')),
     makeBadgeForNPMVersion(pathFromProject('reports')),
     makeBadgeForRepo(pathFromProject('reports')),
     makeBadgeForRelease(pathFromProject('reports')),
-  ]
+    ...(uiTestsExecuted ? [makeBadgeForCoverages(pathFromProject('reports/coverage/ui'))] : []),
+  ])
 
   logStage('fix report styles')
   const files = await getFilesAsArray('reports/coverage/final')
   const cpBase = files.filter(path => basename(path) === 'base.css').map(path => fs.cp('buildfiles/assets/coverage-report-base.css', path))
   const cpPrettify = files.filter(path => basename(path) === 'prettify.css').map(path => fs.cp('buildfiles/assets/coverage-report-prettify.css', path))
-  await Promise.all([rmTmp, rmBak, ...badges, ...cpBase, ...cpPrettify])
+  await Promise.allSettled([...cpBase, ...cpPrettify])
 
+  logStage('copy reports to documentation')
   await rm_rf('build/docs/reports')
   await mkdir_p('build/docs')
   await cp_R('reports', 'build/docs/reports')
   logEndStage()
 }
 
-async function buildTest () {
-  logStartStage('build:test', 'bundle')
-
-  const esbuild = await import('esbuild')
-
-  const commonBuildParams = {
+/**
+ * @returns {import('esbuild').BuildOptions} common build option for esbuild
+ */
+function esBuildCommonParams () {
+  return {
     target: ['es2022'],
     bundle: true,
     minify: false,
@@ -198,6 +230,14 @@ async function buildTest () {
     absWorkingDir: pathFromProject('.'),
     logLevel: 'info',
   }
+}
+
+async function buildTest () {
+  logStartStage('build:test', 'bundle')
+
+  const esbuild = await import('esbuild')
+
+  const commonBuildParams = esBuildCommonParams()
 
   const buildPath = 'build'
   const esmDistPath = `${buildPath}/dist/esm`
@@ -214,8 +254,8 @@ async function buildTest () {
    */
   const buildDistFromEsm = esbuild.build({
     ...commonBuildParams,
-    entryPoints: [`${esmDistPath}/dynamic-select.element.js`],
-    outfile: `${minDistPath}/dynamic-select.element.min.js`,
+    entryPoints: [`${esmDistPath}/entrypoint/browser.js`],
+    outfile: `${minDistPath}/${configuration.minfiedBundleDistName}`,
     format: 'esm',
     sourcemap: true,
     minify: true,
@@ -229,8 +269,8 @@ async function buildTest () {
    */
   const buildDocsDist = esbuild.build({
     ...commonBuildParams,
-    entryPoints: ['src/dynamic-select.element.js'],
-    outfile: `${docsDistPath}/dynamic-select.element.min.js`,
+    entryPoints: ['src/entrypoint/browser.js'],
+    outfile: `${docsDistPath}/${configuration.minfiedBundleDistName}`,
     format: 'esm',
     sourcemap: true,
     metafile: true,
@@ -238,12 +278,37 @@ async function buildTest () {
     plugins: [await getESbuildPlugin()],
   })
 
+  await Promise.all([buildDistFromEsm, buildDocsDist])
+
+  const metafile = (await buildDocsDist).metafile
+  await mkdir_p('reports')
+  logStage('generating module graph')
+  await writeFile('reports/module-graph.json', JSON.stringify(metafile, null, 2))
+  const svg = await createModuleGraphSvg(metafile)
+  await writeFile('reports/module-graph.svg', svg)
+  logStage('build test page html')
+
+  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
+  await cp_R('docs/assets', `${docsPath}`)
+
+  logEndStage()
+}
+
+async function buildDocs () {
+  logStartStage('build:docs', 'build docs')
+
+  const esbuild = await import('esbuild')
+  const commonBuildParams = esBuildCommonParams()
+
+  const buildPath = 'build'
+  const docsPath = `${buildPath}/docs`
+
   /**
    * Builds documentation specific JS code
    */
   const buildDocsJS = esbuild.build({
     ...commonBuildParams,
-    entryPoints: ['docs/doc.js'],
+    entryPoints: ['docs/doc.js', 'docs/color-test.js'],
     outdir: docsPath,
     splitting: true,
     chunkNames: 'chunk/[name].[hash]',
@@ -263,36 +328,13 @@ async function buildTest () {
     outfile: `${docsPath}/doc.css`,
   })
 
-  await Promise.all([buildDistFromEsm, buildDocsDist, buildDocsJS, buildDocsStyles])
-
-  const metafile = (await buildDocsDist).metafile
-  await mkdir_p('reports')
-  await writeFile('reports/module-graph.json', JSON.stringify(metafile, null, 2))
-  const svg = await createModuleGraphSvg(metafile)
-  await writeFile('reports/module-graph.svg', svg)
-  logStage('build test page html')
-
-  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
-
-  logStage('move to final dir')
-  logEndStage()
-}
-
-async function buildDocs () {
-  logStartStage('build:docs', 'copy reports')
-
-  await cp_R('reports', '.tmp/build/docs/reports')
-
-  logStage('build docs html')
-
   await Promise.all([
+    buildDocsJS, buildDocsStyles,
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
+    exec(`${process.argv[0]} buildfiles/scripts/build-html.js color-test.html`),
   ])
 
-  logStage('move to final dir')
-
-  await cp_R('.tmp/build', 'build')
   logEndStage()
 }
 
@@ -457,7 +499,10 @@ async function mkdir_p (...paths) {
  * @param {string} src
    @param {string} dest  */
 async function cp_R (src, dest) {
-  await fs.cp(src, dest, { recursive: true })
+  await cmdSpawn(`cp -r '${src}' '${dest}'`)
+
+  // this command is a 1000 times slower that running the command, for that reason it is not used (30 000ms vs 30ms)
+  // await fs.cp(src, dest, { recursive: true })
 }
 
 async function mv (src, dest) {
@@ -469,12 +514,17 @@ function logStage (stage) {
 }
 
 function logEndStage () {
-  console.log('done')
+  const startTime = logStage.perfMarks[logStage.currentMark]
+  console.log(startTime ? `done (${Date.now() - startTime}ms)` : 'done')
 }
 
 function logStartStage (jobname, stage) {
+  const markName = 'stage ' + stage
   logStage.currentJobName = jobname
+  logStage.currentMark = markName
+  logStage.perfMarks ??= {}
   stage && process.stdout.write(`[${jobname}] ${stage}...`)
+  logStage.perfMarks[logStage.currentMark] = Date.now()
 }
 
 // @section 5 Dev server
@@ -554,8 +604,7 @@ async function lintStyles ({ onlyChanged }) {
   const result = await stylelint.lint({ files: finalFilePatterns })
   const filesLinted = result.results.length
   process.stdout.write(`linted ${filesLinted} files. `)
-
-  const stringFormatter = await stylelint.formatters.compact
+  const stringFormatter = await stylelint.formatters.string
 
   const output = stringFormatter(result.results)
   if (output) {
@@ -617,12 +666,7 @@ async function minifyHtml (htmlText) {
   const { DOMParser } = await loadDom()
   const parsed = new DOMParser().parseFromString(htmlText, 'text/html')
   await minifyDOM(parsed.documentElement)
-
-  const fullpageRegexCheck = /^<(!doctype\s+)?html/i
-  if (fullpageRegexCheck.test(htmlText)) {
-    return parsed.documentElement.outerHTML
-  }
-  return parsed.body.innerHTML
+  return parsed.documentElement.outerHTML
 }
 
 async function minifyCss (cssText) {
@@ -630,24 +674,62 @@ async function minifyCss (cssText) {
   const result = await esbuild.transform(cssText, { loader: 'css', minify: true })
   return result.code
 }
-/**
- * Minifies the DOM tree
- * @param {Element} domElement - target DOM tree root element
- * @returns {Element} root element of the minified DOM
- */
+
 async function minifyDOM (domElement) {
   const { window } = await loadDom()
-  const Node = window.Node
-  const { TEXT_NODE, ELEMENT_NODE, COMMENT_NODE } = Node
+  const { TEXT_NODE, ELEMENT_NODE, COMMENT_NODE } = window.Node
 
-  /** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
+  const defaultMinificationState = { whitespaceMinify: '1-space' }
+  const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
+  walkElementMinification(domElement, initialMinificationState)
+  return domElement
+
   /**
-   * @typedef {object} MinificationState
-   * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
+   * Updates minification state for each element
+   * @param {Element} element - target element
+   * @param {MinificationState} minificationState - previous minification state
+   * @returns {MinificationState} next minification State
    */
+  function updateMinificationStateForElement (element, minificationState) {
+    switch (element.tagName.toLowerCase()) {
+      // by default, <pre> renders whitespace as is, so we do not want to minify in this case
+      case 'pre': return { ...minificationState, whitespaceMinify: 'pre' }
+      // <html> and <head> are not rendered in the viewport, so we remove all blank text nodes
+      case 'html':
+      case 'head': return { ...minificationState, whitespaceMinify: 'remove-blank' }
+      // in the <body>, the default whitespace behaviour is to merge multiple whitespaces to 1,
+      // there will stil have some whitespace that will be merged, but at this point, there is
+      // little benefit to remove even more duplicated whitespace
+      case 'body': return { ...minificationState, whitespaceMinify: '1-space' }
+      default: return minificationState
+    }
+  }
 
   /**
-   * Minify the text node based con current minification status
+   * @param {Element} currentElement - current element to minify
+   * @param {MinificationState} minificationState - current minificationState
+   */
+  function walkElementMinification (currentElement, minificationState) {
+    const { whitespaceMinify } = minificationState
+    const childNodes = currentElement?.childNodes?.values()
+    if (!childNodes) { return }
+    // we have to make a copy of the iterator for traversal, because we cannot
+    // iterate through what we'll be modifying at the same time
+    const values = Array.from(childNodes)
+    for (const node of values) {
+      if (node.nodeType === COMMENT_NODE) {
+        node.remove()
+      } else if (node.nodeType === TEXT_NODE) {
+        minifyTextNode(node, whitespaceMinify)
+      } else if (node.nodeType === ELEMENT_NODE) {
+        const updatedState = updateMinificationStateForElement(node, minificationState)
+        walkElementMinification(node, updatedState)
+      }
+    }
+  }
+
+  /**
+   * Minify a DOM text node based con current minification status
    * @param {ChildNode} node - current text node
    * @param {WhitespaceMinify} whitespaceMinify - whitespace minification removal method
    */
@@ -666,57 +748,11 @@ async function minifyDOM (domElement) {
     }
   }
 
-  const defaultMinificationState = { whitespaceMinify: '1-space' }
-
+  /** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
   /**
-   * @param {Element} element
-   * @param {MinificationState} minificationState
-   * @returns {MinificationState} update minification State
+   * @typedef {object} MinificationState
+   * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
    */
-  function updateMinificationStateForElement (element, minificationState) {
-    const tag = element.tagName.toLowerCase()
-    // by default, <pre> renders whitespace as is, so we do not want to minify in this case
-    if (['pre'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: 'pre' }
-    }
-    // <html> and <head> are not rendered in the viewport, so we remove it
-    if (['html', 'head'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: 'remove-blank' }
-    }
-    // in the <body>, the default whitespace behaviour is to merge multiple whitespaces to 1,
-    // there will stil have some whitespace that will be merged, but at this point, there is
-    // little benefit to remove even more duplicated whitespace
-    if (['body'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: '1-space' }
-    }
-    return minificationState
-  }
-
-  /**
-   * @param {Element} currentElement - current element to minify
-   * @param {MinificationState} minificationState - current minificationState
-   */
-  function walkElementMinification (currentElement, minificationState) {
-    const { whitespaceMinify } = minificationState
-    // we have to make a copy of the iterator for traversal, because we cannot
-    // iterate through what we'll be modifying at the same time
-    const values = [...currentElement?.childNodes?.values() || []]
-    for (const node of values) {
-      if (node.nodeType === COMMENT_NODE) {
-        // remove comments node
-        currentElement.removeChild(node)
-      } else if (node.nodeType === TEXT_NODE) {
-        minifyTextNode(node, whitespaceMinify)
-      } else if (node.nodeType === ELEMENT_NODE) {
-        // process child elements recursively
-        const updatedState = updateMinificationStateForElement(node, minificationState)
-        walkElementMinification(node, updatedState)
-      }
-    }
-  }
-  const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
-  walkElementMinification(domElement, initialMinificationState)
-  return domElement
 }
 
 // @section 8 exec utilities
@@ -764,14 +800,42 @@ async function getFilesAsArray (dir) {
   for await (const i of getFiles(dir)) arr.push(i)
   return arr
 }
-
+/**
+ *
+ * @param  {...string} dirs
+ * @yields {Promise<{filenames: string[]}>}
+ * @returns {AsyncGenerator<Promise<{filenames: string[]}>>} iterator of changed filenames
+ */
 async function * watchDirs (...dirs) {
-  const { watch } = await import('chokidar')
-  let currentResolver = () => {}
+  const { watch } = await import('node:fs')
+  const nothingResolver = () => {}
+  let currentResolver = nothingResolver
+  let batch = []
   console.log(`watching ${dirs}`)
-  watch(dirs).on('change', (filename, stats) => currentResolver({ filename, stats }))
+
+  /** @type {import('node:fs').WatchListener<string>} */
+  const handler = (eventType, filename) => {
+    if (eventType !== 'change' || filename == null) { return }
+    batch.push(filename)
+    if (currentResolver !== nothingResolver) {
+      currentResolver({ filenames: batch })
+      batch = []
+      currentResolver = nothingResolver
+    }
+  }
+  for (const dir of dirs) {
+    watch(dir, { recursive: true }, handler)
+  }
+
   while (true) {
-    yield new Promise(resolve => { currentResolver = resolve })
+    yield new Promise(resolve => {
+      if (batch.length > 0) {
+        resolve({ filenames: batch })
+        batch = []
+      } else {
+        currentResolver = resolve
+      }
+    })
   }
 }
 
@@ -841,7 +905,7 @@ async function readPackageJson () {
 // @section 11 versioning utilities
 
 async function getLatestReleasedVersion () {
-  const changelogContent = await readFile(pathFromProject('CHANGELOG.md'))
+  const changelogContent = await readFile(pathFromProject('CHANGELOG'))
   const versions = changelogContent.split('\n')
     .map(line => {
       const match = line.match(/^## \[([0-9]+\.[[0-9]+\.[[0-9]+)]\s+-\s+([^\s]+)/)
@@ -850,10 +914,7 @@ async function getLatestReleasedVersion () {
       }
       return { version: match[1], releaseDate: match[2] }
     }).filter(version => !!version)
-  const releasedVersions = versions.filter(version => {
-    return version.releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
-  })
-  return releasedVersions[0]
+  return versions.find(({ releaseDate }) => releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/))
 }
 
 // @section 12 badge utilities
@@ -923,7 +984,7 @@ async function svgStyle () {
   @media (prefers-color-scheme: dark) {
     text { fill: #fff; }
     .icon {fill: #ccc; }
-    rect.label { fill: #555; stroke: none; }
+    rect.label { fill: #4a4a4a; stroke: none; }
     rect.body { fill: var(--dark-fill); }
   }
   `.replaceAll(/\n+\s*/g, '')
@@ -1085,7 +1146,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   const graph = new graphlib.Graph()
 
   // Set an object for the graph label
-  graph.setGraph({})
+  graph.setGraph({ rankdir: 'LR', edgesep: 30, ranksep: 60 })
 
   // Default to assigning a new object as a label for each new edge.
   graph.setDefaultEdgeLabel(function () { return {} })
@@ -1108,7 +1169,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
     imports.forEach(({ path }) => graph.setEdge(file, path))
   })
 
-  layout(graph, { rankdir: 'TB' })
+  layout(graph)
 
   let maxWidth = 0
   let maxHeight = 0
