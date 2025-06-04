@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>It's an image comparison documentation</title>
+        <meta name="description" content="documentation of 'It's an image comparison' web component">
+        <meta name="keywords" content="selectbox documentation">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <script type="module" src="dist/dynamic-select.element.min.js?named=dynamic-select" async></script>
+        <script type="module" src="doc.js" async></script>
+        <link rel="stylesheet" href="code-example.css" ss:inline>
+        <link rel="stylesheet" href="doc.css" ss:inline>
+    </head>
+    <body>
+        <div class="sidebar">
+
+        <div class="toc">
+            <div class="toc">
+                <p><strong>Documentation</strong></p>
+                <template ss:toc></template>
+                <p><strong><a href="contributing">How to contribute</a></strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+
+        <h1 class="no-toc">
+            It's an image comparison
+        </h1>
+
+
+        <section class="section section--badge">
+            <a href="https://github.com/OmarCastro/its-a-dynamic-select/releases/latest" title="View release notes" ss:aria-label></a>
+                <img src="reports/repo-release-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="https://www.npmjs.com/package/its-a-dynamic-select" title="View NPM package" ss:aria-label>
+                <img src="reports/npm-version-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="https://github.com/OmarCastro/its-a-dynamic-select" title="View code repository" ss:aria-label>
+                <img src="reports/repo-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="https://github.com/OmarCastro/its-a-dynamic-select/blob/master/LICENSE" title="View license on repository" ss:aria-label>
+                <img src="reports/license-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="reports/playwright-report" title="Show test results" ss:aria-label>
+                <img src="reports/test-results/test-results-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="reports/coverage/final" title="Show test code coverage information" ss:aria-label>
+                <img src="reports/coverage/final/coverage-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+
+        </section>
+
+        <section class="section section--getting-started" ss:markdown>
+            ## Getting started
+            
+            ### CDN
+
+            To use a CDN all you need is to add the following code in the HTML page:
+
+            <pre><code class="language-markup keep-markup">&lt;script type="module" src="https://cdn.jsdelivr.net/gh/OmarCastro/its-a-dynamic-select@0.1.0/dist/dynamic-select.element.min.js?named=<span class="component-name-edit" contenteditable="true">image-comparison</span>">&lt;/script></code></pre>
+
+            ### NPM
+
+            If you wish to import from npm and use a bundler, you can install the `its-a-dynamic-select` package
+
+            <pre><code class="language-shell keep-markup">npm install its-a-dynamic-select</code></pre>
+
+            Not all bundlers support query strings, it is recommended to import and register the component, like the following code:
+
+            <pre><code class="language-js keep-markup">import element from 'its-a-dynamic-select'
+
+            customElements.define('<span class="component-name-edit" contenteditable="true">qr-code</span>', element)</code></pre>
+        </section>
+
+        <section class="section section--examples">
+
+            <h2> Examples </h2>
+            
+    
+        </section>
+
+    </body>
+</html>
