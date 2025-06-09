@@ -164,7 +164,7 @@ async function execTests () {
 
   const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
   const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec,d}.{js,ts}" --exclude="src/entrypoint/node.js"'
-  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/image-comparison.element.min.js'
+  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/dynamic-select.element.min.js'
 
   logStartStage('test', 'run tests')
 
@@ -289,7 +289,6 @@ async function buildTest () {
   logStage('build test page html')
 
   await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
-  await cp_R('docs/assets', `${docsPath}`)
 
   logEndStage()
 }
@@ -308,7 +307,7 @@ async function buildDocs () {
    */
   const buildDocsJS = esbuild.build({
     ...commonBuildParams,
-    entryPoints: ['docs/doc.js', 'docs/color-test.js'],
+    entryPoints: ['docs/doc.js'],
     outdir: docsPath,
     splitting: true,
     chunkNames: 'chunk/[name].[hash]',
@@ -332,7 +331,6 @@ async function buildDocs () {
     buildDocsJS, buildDocsStyles,
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
-    exec(`${process.argv[0]} buildfiles/scripts/build-html.js color-test.html`),
   ])
 
   logEndStage()
