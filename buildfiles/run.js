@@ -870,7 +870,7 @@ async function listChangedFilesMatching (...patterns) {
 }
 
 async function listChangedFiles () {
-  const mainBranchName = 'main'
+  const mainBranchName = (await execGitCmd(['rev-parse', '--abbrev-ref', 'HEAD']))[0]
   const mergeBase = await execGitCmd(['merge-base', 'HEAD', mainBranchName])
   const diffExec = execGitCmd(['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase])
   const lsFilesExec = execGitCmd(['ls-files', '--others', '--exclude-standard'])
