@@ -943,11 +943,22 @@ function asciiIconSvg (asciicode) {
 }
 
 async function makeBadge (params) {
-  const { default: libMakeBadge } = await import('badge-maker/lib/make-badge.js')
-  return libMakeBadge({
-    style: 'for-the-badge',
-    ...params,
-  })
+  const { makeBadge: libMakeBadge } = await import('badge-maker')
+  console.log('AAAAA')
+  try {
+    const { logo, ...rest } = params
+    const result = libMakeBadge({
+      style: 'for-the-badge',
+      ...rest,
+      logoBase64: logo
+
+    })
+    console.log(result)
+    console.log('AAAAA')
+    return result
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 function getLightVersionOfBadgeColor (color) {
@@ -1100,6 +1111,7 @@ async function makeBadgeForRepo (path) {
     color: getBadgeColors().blue,
     logo: asciiIconSvg('❮❯'),
   })
+  console.log(svg)
   const badgeWrite = writeFile(`${path}/repo-badge.svg`, svg)
   const a11yBadgeWrite = writeFile(`${path}/repo-badge-a11y.svg`, await applyA11yTheme(svg, { replaceIconToText: '❮❯' }))
   await Promise.all([badgeWrite, a11yBadgeWrite])
