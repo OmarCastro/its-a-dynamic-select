@@ -62,7 +62,7 @@ const tasks = {
     cb: async () => { await execGithubBuildWorkflow(); process.exit(0) },
   },
   test: {
-    description: 'builds the project',
+    description: 'tests the project',
     cb: async () => { await execTests(); process.exit(0) },
   },
   lint: {
@@ -194,7 +194,7 @@ async function execTests () {
   ])
   logStage('build badges')
 
-  await Promise.allSettled([
+  await Promise.all([
     makeBadgeForCoverages(pathFromProject('reports/coverage/unit')),
     makeBadgeForCoverages(pathFromProject('reports/coverage/final')),
     makeBadgeForTestResult(pathFromProject('reports/test-results')),
@@ -891,9 +891,13 @@ async function checkNodeModulesFolder () {
 
 async function getLatestPublishedVersion () {
   const pkg = await readPackageJson()
-
-  const version = await exec(`npm view ${pkg.name} version`)
-  return version.stdout.trim()
+  try {
+    const version = await exec(`npm view ${pkg.name} version`)
+    return version.stdout.trim()
+  } catch {
+    const latestReleasedVersion = await getLatestReleasedVersion()
+    return latestReleasedVersion == null ? 'unreleased' : 'error'
+  }
 }
 
 async function readPackageJson () {
@@ -944,21 +948,12 @@ function asciiIconSvg (asciicode) {
 
 async function makeBadge (params) {
   const { makeBadge: libMakeBadge } = await import('badge-maker')
-  console.log('AAAAA')
-  try {
-    const { logo, ...rest } = params
-    const result = libMakeBadge({
-      style: 'for-the-badge',
-      ...rest,
-      logoBase64: logo
-
-    })
-    console.log(result)
-    console.log('AAAAA')
-    return result
-  } catch (e) {
-    console.log(e)
-  }
+  const { logo, ...otherParams } = params
+  return libMakeBadge({
+    style: 'for-the-badge',
+    logoBase64: logo,
+    ...otherParams,
+  })
 }
 
 function getLightVersionOfBadgeColor (color) {
@@ -1065,10 +1060,12 @@ async function makeBadgeForTestResult (path) {
     message: `${passedAmount} / ${testAmount}`,
     color: passed ? green : red,
     logo: asciiIconSvg('✔'),
-    logoWidth: 16,
   })
-  const badgeWrite = writeFile(`${path}/test-results-badge.svg`, svg)
-  const a11yBadgeWrite = writeFile(`${path}/test-results-badge-a11y.svg`, await applyA11yTheme(svg, { replaceIconToText: '✔' }))
+
+  const badgePath = `${path}/test-results-badge.svg`
+  const badgeWrite = writeFile(badgePath, svg)
+  const a11yBadgePath = `${path}/test-results-badge-a11y.svg`
+  const a11yBadgeWrite = writeFile(a11yBadgePath, await applyA11yTheme(svg, { replaceIconToText: '✔' }))
   await Promise.all([badgeWrite, a11yBadgeWrite])
 }
 
@@ -1111,7 +1108,6 @@ async function makeBadgeForRepo (path) {
     color: getBadgeColors().blue,
     logo: asciiIconSvg('❮❯'),
   })
-  console.log(svg)
   const badgeWrite = writeFile(`${path}/repo-badge.svg`, svg)
   const a11yBadgeWrite = writeFile(`${path}/repo-badge-a11y.svg`, await applyA11yTheme(svg, { replaceIconToText: '❮❯' }))
   await Promise.all([badgeWrite, a11yBadgeWrite])
