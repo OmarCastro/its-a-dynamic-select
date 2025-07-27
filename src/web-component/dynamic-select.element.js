@@ -14,6 +14,11 @@ let loadStyles = () => {
   return sheet
 }
 
+/** @type {(dynamicSelect: DynamicSelect) => HTMLInputElement} */
+// const searchInputEl = (dynamicSelect) => dynamicSelect.shadowRoot.getElementById('search-input')
+/** @type {(element: Element) => element is HTMLInputElement} */
+const isSearchInputEl = (node) => node.matches('input#search-input')
+
 export class DynamicSelect extends HTMLElement {
   constructor () {
     super()
@@ -21,5 +26,22 @@ export class DynamicSelect extends HTMLElement {
     shadowRoot.adoptedStyleSheets = [loadStyles()]
     const template = loadTemplate()
     shadowRoot.append(document.importNode(template.content, true))
+    shadowRoot.addEventListener('input', event => {
+      const { target } = event
+      if (isSearchInputEl(target)) {
+        this.searchFilter = target.value
+      }
+    })
+  }
+
+  get searchFilter () {
+    return this.getAttribute('data-filter') ?? ''
+  }
+
+  set searchFilter (newSearchFilter) {
+    if (newSearchFilter === '' || newSearchFilter == null) {
+      this.removeAttribute('data-filter')
+    }
+    this.setAttribute('data-filter', String(newSearchFilter))
   }
 }
