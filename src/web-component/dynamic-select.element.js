@@ -20,11 +20,17 @@ const searchInputEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector(
 const dropdownEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('dialog.dropdown')
 /** @type {(dynamicSelect: DynamicSelect) => HTMLDialogElement} */
 const selectedValueButton = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('button.selected-value')
+/** @type {(dynamicSelect: DynamicSelect) => HTMLUListElement} */
+const valueListEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('dialog.dropdown > ul.value-list')
 
 /** @type {(element: Element) => element is HTMLInputElement} */
 const isSearchInputEl = (node) => node.matches('input.search-input')
 /** @type {(element: Element) => element is HTMLInputElement} */
 const isSelectedValueButton = (node) => node.matches('button.selected-value')
+
+const optionsObserver = new MutationObserver(mutation => {
+
+})
 
 export class DynamicSelect extends HTMLElement {
   constructor () {
@@ -45,6 +51,10 @@ export class DynamicSelect extends HTMLElement {
         this.open = !this.open
       }
     })
+  }
+
+  connectedCallback () {
+    updateDropdownContent(this)
   }
 
   get searchFilter () {
@@ -68,8 +78,22 @@ export class DynamicSelect extends HTMLElement {
     }
   }
 
+  get multiple () {
+    return this.hasAttribute('multiple')
+  }
+
+  set multiple (multipleBool) {
+    if (typeof multiple === 'boolean') {
+      this.toggleAttribute('multiple', multipleBool)
+    }
+  }
+
   static get observedAttributes () {
     return ['open', 'data-filter']
+  }
+
+  get options () {
+    return this.querySelectorAll('option')
   }
 
   attributeChangedCallback (name, oldValue, newValue) {
@@ -85,4 +109,17 @@ export class DynamicSelect extends HTMLElement {
         searchInputEl(this).value = newValue
     }
   }
+}
+
+/**
+ * Updated dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ */
+function updateDropdownContent (dynamicSelect) {
+  const newChildren = []
+  for (const optionOrGroup of dynamicSelect.querySelectorAll(':scope > :is(option, optgroup)')) {
+    newChildren.push(optionOrGroup.cloneNode(true))
+  }
+  const valueList = valueListEl(dynamicSelect)
+  valueList.replaceChildren(...newChildren)
 }
