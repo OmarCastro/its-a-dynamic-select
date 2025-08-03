@@ -1,5 +1,6 @@
 import html from './dynamic-select.element.html'
 import css from './dynamic-select.element.css'
+/** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
 let loadTemplate = () => {
   const templateElement = document.createElement('template')
@@ -14,19 +15,13 @@ let loadStyles = () => {
   return sheet
 }
 
-/** @type {(dynamicSelect: DynamicSelect) => HTMLInputElement} */
-const searchInputEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('input.search-input')
-/** @type {(dynamicSelect: DynamicSelect) => HTMLDialogElement} */
-const dropdownEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('dialog.dropdown')
-/** @type {(dynamicSelect: DynamicSelect) => HTMLDialogElement} */
-const selectedValueButton = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('button.selected-value')
-/** @type {(dynamicSelect: DynamicSelect) => HTMLUListElement} */
-const valueListEl = (dynamicSelect) => dynamicSelect.shadowRoot.querySelector('dialog.dropdown > ul.value-list')
+const searchInputEl = shadowQuery('input.search-input')
+const dropdownEl = shadowQuery('dialog.dropdown')
+const selectedValueButton = shadowQuery('button.selected-value')
+const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
 
-/** @type {(element: Element) => element is HTMLInputElement} */
-const isSearchInputEl = (node) => node.matches('input.search-input')
-/** @type {(element: Element) => element is HTMLInputElement} */
-const isSelectedValueButton = (node) => node.matches('button.selected-value')
+const isSearchInputEl = elementMatcher('input.search-input')
+const isSelectedValueButton = elementMatcher('button.selected-value')
 
 const optionsObserver = new MutationObserver(mutation => {
 
@@ -83,7 +78,7 @@ export class DynamicSelect extends HTMLElement {
   }
 
   set multiple (multipleBool) {
-    if (typeof multiple === 'boolean') {
+    if (typeof multipleBool === 'boolean') {
       this.toggleAttribute('multiple', multipleBool)
     }
   }
@@ -96,6 +91,11 @@ export class DynamicSelect extends HTMLElement {
     return this.querySelectorAll('option')
   }
 
+  /**
+   * @param {string} name - attribute name
+   * @param {string} oldValue - previous attribute value
+   * @param {string} newValue - current attribute value
+   */
   attributeChangedCallback (name, oldValue, newValue) {
     switch (name) {
       case 'open':
@@ -122,4 +122,31 @@ function updateDropdownContent (dynamicSelect) {
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)
+}
+
+/**
+ * @template {string} T
+ * @param {T} selector - css selector
+ * @returns {(dynamicSelect: DynamicSelect) => ParseSelector<T, Element>} type guarded query function
+ */
+function shadowQuery (selector) {
+  return (dynamicSelect) => {
+    const result = dynamicSelect.shadowRoot?.querySelector(selector)
+    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
+    return result
+  }
+}
+
+/**
+ * @template {string} T
+ * @param {T} selector - selector to match
+ */
+function elementMatcher (selector) {
+/**
+ * @param {EventTarget | null} element - target element
+ * @returns {element is ParseSelector<T, Element>} type guarded element matcher
+ */
+  return function (element) {
+    return element instanceof Element && element.matches(selector)
+  }
 }

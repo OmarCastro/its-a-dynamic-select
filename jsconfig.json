@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "jsx": "react",
+        "checkJs": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "allowImportingTsExtensions": true,
+        "allowJs": true,
+        "declaration": true,
+        "declarationMap": true,
+        "strict": false,
+        "noImplicitThis": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "maxNodeModuleJsDepth": 1,
+        "forceConsistentCasingInFileNames": true,  
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+          ]
+    },
+    "files": [
+        "custom.d.ts",
+        "node_modules/typed-query-selector/shim.d.ts"
+
+    ],
+    "include": [
+        "src/**/*.js",
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "**/*.spec.ts",
+        "**/*.spec.js",
+        "**/*.test.ts",
+        "**/*.test.js"
+    ]
+}
