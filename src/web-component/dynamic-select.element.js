@@ -19,9 +19,9 @@ const searchInputEl = shadowQuery('input.search-input')
 const dropdownEl = shadowQuery('dialog.dropdown')
 const selectedValueButton = shadowQuery('button.selected-value')
 const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
+const collapseArrow = shadowQuery('span.collapse-arrow')
 
 const isSearchInputEl = elementMatcher('input.search-input')
-const isSelectedValueButton = elementMatcher('button.selected-value')
 
 const optionsObserver = new MutationObserver(mutation => {
 
@@ -34,18 +34,10 @@ export class DynamicSelect extends HTMLElement {
     shadowRoot.adoptedStyleSheets = [loadStyles()]
     const template = loadTemplate()
     shadowRoot.append(document.importNode(template.content, true))
-    shadowRoot.addEventListener('input', event => {
-      const { target } = event
-      if (isSearchInputEl(target)) {
-        this.searchFilter = target.value
-      }
-    })
-    shadowRoot.addEventListener('click', event => {
-      const { target } = event
-      if (isSelectedValueButton(target)) {
-        this.open = !this.open
-      }
-    })
+
+    searchInputEl(this).addEventListener('input', handleSearchInputChange)
+    selectedValueButton(this).addEventListener('click', handleSelectValueButtonClick)
+    dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
   }
 
   connectedCallback () {
@@ -99,6 +91,7 @@ export class DynamicSelect extends HTMLElement {
   attributeChangedCallback (name, oldValue, newValue) {
     switch (name) {
       case 'open':
+        updateSelectButtonContent(this)
         if (this.open) {
           dropdownEl(this).showPopover()
         } else {
@@ -125,6 +118,15 @@ function updateDropdownContent (dynamicSelect) {
 }
 
 /**
+ * Updated dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ */
+function updateSelectButtonContent (dynamicSelect) {
+  const arrowContent = dynamicSelect.open ? '▲' : '▼'
+  collapseArrow(dynamicSelect).innerHTML = arrowContent
+}
+
+/**
  * @template {string} T
  * @param {T} selector - css selector
  * @returns {(dynamicSelect: DynamicSelect) => ParseSelector<T, Element>} type guarded query function
@@ -135,6 +137,45 @@ function shadowQuery (selector) {
     if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
     return result
   }
+}
+
+/**
+ * @param {Event} event - input event
+ */
+function handleSearchInputChange (event) {
+  const { target } = event
+  if (!isSearchInputEl(target)) return
+  const dynamicSelect = getHostDynamicSelect(target)
+  dynamicSelect.searchFilter = target.value
+}
+
+/**
+ * @param {Event} event - input event
+ */
+function handleSelectValueButtonClick (event) {
+  const dynamicSelect = getHostDynamicSelect(event.target)
+  dynamicSelect.open = !dynamicSelect.open
+}
+
+/**
+ * @param {Event} event - input event
+ */
+function handleDropdownToggle (event) {
+  const dynamicSelect = getHostDynamicSelect(event.target)
+  dynamicSelect.open = dropdownEl(dynamicSelect).matches(':popover-open')
+}
+
+/**
+ * @param {EventTarget | null} target - target
+ * @returns {DynamicSelect} host element
+ */
+function getHostDynamicSelect (target) {
+  if (!(target instanceof Element)) throw Error('target is not an element')
+  const rootNode = target.getRootNode()
+  if (!(rootNode instanceof ShadowRoot)) throw Error('target is not inside a shadow dom')
+  const host = rootNode.host
+  if (!(host instanceof DynamicSelect)) throw Error('target is not inside a Dynamic Select shadow dom')
+  return host
 }
 
 /**
