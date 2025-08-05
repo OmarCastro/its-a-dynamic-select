@@ -55,6 +55,30 @@ export class DynamicSelect extends HTMLElement {
     this.setAttribute('data-filter', String(newSearchFilter))
   }
 
+  get value () {
+    return this.valueAsArray[0] ?? ''
+  }
+
+  set value (value) {
+    if (typeof value !== 'string') return
+    this.valueAsArray = [value]
+  }
+
+  get valueAsArray () {
+    let iterator = Iterator.from(this.selectedOptions).map(option => option.value)
+    if (!this.multiple) {
+      iterator = iterator.take(1)
+    }
+    return iterator.toArray()
+  }
+
+  set valueAsArray (valueAsArray) {
+    if (!Array.isArray(valueAsArray)) { return }
+    Iterator.from(this.options).forEach(option => {
+      option.selected = valueAsArray.includes(option.value)
+    })
+  }
+
   get open () {
     return this.hasAttribute('open')
   }
@@ -81,6 +105,14 @@ export class DynamicSelect extends HTMLElement {
 
   get options () {
     return this.querySelectorAll('option')
+  }
+
+  get selectedOptions () {
+    return this.querySelectorAll('option[selected]')
+  }
+
+  get src () {
+    return this.querySelectorAll('option[selected]')
   }
 
   /**
