@@ -30,3 +30,21 @@ export function stringToPath (string) {
   cache[string] = finalResult
   return finalResult
 }
+
+/**
+ * Get object data from a string path
+ *
+ * @param {*} obj - target object
+ * @param {string} stringPath - string path
+ * @returns {*} result from string path
+ */
+export function getFromStringPath (obj, stringPath) {
+  if (obj == null) { return obj }
+  const pathArray = stringToPath(stringPath)
+  let current = obj
+  for (const section of pathArray) {
+    current = obj[section]
+    if (current == null) { return current }
+  }
+  return current
+}

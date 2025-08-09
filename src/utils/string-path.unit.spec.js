@@ -1,7 +1,8 @@
 import { test } from '../../test-utils/unit/test.util.js'
-import { stringToPath } from './string-to-path.js'
+import { stringToPath, getFromStringPath } from './string-path.js'
 
 test('stringToPath - should convert a string to a path', async ({ expect }) => {
+  expect(stringToPath('')).toStrictEqual([])
   expect(stringToPath('a.b.c')).toStrictEqual(['a', 'b', 'c'])
   expect(stringToPath('a[0].b.c')).toStrictEqual(['a', '0', 'b', 'c'])
 })
@@ -48,4 +49,13 @@ test('stringToPath - should memoize the result', async ({ expect }) => {
 test('stringToPath - should make the result immutable', async ({ expect }) => {
   const actual = stringToPath('a.b.c')
   expect(Object.isFrozen(actual)).toBe(true)
+})
+
+test('getFromStringPath - should pass', async ({ expect }) => {
+  const data = {
+    prop1: ['aa', 'bb'],
+    prop2: 'lorem ipsum'
+  }
+  const actual = getFromStringPath(data, 'prop1')
+  expect(actual).toBe(data.prop1)
 })
