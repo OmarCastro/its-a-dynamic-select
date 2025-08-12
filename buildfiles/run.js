@@ -311,10 +311,7 @@ async function buildDocs () {
     splitting: true,
     chunkNames: 'chunk/[name].[hash]',
     format: 'esm',
-    loader: {
-      '.element.html': 'text',
-      '.element.css': 'text',
-    },
+    plugins: [await getESbuildPlugin()],
   })
 
   /**
@@ -349,6 +346,10 @@ async function buildESM (outputDir) {
       .replaceAll(".element.html'", ".element.html.generated.js'")
       .replaceAll('.element.css"', '.element.css.generated.js"')
       .replaceAll(".element.css'", ".element.css.generated.js'")
+      .replaceAll('.inline.html"', '.inline.html.generated.js"')
+      .replaceAll(".inline.html'", ".inline.html.generated.js'")
+      .replaceAll('.inline.css"', '.inline.css.generated.js"')
+      .replaceAll(".inline.css'", ".inline.css.generated.js'")
 
     const noSrcPath = path.split('/').slice(1).join('/')
     const outfile = pathFromProject(`${outputDir}/${noSrcPath}`)
@@ -357,7 +358,7 @@ async function buildESM (outputDir) {
     return fs.writeFile(outfile, updatedJs)
   })
 
-  const fileListCSS = await listNonIgnoredFiles({ patterns: ['src/**/*.element.css'] })
+  const fileListCSS = await listNonIgnoredFiles({ patterns: ['src/**/*.element.css', 'src/**/*.inline.css'] })
   const fileListCssJob = fileListCSS.map(async (path) => {
     const minCss = await minifyCss(await fs.readFile(path, 'utf8'))
     const minCssJs = await esbuild.transform(minCss, { loader: 'text', format: 'esm' })
@@ -368,7 +369,7 @@ async function buildESM (outputDir) {
     return fs.writeFile(outfile, `// generated code from ${path}\n${minCssJs.code}`)
   })
 
-  const fileListHtml = await listNonIgnoredFiles({ patterns: ['src/**/*.element.html'] })
+  const fileListHtml = await listNonIgnoredFiles({ patterns: ['src/**/*.element.html', 'src/**/*.inline.html'] })
   const fileListHtmlJob = fileListHtml.map(async (path) => {
     const minHtml = await minifyHtml(await fs.readFile(path, 'utf8'))
     const minHtmlJs = await esbuild.transform(minHtml, { loader: 'text', format: 'esm' })
@@ -1237,14 +1238,14 @@ async function getESbuildPlugin () {
   return {
     name: 'assetsBuid',
     async setup (build) {
-      build.onLoad({ filter: /\.element.css$/ }, async (args) => {
+      build.onLoad({ filter: /\.(element|inline).css$/ }, async (args) => {
         return {
           contents: await minifyCss(await fs.readFile(args.path, 'utf8')),
           loader: 'text',
         }
       })
 
-      build.onLoad({ filter: /\.element.html$/ }, async (args) => {
+      build.onLoad({ filter: /\.(element|inline).html$/ }, async (args) => {
         return {
           contents: await minifyHtml(await fs.readFile(args.path, 'utf8')),
           loader: 'text',
