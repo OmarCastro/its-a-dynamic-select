@@ -1,23 +1,44 @@
 import html from './dynamic-select.element.html'
+import defaultTemplatesHtml from './dynamic-select.templates.inline.html'
 import css from './dynamic-select.element.css'
+import { applyTemplate } from '../utils/templater'
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
-let loadTemplate = () => {
+const loadTemplate = computeOnce(() => {
   const templateElement = document.createElement('template')
   templateElement.innerHTML = html
-  loadTemplate = () => templateElement
   return templateElement
-}
-let loadStyles = () => {
+})
+
+const loadStyles = computeOnce(() => {
   const sheet = new CSSStyleSheet()
   sheet.replaceSync(css)
-  loadStyles = () => sheet
   return sheet
-}
+})
+
+const loadSelectDefaultTemplates = computeOnce(() => {
+  const templatesRootElement = document.createElement('template')
+  templatesRootElement.innerHTML = defaultTemplatesHtml
+  /**
+   * @param {string} name - template id on './dynamic-select.templates.html'
+   */
+  const query = (name) => {
+    const result = templatesRootElement.content.querySelector('template#' + name)
+    if (!(result instanceof HTMLTemplateElement)) throw Error(`Error: default template "${JSON.stringify(name)}" not defined`)
+    return result
+  }
+
+  const templates = {
+    option: query('option'),
+    selectedOption: query('selected-option')
+  }
+  return templates
+})
 
 const searchInputEl = shadowQuery('input.search-input')
 const dropdownEl = shadowQuery('dialog.dropdown')
 const selectedValueButton = shadowQuery('button.selected-value')
+const selectedValueContent = shadowQuery('button.selected-value > span.selected-value-content')
 const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
 const collapseArrow = shadowQuery('span.collapse-arrow')
 
@@ -42,6 +63,7 @@ export class DynamicSelect extends HTMLElement {
 
   connectedCallback () {
     updateDropdownContent(this)
+    updateButtonContent(this)
   }
 
   get searchFilter () {
@@ -108,7 +130,16 @@ export class DynamicSelect extends HTMLElement {
   }
 
   get selectedOptions () {
-    return this.querySelectorAll('option[selected]')
+    const result = Iterator.from(this.querySelectorAll('option')).filter(option => option.selected).toArray()
+    if (result.length) {
+      return result
+    }
+    const firstOption = this.querySelector('option')
+    if (!firstOption) {
+      return []
+    }
+    firstOption.selected = true
+    return [firstOption]
   }
 
   get src () {
@@ -140,6 +171,15 @@ export class DynamicSelect extends HTMLElement {
  * Updated dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
+function getSelectedOptionTemplate (dynamicSelect) {
+  const defaults = loadSelectDefaultTemplates()
+  return defaults.selectedOption
+}
+
+/**
+ * Updated dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ */
 function updateDropdownContent (dynamicSelect) {
   const newChildren = []
   for (const optionOrGroup of dynamicSelect.querySelectorAll(':scope > :is(option, optgroup)')) {
@@ -147,6 +187,20 @@ function updateDropdownContent (dynamicSelect) {
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)
+}
+
+/**
+ * Updated dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ */
+function updateButtonContent (dynamicSelect) {
+  const optionTemplate = getSelectedOptionTemplate(dynamicSelect)
+  const selectedOption = dynamicSelect.selectedOptions[0]
+  const data = {
+    text: selectedOption.textContent,
+    value: selectedOption.value
+  }
+  selectedValueContent(dynamicSelect).replaceChildren(applyTemplate(optionTemplate, data))
 }
 
 /**
@@ -222,4 +276,15 @@ function elementMatcher (selector) {
   return function (element) {
     return element instanceof Element && element.matches(selector)
   }
+}
+
+/**
+ * Memoization technique that computes once
+ * @template {() => any} T
+ * @param {T} callback - callback to memoize
+ * @returns {() => ReturnType<T>} memoized function
+ */
+function computeOnce (callback) {
+  let result
+  return () => result ?? (result = callback())
 }

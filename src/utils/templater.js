@@ -6,7 +6,7 @@ import { getFromStringPath } from './string-path'
  * @param {Element} currentElement The string to convert.
  * @param {Record<string, any>} currentData The string to convert.
  */
-export function applyTemplateAux (currentElement, currentData) {
+function applyTemplateAux (currentElement, currentData) {
   switch (currentElement.tagName) {
     case 'SLOT': {
       const name = currentElement.getAttribute('name') ?? ''
