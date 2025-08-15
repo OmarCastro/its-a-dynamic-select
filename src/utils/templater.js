@@ -1,6 +1,14 @@
 import { getFromStringPath } from './string-path'
 
 /**
+ * @param {*} value - value to normalize
+ * @returns {string} normalized value
+ */
+function normalizeValue (value) {
+  return value === undefined ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value)
+}
+
+/**
  * Converts `string` to a property path array.
  *
  * @param {Element} currentElement The string to convert.
@@ -12,7 +20,7 @@ function applyTemplateAux (currentElement, currentData) {
       const name = currentElement.getAttribute('name') ?? ''
       if (name.startsWith('$.')) {
         currentElement.removeAttribute('name')
-        const content = String(getFromStringPath(currentData, name.slice(2)))
+        const content = normalizeValue(getFromStringPath(currentData, name.slice(2)))
         const parent = currentElement.parentNode
         currentElement.replaceWith(content)
         parent?.normalize()
@@ -33,7 +41,7 @@ function applyTemplateAux (currentElement, currentData) {
   }
   for (const { name, value } of currentElement.attributes) {
     if (value.startsWith('$.')) {
-      const newValue = String(getFromStringPath(currentData, value.slice(2)))
+      const newValue = normalizeValue(getFromStringPath(currentData, value.slice(2)))
       currentElement.setAttribute(name, newValue)
     } else if (value.startsWith('$$')) {
       currentElement.setAttribute(name, value.slice(1))
