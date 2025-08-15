@@ -7,3 +7,24 @@
 <template id="option-list">
     <span data-value="$.value"><slot name="$.text"></slot></span>
 </template>
+<template id="single-select-input">
+    <button class="selected-value">
+        <span class="selected-value-content"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
+        <span class="collapse-arrow"></span>
+    </button>
+</template>
+<template id="multi-select-input">
+    <button class="multi-input">
+        <span class="selected-options">
+        <template data-each="$.selectedOptions">
+            <span class="multiselect-option">
+                <slot data-value="$." name="selected-option"></slot>
+                <button class="deselect-option"></button>
+            </span>
+        </template>
+
+        </span>
+        <span class="clear-button"></span>
+        <span class="collapse-arrow"></span>
+    </button>
+</template>

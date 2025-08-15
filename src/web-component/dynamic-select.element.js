@@ -30,23 +30,30 @@ const loadSelectDefaultTemplates = computeOnce(() => {
 
   const templates = {
     option: query('option'),
-    selectedOption: query('selected-option')
+    selectedOption: query('selected-option'),
+    singleSelectInput: query('single-select-input'),
+    multiSelectInput: query('multi-select-input'),
   }
   return templates
 })
 
 const searchInputEl = shadowQuery('input.search-input')
+const inputEl = shadowQuery('span.input')
 const dropdownEl = shadowQuery('dialog.dropdown')
-const selectedValueButton = shadowQuery('button.selected-value')
-const selectedValueContent = shadowQuery('button.selected-value > span.selected-value-content')
 const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
-const collapseArrow = shadowQuery('span.collapse-arrow')
 
 const isSearchInputEl = elementMatcher('input.search-input')
 
 const optionsObserver = new MutationObserver(mutation => {
 
 })
+/** @type {MutationObserverInit} */
+const optionsObserverOptions = {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['data-of-option']
+}
 
 export class DynamicSelect extends HTMLElement {
   constructor () {
@@ -57,8 +64,9 @@ export class DynamicSelect extends HTMLElement {
     shadowRoot.append(document.importNode(template.content, true))
 
     searchInputEl(this).addEventListener('input', handleSearchInputChange)
-    selectedValueButton(this).addEventListener('click', handleSelectValueButtonClick)
+    inputEl(this).addEventListener('click', handleSelectValueButtonClick)
     dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
+    optionsObserver.observe(this, optionsObserverOptions)
   }
 
   connectedCallback () {
@@ -131,7 +139,7 @@ export class DynamicSelect extends HTMLElement {
 
   get selectedOptions () {
     const result = Iterator.from(this.querySelectorAll('option')).filter(option => option.selected).toArray()
-    if (result.length) {
+    if (result.length || this.multiple) {
       return result
     }
     const firstOption = this.querySelector('option')
@@ -154,7 +162,6 @@ export class DynamicSelect extends HTMLElement {
   attributeChangedCallback (name, oldValue, newValue) {
     switch (name) {
       case 'open':
-        updateSelectButtonContent(this)
         if (this.open) {
           dropdownEl(this).showPopover()
         } else {
@@ -190,26 +197,30 @@ function updateDropdownContent (dynamicSelect) {
 }
 
 /**
- * Updated dropdown content based on the content in dynamic select in light DOM
+ * Updated input content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateButtonContent (dynamicSelect) {
   const optionTemplate = getSelectedOptionTemplate(dynamicSelect)
-  const selectedOption = dynamicSelect.selectedOptions[0]
+  const defaultTemplates = loadSelectDefaultTemplates()
+  const isMultiple = dynamicSelect.multiple
+  const buttonTemplate = isMultiple ? defaultTemplates.multiSelectInput : defaultTemplates.singleSelectInput
+  const selectedOptionsVal = dynamicSelect.selectedOptions.map(option => ({
+    text: option.textContent,
+    value: option.value
+  }))
   const data = {
-    text: selectedOption.textContent,
-    value: selectedOption.value
+    isMultiple,
+    isSingle: !isMultiple,
+    selectedOptions: selectedOptionsVal,
+    selectedOption: selectedOptionsVal[0],
   }
-  selectedValueContent(dynamicSelect).replaceChildren(applyTemplate(optionTemplate, data))
-}
-
-/**
- * Updated dropdown content based on the content in dynamic select in light DOM
- * @param {DynamicSelect} dynamicSelect - web component element reference
- */
-function updateSelectButtonContent (dynamicSelect) {
-  const arrowContent = dynamicSelect.open ? '▲' : '▼'
-  collapseArrow(dynamicSelect).innerHTML = arrowContent
+  const button = applyTemplate(buttonTemplate, data)
+  button.querySelectorAll('slot[name="selected-option"]').forEach(slot => {
+    const data = JSON.parse(slot.dataset.value || '{}')
+    slot.replaceWith(applyTemplate(optionTemplate, data))
+  })
+  inputEl(dynamicSelect).replaceChildren(button)
 }
 
 /**
