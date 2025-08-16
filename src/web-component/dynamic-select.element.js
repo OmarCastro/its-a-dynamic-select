@@ -250,8 +250,20 @@ function handleSearchInputChange (event) {
  * @param {Event} event - input event
  */
 function handleSelectValueButtonClick (event) {
-  const dynamicSelect = getHostDynamicSelect(event.target)
-  dynamicSelect.open = !dynamicSelect.open
+  const { target } = event
+  if (target instanceof HTMLElement && target.matches('.multiselect-option[data-value] > .deselect-option')) {
+    const option = target.closest('.multiselect-option')
+    if (!(option instanceof HTMLElement)) { return }
+    const value = option.dataset.value
+    const dynamicSelect = getHostDynamicSelect(option)
+    const selectOption = dynamicSelect.selectedOptions.find(option => option.value === value)
+    if (selectOption == null) { return }
+    selectOption.selected = false
+    updateButtonContent(dynamicSelect)
+  } else {
+    const dynamicSelect = getHostDynamicSelect(event.target)
+    dynamicSelect.open = !dynamicSelect.open
+  }
 }
 
 /**

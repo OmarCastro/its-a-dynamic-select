@@ -23,11 +23,14 @@
         appearance: none;
         border: none;
         background: none;
-        margin-left: 0.5em;
-        padding: 0;
+        padding-left: 0.5em;
         opacity: 0.5;
+        cursor:pointer;
         &::after {
             content: "x";
+        }
+        &:hover {
+            opacity: 1;
         }
     }
 }

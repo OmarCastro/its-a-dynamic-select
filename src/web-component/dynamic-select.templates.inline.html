@@ -17,12 +17,11 @@
     <button class="multi-input">
         <span class="selected-options">
         <template data-each="$.selectedOptions">
-            <span class="multiselect-option">
+            <span data-value="$.value" class="multiselect-option">
                 <slot data-value="$." name="selected-option"></slot>
                 <button class="deselect-option"></button>
             </span>
         </template>
-
         </span>
         <span class="clear-button"></span>
         <span class="collapse-arrow"></span>
