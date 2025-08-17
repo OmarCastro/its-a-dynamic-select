@@ -43,6 +43,7 @@ const dropdownEl = shadowQuery('dialog.dropdown')
 const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
 
 const isSearchInputEl = elementMatcher('input.search-input')
+const isDeselectButton = elementMatcher('.multiselect-option[data-value] > button.deselect-option')
 
 const optionsObserver = new MutationObserver(mutation => {
 
@@ -164,6 +165,7 @@ export class DynamicSelect extends HTMLElement {
       case 'open':
         if (this.open) {
           dropdownEl(this).showPopover()
+          updateDropdownPosition(this)
         } else {
           dropdownEl(this).close()
         }
@@ -194,6 +196,32 @@ function updateDropdownContent (dynamicSelect) {
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)
+}
+
+/**
+ * Updated dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ */
+function updateDropdownPosition (dynamicSelect) {
+  const dropdown = dropdownEl(dynamicSelect)
+  const input = inputEl(dynamicSelect)
+  const clientRect = input.getBoundingClientRect()
+  const isTopDirection = clientRect.bottom + dropdown.clientHeight > getViewportHeight()
+  dropdown.classList.toggle('top-direction', isTopDirection)
+  if (isTopDirection) {
+    dropdown.style.marginTop = `${clientRect.top}px`
+    dropdown.style.marginLeft = `${clientRect.left}px`
+  } else {
+    dropdown.style.marginTop = `${clientRect.bottom}px`
+    dropdown.style.marginLeft = `${clientRect.left}px`
+  }
+}
+
+/**
+ *
+ */
+function getViewportHeight () {
+  return window.visualViewport?.height ?? window.innerHeight
 }
 
 /**
@@ -251,7 +279,7 @@ function handleSearchInputChange (event) {
  */
 function handleSelectValueButtonClick (event) {
   const { target } = event
-  if (target instanceof HTMLElement && target.matches('.multiselect-option[data-value] > .deselect-option')) {
+  if (isDeselectButton(target)) {
     const option = target.closest('.multiselect-option')
     if (!(option instanceof HTMLElement)) { return }
     const value = option.dataset.value

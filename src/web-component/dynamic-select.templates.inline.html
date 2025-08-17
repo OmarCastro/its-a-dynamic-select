@@ -9,7 +9,7 @@
 </template>
 <template id="single-select-input">
     <button class="selected-value">
-        <span class="selected-value-content"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
+        <span class="option"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
         <span class="collapse-arrow"></span>
     </button>
 </template>
@@ -17,7 +17,7 @@
     <button class="multi-input">
         <span class="selected-options">
         <template data-each="$.selectedOptions">
-            <span data-value="$.value" class="multiselect-option">
+            <span data-value="$.value" class="option multiselect-option">
                 <slot data-value="$." name="selected-option"></slot>
                 <button class="deselect-option"></button>
             </span>
