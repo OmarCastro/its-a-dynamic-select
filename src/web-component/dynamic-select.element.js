@@ -110,6 +110,33 @@ export class DynamicSelect extends HTMLElement {
     })
   }
 
+  get valueAsObjects () {
+    let iterator = Iterator.from(this.selectedOptions).map(dataObjectOfOption)
+    if (!this.multiple) {
+      iterator = iterator.take(1)
+    }
+    return iterator.toArray()
+  }
+
+  set valueAsObjects (valueAsObjects) {
+    const map = Object.fromEntries(valueAsObjects.map(obj => [obj.value, obj]))
+    Iterator.from(this.options).forEach(option => {
+      const obj = map[option.value]
+      if (!isPlainObject(obj)) {
+        option.selected = false
+        return
+      }
+      option.selected = true
+      const { data } = obj
+      if (isPlainObject(data)) {
+        const { text, value, ...rest } = data
+        if (Object.keys(rest).length > 0) {
+          option.setAttribute('data-of-option', JSON.stringify(data))
+        }
+      }
+    })
+  }
+
   get open () {
     return this.hasAttribute('open')
   }
@@ -177,7 +204,7 @@ export class DynamicSelect extends HTMLElement {
 }
 
 /**
- * Updated dropdown content based on the content in dynamic select in light DOM
+ * Updates dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function getSelectedOptionTemplate (dynamicSelect) {
@@ -186,7 +213,7 @@ function getSelectedOptionTemplate (dynamicSelect) {
 }
 
 /**
- * Updated dropdown content based on the content in dynamic select in light DOM
+ * Updates dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateDropdownContent (dynamicSelect) {
@@ -218,14 +245,14 @@ function updateDropdownPosition (dynamicSelect) {
 }
 
 /**
- *
+ * gets viewport height
  */
 function getViewportHeight () {
   return window.visualViewport?.height ?? window.innerHeight
 }
 
 /**
- * Updated input content based on the content in dynamic select in light DOM
+ * Updates button content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateButtonContent (dynamicSelect) {
@@ -233,10 +260,7 @@ function updateButtonContent (dynamicSelect) {
   const defaultTemplates = loadSelectDefaultTemplates()
   const isMultiple = dynamicSelect.multiple
   const buttonTemplate = isMultiple ? defaultTemplates.multiSelectInput : defaultTemplates.singleSelectInput
-  const selectedOptionsVal = dynamicSelect.selectedOptions.map(option => ({
-    text: option.textContent,
-    value: option.value
-  }))
+  const selectedOptionsVal = dynamicSelect.selectedOptions.map(dataObjectOfOption)
   const data = {
     isMultiple,
     isSingle: !isMultiple,
@@ -249,19 +273,6 @@ function updateButtonContent (dynamicSelect) {
     slot.replaceWith(applyTemplate(optionTemplate, data))
   })
   inputEl(dynamicSelect).replaceChildren(button)
-}
-
-/**
- * @template {string} T
- * @param {T} selector - css selector
- * @returns {(dynamicSelect: DynamicSelect) => ParseSelector<T, Element>} type guarded query function
- */
-function shadowQuery (selector) {
-  return (dynamicSelect) => {
-    const result = dynamicSelect.shadowRoot?.querySelector(selector)
-    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
-    return result
-  }
 }
 
 /**
@@ -303,7 +314,44 @@ function handleDropdownToggle (event) {
 }
 
 /**
- * @param {EventTarget | null} target - target
+ * get data object of option in a JSON represented format
+ *
+ * @param {HTMLOptionElement} option - target element in shadow DOM
+ * @returns {OptionData} option data
+ */
+function dataObjectOfOption (option) {
+  const baseData = {
+    text: option.textContent || '',
+    value: option.value,
+  }
+  const dataAttr = option.getAttribute('data-of-option')
+  if (dataAttr != null && dataAttr.trim() !== '') {
+    try {
+      const jsonData = JSON.parse(dataAttr)
+      if (!isPlainObject(jsonData)) { throw Error('data-of-option attr must be serialized json object') }
+      return {
+        ...baseData,
+        selected: option.selected,
+        data: {
+          ...jsonData,
+          ...baseData,
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return {
+    ...baseData,
+    selected: option.selected,
+    data: baseData,
+  }
+}
+
+/**
+ * Gets hots DynamicSelect element from a shadow DOM element
+ *
+ * @param {EventTarget | null} target - target element in shadow DOM
  * @returns {DynamicSelect} host element
  */
 function getHostDynamicSelect (target) {
@@ -313,6 +361,19 @@ function getHostDynamicSelect (target) {
   const host = rootNode.host
   if (!(host instanceof DynamicSelect)) throw Error('target is not inside a Dynamic Select shadow dom')
   return host
+}
+
+/**
+ * @template {string} T
+ * @param {T} selector - css selector
+ * @returns {(dynamicSelect: DynamicSelect) => ParseSelector<T, Element>} type guarded query function
+ */
+function shadowQuery (selector) {
+  return (dynamicSelect) => {
+    const result = dynamicSelect.shadowRoot?.querySelector(selector)
+    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
+    return result
+  }
 }
 
 /**
@@ -330,7 +391,9 @@ function elementMatcher (selector) {
 }
 
 /**
- * Memoization technique that computes once
+ * Memoization technique that calls the callback once, subsequent calls
+ * simply returns the result of the first callback
+ *
  * @template {() => any} T
  * @param {T} callback - callback to memoize
  * @returns {() => ReturnType<T>} memoized function
@@ -339,3 +402,18 @@ function computeOnce (callback) {
   let result
   return () => result ?? (result = callback())
 }
+
+/**
+ *
+ * @param {*} obj - target object
+ * @returns {obj is Record<string,any>} true if `obj` is a plain object, false otherwise
+ */
+const isPlainObject = obj => (obj?.constructor === Object || Object.getPrototypeOf(obj ?? 0) === null)
+
+/**
+ * @typedef {object} OptionData
+ * @property {boolean} selected - option selected flag
+ * @property {string} text - option text
+ * @property {string} value - option value
+ * @property {object} data - option data
+ */
