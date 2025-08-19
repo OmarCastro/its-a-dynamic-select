@@ -111,7 +111,9 @@ export class DynamicSelect extends HTMLElement {
   }
 
   get valueAsObjects () {
-    let iterator = Iterator.from(this.selectedOptions).map(dataObjectOfOption)
+    let iterator = Iterator.from(this.selectedOptions)
+      .map(dataObjectOfOption)
+      .map(info => info.data)
     if (!this.multiple) {
       iterator = iterator.take(1)
     }
@@ -119,15 +121,20 @@ export class DynamicSelect extends HTMLElement {
   }
 
   set valueAsObjects (valueAsObjects) {
-    const map = Object.fromEntries(valueAsObjects.map(obj => [obj.value, obj]))
+    if (!Array.isArray(valueAsObjects)) { return }
+    const isValidValue = (value) => typeof value === 'string' || !isNaN(value)
+    const validValueEntries = Iterator.from(valueAsObjects)
+      .filter(isPlainObject)
+      .filter(obj => isValidValue(obj.value))
+      .map(obj => [obj.value, obj])
+    const map = Object.fromEntries(validValueEntries)
     Iterator.from(this.options).forEach(option => {
-      const obj = map[option.value]
-      if (!isPlainObject(obj)) {
+      const data = map[option.value]
+      if (data) {
         option.selected = false
         return
       }
       option.selected = true
-      const { data } = obj
       if (isPlainObject(data)) {
         const { text, value, ...rest } = data
         if (Object.keys(rest).length > 0) {
@@ -415,5 +422,10 @@ const isPlainObject = obj => (obj?.constructor === Object || Object.getPrototype
  * @property {boolean} selected - option selected flag
  * @property {string} text - option text
  * @property {string} value - option value
- * @property {object} data - option data
+ * @property { {
+ *  [x:string]: any,
+ *  text: string,
+ *  value: string,
+ *  group?: string
+ * }} data - option data
  */
