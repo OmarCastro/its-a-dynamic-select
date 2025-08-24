@@ -221,12 +221,39 @@ function getSelectedOptionTemplate (dynamicSelect) {
 
 /**
  * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {HTMLOptionElement | HTMLOptGroupElement} optionOrGroup - web component element reference
+ */
+const dropdownHtml = (optionOrGroup) => {
+  const { option } = loadSelectDefaultTemplates()
+  const li = document.createElement('li')
+
+  if (optionOrGroup instanceof HTMLOptionElement) {
+    const data = dataObjectOfOption(optionOrGroup)
+    li.append(applyTemplate(option, data))
+    li.classList.add('option-value')
+    return li
+  }
+
+  const header = document.createElement('header')
+  header.textContent = optionOrGroup.label
+  li.append(header)
+  li.classList.add('option-group')
+  const ul = document.createElement('ul')
+  for (const subOptionOrGroup of optionOrGroup.querySelectorAll(':scope > :is(option, optgroup)')) {
+    ul.append(dropdownHtml(subOptionOrGroup))
+  }
+  li.append(ul)
+  return li
+}
+
+/**
+ * Updates dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateDropdownContent (dynamicSelect) {
   const newChildren = []
   for (const optionOrGroup of dynamicSelect.querySelectorAll(':scope > :is(option, optgroup)')) {
-    newChildren.push(optionOrGroup.cloneNode(true))
+    newChildren.push(dropdownHtml(optionOrGroup))
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)

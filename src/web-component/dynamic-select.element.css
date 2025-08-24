@@ -41,6 +41,25 @@
             opacity: 1;
         }
     }
+    & ul {
+        list-style: none;
+        padding: 0;
+
+    }
+
+    & li > header {
+        font-weight: bold;
+    }
+
+    & li > ul > li.option-value {
+        padding-left: 1em;
+    }
+
+    & li.option-value:hover {
+        background-color: bisque;
+    }
+
+    
 }
 
 :host > .container > .dropdown {
