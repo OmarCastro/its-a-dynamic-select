@@ -201,7 +201,7 @@ export class DynamicSelect extends HTMLElement {
           dropdownEl(this).showPopover()
           updateDropdownPosition(this)
         } else {
-          dropdownEl(this).close()
+          dropdownEl(this).hidePopover()
         }
         break
       case 'data-filter':
