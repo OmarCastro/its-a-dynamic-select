@@ -230,7 +230,11 @@ const dropdownHtml = (optionOrGroup) => {
   if (optionOrGroup instanceof HTMLOptionElement) {
     const data = dataObjectOfOption(optionOrGroup)
     li.append(applyTemplate(option, data))
-    li.classList.add('option-value')
+    const { classList, dataset } = li
+    classList.add('option-value')
+    classList.toggle('selected', data.selected)
+    dataset.value = data.value
+    li.addEventListener('click', handleDropdownOptionClick)
     return li
   }
 
@@ -345,6 +349,28 @@ function handleSelectValueButtonClick (event) {
 function handleDropdownToggle (event) {
   const dynamicSelect = getHostDynamicSelect(event.target)
   dynamicSelect.open = dropdownEl(dynamicSelect).matches(':popover-open')
+}
+
+/**
+ * @param {Event} event - input event
+ */
+function handleDropdownOptionClick (event) {
+  const { currentTarget } = event
+  if (!(currentTarget instanceof HTMLLIElement)) { return }
+  const value = currentTarget.dataset.value
+  if (typeof value !== 'string') return
+  const dynamicSelect = getHostDynamicSelect(currentTarget)
+  if (dynamicSelect.multiple) {
+    const valueSet = new Set(dynamicSelect.valueAsArray)
+    const toggledValue = valueSet.symmetricDifference(new Set([value]))
+    dynamicSelect.valueAsArray = [...toggledValue]
+    updateButtonContent(dynamicSelect)
+    updateDropdownContent(dynamicSelect)
+  } else {
+    dynamicSelect.value = value
+    updateButtonContent(dynamicSelect)
+    dynamicSelect.open = false
+  }
 }
 
 /**

@@ -59,6 +59,10 @@
         background-color: bisque;
     }
 
+    & li.selected.option-value {
+        background-color: bisque;
+    }
+
     
 }
 
