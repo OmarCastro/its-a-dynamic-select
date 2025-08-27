@@ -2,6 +2,8 @@ import html from './dynamic-select.element.html'
 import defaultTemplatesHtml from './dynamic-select.templates.inline.html'
 import css from './dynamic-select.element.css'
 import { applyTemplate } from '../utils/templater'
+import { isPlainObject } from '../utils/object'
+import { dataObjectOfOption } from '../utils/option-data'
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
 const loadTemplate = computeOnce(() => {
@@ -374,41 +376,6 @@ function handleDropdownOptionClick (event) {
 }
 
 /**
- * get data object of option in a JSON represented format
- *
- * @param {HTMLOptionElement} option - target element in shadow DOM
- * @returns {OptionData} option data
- */
-function dataObjectOfOption (option) {
-  const baseData = {
-    text: option.textContent || '',
-    value: option.value,
-  }
-  const dataAttr = option.getAttribute('data-of-option')
-  if (dataAttr != null && dataAttr.trim() !== '') {
-    try {
-      const jsonData = JSON.parse(dataAttr)
-      if (!isPlainObject(jsonData)) { throw Error('data-of-option attr must be serialized json object') }
-      return {
-        ...baseData,
-        selected: option.selected,
-        data: {
-          ...jsonData,
-          ...baseData,
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return {
-    ...baseData,
-    selected: option.selected,
-    data: baseData,
-  }
-}
-
-/**
  * Gets hots DynamicSelect element from a shadow DOM element
  *
  * @param {EventTarget | null} target - target element in shadow DOM
@@ -462,23 +429,3 @@ function computeOnce (callback) {
   let result
   return () => result ?? (result = callback())
 }
-
-/**
- *
- * @param {*} obj - target object
- * @returns {obj is Record<string,any>} true if `obj` is a plain object, false otherwise
- */
-const isPlainObject = obj => (obj?.constructor === Object || Object.getPrototypeOf(obj ?? 0) === null)
-
-/**
- * @typedef {object} OptionData
- * @property {boolean} selected - option selected flag
- * @property {string} text - option text
- * @property {string} value - option value
- * @property { {
- *  [x:string]: any,
- *  text: string,
- *  value: string,
- *  group?: string
- * }} data - option data
- */
