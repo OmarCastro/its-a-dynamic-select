@@ -4,6 +4,7 @@ import css from './dynamic-select.element.css'
 import { applyTemplate } from '../utils/templater'
 import { isPlainObject } from '../utils/object'
 import { dataObjectOfOption } from '../utils/option-data'
+/** @import { OptionData } from '../utils/option-data' */
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
 const loadTemplate = computeOnce(() => {
@@ -223,30 +224,34 @@ function getSelectedOptionTemplate (dynamicSelect) {
 
 /**
  * Updates dropdown content based on the content in dynamic select in light DOM
- * @param {HTMLOptionElement | HTMLOptGroupElement} optionOrGroup - web component element reference
+ * @param {OptionData} optionData - web component element reference
  */
-const dropdownHtml = (optionOrGroup) => {
+const dropdownOptionHtml = (optionData) => {
   const { option } = loadSelectDefaultTemplates()
   const li = document.createElement('li')
+  li.append(applyTemplate(option, optionData))
+  const { classList, dataset } = li
+  classList.add('option-value')
+  classList.toggle('selected', optionData.selected)
+  dataset.value = optionData.value
+  li.addEventListener('click', handleDropdownOptionClick)
+  return li
+}
 
-  if (optionOrGroup instanceof HTMLOptionElement) {
-    const data = dataObjectOfOption(optionOrGroup)
-    li.append(applyTemplate(option, data))
-    const { classList, dataset } = li
-    classList.add('option-value')
-    classList.toggle('selected', data.selected)
-    dataset.value = data.value
-    li.addEventListener('click', handleDropdownOptionClick)
-    return li
-  }
-
+/**
+ * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {string} groupName - web component element reference
+ * @param {OptionData[]} optionsData - web component element reference
+ */
+const dropdownGroupOptionHtml = (groupName, optionsData) => {
+  const li = document.createElement('li')
   const header = document.createElement('header')
-  header.textContent = optionOrGroup.label
+  header.textContent = groupName
   li.append(header)
   li.classList.add('option-group')
   const ul = document.createElement('ul')
-  for (const subOptionOrGroup of optionOrGroup.querySelectorAll(':scope > :is(option, optgroup)')) {
-    ul.append(dropdownHtml(subOptionOrGroup))
+  for (const option of optionsData) {
+    ul.append(dropdownOptionHtml(option))
   }
   li.append(ul)
   return li
@@ -255,11 +260,45 @@ const dropdownHtml = (optionOrGroup) => {
 /**
  * Updates dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
+ * @returns {{
+ *    ungroupedOptions: OptionData[],
+ *    optionGroups: {[x:string]: OptionData[]}
+ * }} - dropdown data
+ */
+function getDropdownListData (dynamicSelect) {
+  const ungroupedOptions = []
+  const optionGroups = ({})
+
+  for (const option of dynamicSelect.querySelectorAll(':scope > option')) {
+    ungroupedOptions.push(dataObjectOfOption(option))
+  }
+  for (const option of dynamicSelect.querySelectorAll(':scope > optgroup option')) {
+    const groupName = option.closest('optgroup')?.label
+    const data = dataObjectOfOption(option)
+
+    if (!groupName) {
+      ungroupedOptions.push(data)
+    } else {
+      optionGroups[groupName] ??= []
+      optionGroups[groupName].push(data)
+    }
+  }
+  return { ungroupedOptions, optionGroups }
+}
+
+/**
+ * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateDropdownContent (dynamicSelect) {
+  const dropdownData = getDropdownListData(dynamicSelect)
+  console.log(dropdownData)
   const newChildren = []
-  for (const optionOrGroup of dynamicSelect.querySelectorAll(':scope > :is(option, optgroup)')) {
-    newChildren.push(dropdownHtml(optionOrGroup))
+  for (const option of dropdownData.ungroupedOptions) {
+    newChildren.push(dropdownOptionHtml(option))
+  }
+  for (const [group, options] of Object.entries(dropdownData.optionGroups)) {
+    newChildren.push(dropdownGroupOptionHtml(group, options))
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)
@@ -371,6 +410,7 @@ function handleDropdownOptionClick (event) {
   } else {
     dynamicSelect.value = value
     updateButtonContent(dynamicSelect)
+    updateDropdownContent(dynamicSelect)
     dynamicSelect.open = false
   }
 }
