@@ -1,9 +1,10 @@
 import html from './dynamic-select.element.html'
-import defaultTemplatesHtml from './dynamic-select.templates.inline.html'
 import css from './dynamic-select.element.css'
 import { applyTemplate } from '../utils/templater'
 import { isPlainObject } from '../utils/object'
 import { dataObjectOfOption } from '../utils/option-data'
+import { templatesOf } from '../features/templates/templates'
+import { computeOnce } from '../utils/memoization'
 /** @import { OptionData } from '../utils/option-data' */
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
@@ -17,27 +18,6 @@ const loadStyles = computeOnce(() => {
   const sheet = new CSSStyleSheet()
   sheet.replaceSync(css)
   return sheet
-})
-
-const loadSelectDefaultTemplates = computeOnce(() => {
-  const templatesRootElement = document.createElement('template')
-  templatesRootElement.innerHTML = defaultTemplatesHtml
-  /**
-   * @param {string} name - template id on './dynamic-select.templates.html'
-   */
-  const query = (name) => {
-    const result = templatesRootElement.content.querySelector('template#' + name)
-    if (!(result instanceof HTMLTemplateElement)) throw Error(`Error: default template "${JSON.stringify(name)}" not defined`)
-    return result
-  }
-
-  const templates = {
-    option: query('option'),
-    selectedOption: query('selected-option'),
-    singleSelectInput: query('single-select-input'),
-    multiSelectInput: query('multi-select-input'),
-  }
-  return templates
 })
 
 const searchInputEl = shadowQuery('input.search-input')
@@ -215,19 +195,11 @@ export class DynamicSelect extends HTMLElement {
 
 /**
  * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {OptionData} optionData - web component element reference
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
-function getSelectedOptionTemplate (dynamicSelect) {
-  const defaults = loadSelectDefaultTemplates()
-  return defaults.selectedOption
-}
-
-/**
- * Updates dropdown content based on the content in dynamic select in light DOM
- * @param {OptionData} optionData - web component element reference
- */
-const dropdownOptionHtml = (optionData) => {
-  const { option } = loadSelectDefaultTemplates()
+const dropdownOptionHtml = (optionData, dynamicSelect) => {
+  const { option } = templatesOf(dynamicSelect)
   const li = document.createElement('li')
   li.append(applyTemplate(option, optionData))
   const { classList, dataset } = li
@@ -242,8 +214,9 @@ const dropdownOptionHtml = (optionData) => {
  * Updates dropdown content based on the content in dynamic select in light DOM
  * @param {string} groupName - web component element reference
  * @param {OptionData[]} optionsData - web component element reference
+ * @param {DynamicSelect} dynamicSelect - web component element reference
  */
-const dropdownGroupOptionHtml = (groupName, optionsData) => {
+const dropdownGroupOptionHtml = (groupName, optionsData, dynamicSelect) => {
   const li = document.createElement('li')
   const header = document.createElement('header')
   header.textContent = groupName
@@ -251,7 +224,7 @@ const dropdownGroupOptionHtml = (groupName, optionsData) => {
   li.classList.add('option-group')
   const ul = document.createElement('ul')
   for (const option of optionsData) {
-    ul.append(dropdownOptionHtml(option))
+    ul.append(dropdownOptionHtml(option, dynamicSelect))
   }
   li.append(ul)
   return li
@@ -295,10 +268,10 @@ function updateDropdownContent (dynamicSelect) {
   console.log(dropdownData)
   const newChildren = []
   for (const option of dropdownData.ungroupedOptions) {
-    newChildren.push(dropdownOptionHtml(option))
+    newChildren.push(dropdownOptionHtml(option, dynamicSelect))
   }
   for (const [group, options] of Object.entries(dropdownData.optionGroups)) {
-    newChildren.push(dropdownGroupOptionHtml(group, options))
+    newChildren.push(dropdownGroupOptionHtml(group, options, dynamicSelect))
   }
   const valueList = valueListEl(dynamicSelect)
   valueList.replaceChildren(...newChildren)
@@ -335,10 +308,9 @@ function getViewportHeight () {
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateButtonContent (dynamicSelect) {
-  const optionTemplate = getSelectedOptionTemplate(dynamicSelect)
-  const defaultTemplates = loadSelectDefaultTemplates()
+  const { option: optionTemplate, multiSelectInput, singleSelectInput } = templatesOf(dynamicSelect)
   const isMultiple = dynamicSelect.multiple
-  const buttonTemplate = isMultiple ? defaultTemplates.multiSelectInput : defaultTemplates.singleSelectInput
+  const buttonTemplate = isMultiple ? multiSelectInput : singleSelectInput
   const selectedOptionsVal = dynamicSelect.selectedOptions.map(dataObjectOfOption)
   const data = {
     isMultiple,
@@ -455,17 +427,4 @@ function elementMatcher (selector) {
   return function (element) {
     return element instanceof Element && element.matches(selector)
   }
-}
-
-/**
- * Memoization technique that calls the callback once, subsequent calls
- * simply returns the result of the first callback
- *
- * @template {() => any} T
- * @param {T} callback - callback to memoize
- * @returns {() => ReturnType<T>} memoized function
- */
-function computeOnce (callback) {
-  let result
-  return () => result ?? (result = callback())
 }
