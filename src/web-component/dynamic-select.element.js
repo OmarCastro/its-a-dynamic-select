@@ -189,6 +189,7 @@ export class DynamicSelect extends HTMLElement {
         break
       case 'data-filter':
         searchInputEl(this).value = newValue
+        updateDropdownContent(this)
     }
   }
 }
@@ -256,7 +257,40 @@ function getDropdownListData (dynamicSelect) {
       optionGroups[groupName].push(data)
     }
   }
+
+  const { searchFilter } = dynamicSelect
+  if (typeof searchFilter === 'string' && searchFilter.trim() !== '') {
+    const matchFilter = filterMatcher(searchFilter)
+    const filteredUngrouped = ungroupedOptions.filter((option) => matchFilter(option.text))
+    const filteredOptionGroups = ({})
+
+    for (const [groupName, options] of Object.entries(optionGroups)) {
+      if (matchFilter(groupName)) {
+        filteredOptionGroups[groupName] = options
+        continue
+      }
+      const filteredOptions = options.filter((option) => matchFilter(option.text))
+      if (filteredOptions.length > 0) {
+        filteredOptionGroups[groupName] = filteredOptions
+      }
+    }
+    return {
+      ungroupedOptions: filteredUngrouped,
+      optionGroups: filteredOptionGroups
+    }
+  }
+
   return { ungroupedOptions, optionGroups }
+}
+
+/**
+ * Create a predicate as option filter on dropdown
+ * @param {string} filter - filter value, generally the filter input on the dropdown
+ * @returns {(text: string) => boolean} filter predicate
+ */
+const filterMatcher = (filter) => {
+  const caseInsensitiveFilter = filter.trim().toLocaleLowerCase()
+  return (text) => text.toLowerCase().includes(caseInsensitiveFilter)
 }
 
 /**
