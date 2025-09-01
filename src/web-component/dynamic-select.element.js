@@ -4,6 +4,7 @@ import { applyTemplate } from '../utils/templater'
 import { isPlainObject } from '../utils/object'
 import { dataObjectOfOption } from '../utils/option-data'
 import { templatesOf } from '../features/templates/templates'
+import { configurationOf } from '../features/configuration/configuration'
 import { computeOnce } from '../utils/memoization'
 /** @import { OptionData } from '../utils/option-data' */
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
@@ -259,7 +260,9 @@ function getDropdownListData (dynamicSelect) {
   }
 
   const { searchFilter } = dynamicSelect
-  if (typeof searchFilter === 'string' && searchFilter.trim() !== '') {
+  const { minQueryLength } = configurationOf(dynamicSelect)
+
+  if (typeof searchFilter === 'string' && searchFilter.trim() !== '' && searchFilter.length >= minQueryLength) {
     const matchFilter = filterMatcher(searchFilter)
     const filteredUngrouped = ungroupedOptions.filter((option) => matchFilter(option.text))
     const filteredOptionGroups = ({})
