@@ -1,6 +1,12 @@
 import { computeOnce } from '../../utils/memoization'
 import defaultTemplatesHtml from './default-select-templates.inline.html'
 
+/**
+ * @typedef {object} Templates
+ * @property {HTMLTemplateElement} option - options in the dropdown
+ * @property {HTMLTemplateElement} selectedOption - options in the button
+ */
+
 const loadSelectDefaultTemplates = computeOnce(() => {
   const templatesRootElement = document.createElement('template')
   templatesRootElement.innerHTML = defaultTemplatesHtml
@@ -15,7 +21,6 @@ const loadSelectDefaultTemplates = computeOnce(() => {
 
   const templates = Object.freeze({
     option: query('option'),
-    selectedOption: query('selected-option'),
     singleSelectInput: query('single-select-input'),
     multiSelectInput: query('multi-select-input'),
   })
@@ -33,11 +38,6 @@ export function templatesOf (element) {
       const scopedTemplate = element.querySelector(':scope > template[data-for="option"]')
       if (scopedTemplate) return scopedTemplate
       return loadSelectDefaultTemplates().option
-    },
-    get selectedOption () {
-      const scopedTemplate = element.querySelector(':scope > template[data-for="selected-option"]')
-      if (scopedTemplate) return scopedTemplate
-      return loadSelectDefaultTemplates().selectedOption
     },
     get singleSelectInput () {
       return loadSelectDefaultTemplates().singleSelectInput
