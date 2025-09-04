@@ -1,12 +1,12 @@
 import { parseCSV } from '../../utils/csv-parser'
 import { linkHeaderOf, toTextStream } from '../../utils/response'
-
+/** @import {ParsedResponse} from '../data-loading/fetch-data' */
 /**
  * Checks if response is a valid CSV response
  * It checks by checking content type is CSV
  *
  * @param {Response} response - response from fetch
- * @returns {Promise<*>} true if is a valid CSV response, false otherwise
+ * @returns {Promise<ParsedResponse>} parsed response
  */
 export async function parseCSVResponse (response) {
   if (!isCSVResponse(response)) {
@@ -20,7 +20,7 @@ export async function parseCSVResponse (response) {
     return {
       hasMore: true,
       navigationMode: 'link',
-      link: linkHeader.byRel.next[0].url,
+      href: linkHeader.byRel.next[0].url,
       data
     }
   }
