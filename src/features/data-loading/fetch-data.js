@@ -1,3 +1,4 @@
+import { isPlainObject } from '../../utils/object.js'
 import { parseCSVResponse, isCSVResponse } from '../parses-csv-data-response/parse-csv-response.js'
 import { parseJsonResponse, isJsonResponse } from '../parses-json-array-and-object-data-response/parse-json-response.js'
 
@@ -45,7 +46,7 @@ function createDataLoaderFor (elementRef) {
 function dispatchFetchDataEvent (element, dataToFetch) {
   let customResponse = null
   let respondWithCalls = 0
-  const event = new CustomEvent('fetch data', {
+  const event = new CustomEvent('datafetch', {
     cancelable: true,
     composed: true,
     detail: {
@@ -69,22 +70,30 @@ function dispatchFetchDataEvent (element, dataToFetch) {
 async function fetchData (element) {
   const loader = dataLoaderOf(element)
 
-  const url = getUrlToFetch(element)
   const dataToFetch = {
     query: getQueryValue(element),
-    url
+    url: getUrlToFetch(element)
   }
 
   const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
   if (respondWithCalls > 0) {
-    const response = await customResponse
-    loader.currentData = response
+    const parsedResponse = await parseRespondWithCall(customResponse)
+    if (!('error' in parsedResponse)) {
+      loader.currentData = parsedResponse
+    }
+    addToFetchHistory(element, dataToFetch, parsedResponse)
     return loader.currentData
   }
 
+  const { url } = dataToFetch
+
   if (!event.defaultPrevented && url) {
     const response = await fetch(url)
-    await parseResponse(element, response, dataToFetch)
+    const parsedResponse = await parseResponse(response)
+    if (!('error' in parsedResponse)) {
+      loader.currentData = parsedResponse
+    }
+    addToFetchHistory(element, dataToFetch, parsedResponse)
   }
 
   return loader.currentData
@@ -97,42 +106,58 @@ async function fetchData (element) {
 async function fetchNextData (element) {
   const loader = dataLoaderOf(element)
   const { currentData } = loader
-
-  const url = getUrlToFetch(element)
+  if (currentData == null) {
+    return await fetchData(element)
+  }
+  if (!currentData.hasMore) {
+    // no need to fetch since we have all data
+    return currentData
+  }
 
   const dataToFetch = (() => {
-    const base = {
-      query: getQueryValue(element),
-      url
-    }
-    if (currentData == null || !currentData.hasMore) {
-      return base
-    }
     if (currentData.navigationMode === 'link') {
       return {
-        ...base,
+        query: getQueryValue(element),
         url: currentData.href
       }
     }
     if (currentData.navigationMode === 'cursor') {
       return {
-        ...base,
+        query: getQueryValue(element),
+        url: getUrlToFetch(element)
       }
     }
-    return base
   })()
+
+  if (!dataToFetch) {
+    console.error('error getting next data: unreachable code detected, aborting fetch')
+    return currentData
+  }
 
   const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
   if (respondWithCalls > 0) {
-    const response = await customResponse
-    loader.currentData = response
+    const parsedResponse = await parseRespondWithCall(customResponse)
+    if (!('error' in parsedResponse)) {
+      loader.currentData = {
+        ...parsedResponse,
+        data: (loader.currentData?.data ?? []).concat(parsedResponse.data)
+      }
+    }
+    addToFetchHistory(element, dataToFetch, parsedResponse)
     return loader.currentData
   }
 
-  const src = element.getAttribute('data-src')
-  if (!event.defaultPrevented && src) {
-    const response = await fetch(src)
-    await parseResponse(element, response, dataToFetch)
+  const { url } = dataToFetch
+  if (!event.defaultPrevented && url) {
+    const response = await fetch(url)
+    const parsedResponse = await parseResponse(response)
+    if (!('error' in parsedResponse)) {
+      loader.currentData = {
+        ...parsedResponse,
+        data: (loader.currentData?.data ?? []).concat(parsedResponse.data)
+      }
+    }
+    addToFetchHistory(element, dataToFetch, parsedResponse)
   }
 
   return loader.currentData
@@ -140,31 +165,76 @@ async function fetchNextData (element) {
 
 /**
  *
- * @param element
- * @param response
- * @param dataToFetch
+ * @param {*} paramOfRespondWith - param sent to event.detail.respondWith()
+ * @returns {Promise<ParsedResponse | ParseError>} parse result
  */
-async function parseResponse (element, response, dataToFetch) {
-  const loader = dataLoaderOf(element)
+async function parseRespondWithCall (paramOfRespondWith) {
+  const result = await Promise.resolve(paramOfRespondWith)
+  if (result instanceof Response) {
+    const parsedResponse = await parseResponse(paramOfRespondWith)
+    if ('error' in parsedResponse) {
+      parsedResponse.error = 'parse event .respondWith(Response)'
+    }
+    return parsedResponse
+  }
 
+  if (Array.isArray(result)) {
+    return {
+      data: result,
+      hasMore: false
+    }
+  }
+  if (isPlainObject(result)) {
+    const { hasMore, links, records } = result
+    if (!Array.isArray(records)) {
+      return {
+        error: `records property must be an array, instead it is ${records}`,
+        stage: 'parse event .respondWith(Object)'
+      }
+    }
+    if (typeof links?.next === 'string') {
+      return {
+        data: records,
+        hasMore: true,
+        navigationMode: 'link',
+        href: links.next
+      }
+    }
+    if (hasMore) {
+      return {
+        data: records,
+        hasMore: true,
+        navigationMode: 'cursor'
+      }
+    }
+  }
+  return {
+    error: 'invalid data on RespondsWith, param must be an array, plain object or Response',
+    stage: 'parse event .respondWith(...)'
+  }
+}
+
+/**
+ * @param {Response} response - response from fetch
+ * @returns {Promise<ParsedResponse | ParseError>} parse result
+ */
+async function parseResponse (response) {
   if (isValidResponse(response)) {
     if (isCSVResponse(response)) {
-      loader.currentData = await parseCSVResponse(response)
+      return await parseCSVResponse(response)
     } else if (isJsonResponse(response)) {
-      loader.currentData = await parseJsonResponse(response)
+      return await parseJsonResponse(response)
     } else {
-      addToFetchHistory(element, dataToFetch, {
-        ok: false,
-        status: response.status,
-        error: 'invalid response'
-      })
+      return {
+        error: 'invalid response, expected JSON or CSV response, guarantee that Content-type header is set correctly to "text/csv" or "application/json"',
+        stage: 'parse fetch response'
+
+      }
     }
-  } else {
-    addToFetchHistory(element, dataToFetch, {
-      ok: false,
-      status: response.status,
-      error: `${response.status} HTTP status code`
-    })
+  }
+  return {
+    error: `${response.status} HTTP status code`,
+    stage: 'parse fetch response'
   }
 }
 
@@ -206,7 +276,7 @@ const getUrlToFetch = element => {
   const query = getQueryValue(element)
   const srcURL = new URL(src, window.location.href)
   if (query) {
-    srcURL.searchParams.append('q', query)
+    srcURL.searchParams.set('q', query)
   }
   return srcURL.href
 }
@@ -229,13 +299,13 @@ function isValidResponse (response) {
  */
 
 /**
- * @typedef {object} ParsedResponseBase
+ * @typedef {object} ParsedHasMoreResponse
  * @property {true} hasMore - flag to determine if there is more data after the last element
  * @property {{[prop: string]: string}[]} data - options data
  */
 
 /**
- * @typedef {object} NoMoreResponse
+ * @typedef {object} ParsedNoMoreResponse
  * @property {false} hasMore - flag to determine if there is more data after the last element
  * @property {{[prop: string]: string}[]} data - options data
  */
@@ -252,5 +322,11 @@ function isValidResponse (response) {
  */
 
 /**
- * @typedef {NoMoreResponse | (ParsedResponseBase & (CursorPaginatedParsedResponse | LinkPaginatedParsedResponse))} ParsedResponse
+ * @typedef {ParsedNoMoreResponse | (ParsedHasMoreResponse & (CursorPaginatedParsedResponse | LinkPaginatedParsedResponse))} ParsedResponse
+ */
+
+/**
+ * @typedef {object} ParseError
+ * @property {string} error - error message
+ * @property {string} stage - stage where error happened
  */
