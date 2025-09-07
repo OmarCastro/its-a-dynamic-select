@@ -90,5 +90,5 @@ function parseJsonObjectResponse (json, response) {
  * @returns {boolean} true if is a valid CSV response, false otherwise
  */
 export function isJsonResponse (response) {
-  return response.ok && response.headers.get('Content-Type') === 'text/csv'
+  return response.ok && response.headers.get('Content-Type') === 'application/json'
 }
