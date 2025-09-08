@@ -30,12 +30,23 @@ function createDataLoaderFor (elementRef) {
     if (!element) { throw new Error('element no longer exists') }
     return element
   }
-  return {
+  /** @type {DataLoader} */
+  const api = {
     fetchData: async () => await fetchData(getElement()),
     fetchNextData: async () => await fetchNextData(getElement()),
     fetchHistory: [],
-    currentData: null
+    getLatestSuccessResponse () {
+      for (let i = api.fetchHistory.length - 1; i >= 0; i--) {
+        const record = api.fetchHistory[i]
+        if (record.completed) {
+          const result = record.result
+          if (!('error' in result)) { return result }
+        }
+      }
+    }
+
   }
+  return api
 }
 
 /**
@@ -49,6 +60,7 @@ function dispatchFetchDataEvent (element, dataToFetch) {
   const event = new CustomEvent('datafetch', {
     cancelable: true,
     composed: true,
+    bubbles: true,
     detail: {
       dataToFetch,
       respondWith (data) {
@@ -68,35 +80,12 @@ function dispatchFetchDataEvent (element, dataToFetch) {
  * @param {HTMLElement} element - target element to load data to
  */
 async function fetchData (element) {
-  const loader = dataLoaderOf(element)
-
   const dataToFetch = {
     query: getQueryValue(element),
     url: getUrlToFetch(element)
   }
 
-  const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
-  if (respondWithCalls > 0) {
-    const parsedResponse = await parseRespondWithCall(customResponse)
-    if (!('error' in parsedResponse)) {
-      loader.currentData = parsedResponse
-    }
-    addToFetchHistory(element, dataToFetch, parsedResponse)
-    return loader.currentData
-  }
-
-  const { url } = dataToFetch
-
-  if (!event.defaultPrevented && url) {
-    const response = await fetch(url)
-    const parsedResponse = await parseResponse(response)
-    if (!('error' in parsedResponse)) {
-      loader.currentData = parsedResponse
-    }
-    addToFetchHistory(element, dataToFetch, parsedResponse)
-  }
-
-  return loader.currentData
+  return fetchFromDataToFetch(element, dataToFetch)
 }
 
 /**
@@ -105,7 +94,7 @@ async function fetchData (element) {
  */
 async function fetchNextData (element) {
   const loader = dataLoaderOf(element)
-  const { currentData } = loader
+  const currentData = loader.getLatestSuccessResponse()
   if (currentData == null) {
     return await fetchData(element)
   }
@@ -134,33 +123,53 @@ async function fetchNextData (element) {
     return currentData
   }
 
+  return fetchFromDataToFetch(element, dataToFetch)
+}
+
+/**
+ *
+ * @param {HTMLElement} element
+ * @param {DataToFetch} dataToFetch
+ */
+async function fetchFromDataToFetch (element, dataToFetch) {
+  const fetchRecord = addToFetchHistory(element, {
+    dataToFetch,
+    result: { status: 'dispatching event' },
+    completed: false
+  })
+
   const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
   if (respondWithCalls > 0) {
-    const parsedResponse = await parseRespondWithCall(customResponse)
-    if (!('error' in parsedResponse)) {
-      loader.currentData = {
-        ...parsedResponse,
-        data: (loader.currentData?.data ?? []).concat(parsedResponse.data)
-      }
+    fetchRecord.result = await parseRespondWithCall(customResponse)
+    fetchRecord.completed = true
+
+    if ('error' in fetchRecord.result) {
+      throw Error(fetchRecord.result.error)
     }
-    addToFetchHistory(element, dataToFetch, parsedResponse)
-    return loader.currentData
+
+    return fetchRecord.result
   }
 
   const { url } = dataToFetch
   if (!event.defaultPrevented && url) {
+    fetchRecord.result = { status: 'fetching data' }
     const response = await fetch(url)
-    const parsedResponse = await parseResponse(response)
-    if (!('error' in parsedResponse)) {
-      loader.currentData = {
-        ...parsedResponse,
-        data: (loader.currentData?.data ?? []).concat(parsedResponse.data)
-      }
+    fetchRecord.result = await parseResponse(response)
+    fetchRecord.completed = true
+
+    if ('error' in fetchRecord.result) {
+      throw Error(fetchRecord.result.error)
     }
-    addToFetchHistory(element, dataToFetch, parsedResponse)
+    return fetchRecord.result
   }
 
-  return loader.currentData
+  fetchRecord.completed = true
+  fetchRecord.result = {
+    error: 'no data loaded',
+    stage: 'loading data'
+  }
+
+  throw Error('no data to load')
 }
 
 /**
@@ -241,15 +250,15 @@ async function parseResponse (response) {
 /**
  *
  * @param {HTMLElement} element
- * @param dataToFetch
- * @param result
+ * @param {FetchRecord} record
  */
-function addToFetchHistory (element, dataToFetch, result) {
+function addToFetchHistory (element, record) {
   const { fetchHistory } = dataLoaderOf(element)
-  fetchHistory.push({ dataToFetch, result })
+  fetchHistory.push(record)
   if (fetchHistory.length > 128) {
     fetchHistory.shift()
   }
+  return record
 }
 
 /**
@@ -292,10 +301,10 @@ function isValidResponse (response) {
 
 /**
  * @typedef {object} DataLoader
- * @property {() => Promise<ParsedResponse|null>} fetchData - fetches data and saves to current data
- * @property {() => Promise<ParsedResponse|null>} fetchNextData - used for paginated options, fetches next page
- * @property {*[]} fetchHistory - get fetch history, history is no longer than 128 requests
- * @property {ParsedResponse|null} currentData - current data for select box
+ * @property {() => Promise<ParsedResponse>} fetchData - fetches data and saves to current data
+ * @property {() => Promise<ParsedResponse>} fetchNextData - used for paginated options, fetches next page
+ * @property {FetchRecord[]} fetchHistory - get fetch history, history is no longer than 128 requests
+ * @property {()=>ParsedResponse|undefined} getLatestSuccessResponse - current data for select box
  */
 
 /**
@@ -329,4 +338,31 @@ function isValidResponse (response) {
  * @typedef {object} ParseError
  * @property {string} error - error message
  * @property {string} stage - stage where error happened
+ */
+
+/**
+ * @typedef {object} FetchingData
+ * @property {string} status - error message
+ */
+
+/**
+ * @typedef {object} FetchRecordLoading
+ * @property {DataToFetch} dataToFetch - error message
+ * @property {false} completed - completed flag
+ * @property {FetchingData} result - stage where error happened
+ */
+
+/**
+ * @typedef {object} FetchRecordCompleted
+ * @property {DataToFetch} dataToFetch - error message
+ * @property {true} completed - completed flag
+ * @property {ParseError | ParsedResponse} result - stage where error happened
+ */
+
+/**
+ * @typedef {FetchRecordLoading | FetchRecordCompleted} FetchRecord
+ */
+
+/**
+ * @typedef {*} DataToFetch
  */
