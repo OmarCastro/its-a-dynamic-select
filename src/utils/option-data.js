@@ -8,6 +8,7 @@ import { isPlainObject } from './object.js'
  * @property {boolean} selected - option selected flag
  * @property {string} text - option text
  * @property {string} value - option value
+ * @property {"fetch"|"option"} origin - gets where the data is from
  * @property { {
  *  [x:string]: any,
  *  text: string,
@@ -35,6 +36,7 @@ export function dataObjectOfOption (option) {
       return {
         ...baseData,
         selected: option.selected,
+        origin: 'option',
         data: {
           ...jsonData,
           ...baseData,
@@ -47,6 +49,7 @@ export function dataObjectOfOption (option) {
   return {
     ...baseData,
     selected: option.selected,
+    origin: 'option',
     data: baseData,
   }
 }
