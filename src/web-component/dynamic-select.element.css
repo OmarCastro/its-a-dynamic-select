@@ -61,6 +61,11 @@ li.selected.option-value:not(.option *)  {
     background-color: bisque;
 }
 
+:host > .container {
+    display: inline-block;
+    position: relative;
+}
+
 :host > .container > .dropdown {
     border: none;
     &.top-direction {
@@ -71,4 +76,8 @@ li.selected.option-value:not(.option *)  {
 
 :host > .container > .input {
     display: inline-block;
+}
+
+:host > .container > .dynamic-options {
+    display: none;
 }

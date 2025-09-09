@@ -5,6 +5,7 @@ import { isPlainObject } from '../utils/object'
 import { dataObjectOfOption } from '../utils/option-data'
 import { templatesOf } from '../features/templates/templates'
 import { configurationOf } from '../features/configuration/configuration'
+import { dynamicOptionsOf } from '../features/dynamic-loaded-options/dynamic-option'
 import { computeOnce } from '../utils/memoization'
 /** @import { OptionData } from '../utils/option-data' */
 /** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
@@ -92,6 +93,7 @@ export class DynamicSelect extends HTMLElement {
     Iterator.from(this.options).forEach(option => {
       option.selected = valueAsArray.includes(option.value)
     })
+    dynamicOptionsOf(this).values = valueAsArray
   }
 
   get valueAsObjects () {
@@ -153,15 +155,16 @@ export class DynamicSelect extends HTMLElement {
   }
 
   get options () {
-    return this.querySelectorAll('option')
+    return [...this.querySelectorAll('option'), ...dynamicOptionsOf(this).options]
   }
 
   get selectedOptions () {
-    const result = Iterator.from(this.querySelectorAll('option')).filter(option => option.selected).toArray()
+    const { options } = this
+    const result = Iterator.from(options).filter(option => option.selected).toArray()
     if (result.length || this.multiple) {
       return result
     }
-    const firstOption = this.querySelector('option')
+    const firstOption = options[0]
     if (!firstOption) {
       return []
     }
@@ -184,13 +187,21 @@ export class DynamicSelect extends HTMLElement {
         if (this.open) {
           dropdownEl(this).showPopover()
           updateDropdownPosition(this)
+          updateDropdownContent(this)
+          dynamicOptionsOf(this).loadData().then(() => {
+            updateDropdownContent(this)
+          })
         } else {
           dropdownEl(this).hidePopover()
+          document.defaultView?.removeEventListener('scroll', scrollObserverOf(this), true)
         }
         break
       case 'data-filter':
         searchInputEl(this).value = newValue
         updateDropdownContent(this)
+        dynamicOptionsOf(this).loadData().then(() => {
+          updateDropdownContent(this)
+        })
     }
   }
 }
@@ -251,6 +262,17 @@ function getDropdownListData (dynamicSelect) {
     const groupName = option.closest('optgroup')?.label
     const data = dataObjectOfOption(option)
 
+    if (!groupName) {
+      ungroupedOptions.push(data)
+    } else {
+      optionGroups[groupName] ??= []
+      optionGroups[groupName].push(data)
+    }
+  }
+
+  const { optionsData } = dynamicOptionsOf(dynamicSelect)
+  for (const data of optionsData) {
+    const groupName = data.data.group?.toString()
     if (!groupName) {
       ungroupedOptions.push(data)
     } else {
@@ -386,6 +408,7 @@ function handleSelectValueButtonClick (event) {
     const selectOption = dynamicSelect.selectedOptions.find(option => option.value === value)
     if (selectOption == null) { return }
     selectOption.selected = false
+    dynamicOptionsOf(dynamicSelect).toggleValue(selectOption.value, false)
     updateButtonContent(dynamicSelect)
   } else {
     const dynamicSelect = getHostDynamicSelect(event.target)

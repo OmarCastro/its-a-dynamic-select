@@ -182,7 +182,7 @@ async function parseRespondWithCall (paramOfRespondWith) {
   if (result instanceof Response) {
     const parsedResponse = await parseResponse(paramOfRespondWith)
     if ('error' in parsedResponse) {
-      parsedResponse.error = 'parse event .respondWith(Response)'
+      parsedResponse.error = `parse event .respondWith(Response): ${parsedResponse.error}`
     }
     return parsedResponse
   }

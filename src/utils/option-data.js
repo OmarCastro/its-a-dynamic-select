@@ -53,3 +53,18 @@ export function dataObjectOfOption (option) {
     data: baseData,
   }
 }
+
+/**
+ * creates an option element based on option data
+ *
+ * @param {OptionData} optionData - option data
+ * @returns {HTMLOptionElement} option element
+ */
+export function optionElementOfData (optionData) {
+  const option = document.createElement('option')
+  option.textContent = optionData.text
+  option.value = optionData.value
+  option.selected = optionData.selected
+  option.setAttribute('data-of-option', JSON.stringify(optionData.data))
+  return option
+}
