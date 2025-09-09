@@ -82,3 +82,26 @@ function reactElementNameChange (event) {
 }
 
 document.body.addEventListener('input', (event) => { reactElementNameChange(event) })
+
+document.body.addEventListener('datafetch', (event) => {
+  if (event.target?.matches('[data-src="example-src-1"]')) {
+    event.detail.respondWith([{
+      value: '1',
+      text: 'option 1'
+    }, {
+      value: '2',
+      text: 'option 2'
+    }])
+    return
+  }
+
+  if (event.target?.matches('[data-src="example-src-2"]')) {
+    const response = new Response(`value,text
+1,option 1
+2,option 2
+3,option 3
+`)
+    response.headers.set('content-type', 'text/csv')
+    event.detail.respondWith(response)
+  }
+})
