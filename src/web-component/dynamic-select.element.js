@@ -191,6 +191,7 @@ export class DynamicSelect extends HTMLElement {
           dynamicOptionsOf(this).loadData().then(() => {
             updateDropdownContent(this)
           })
+          document.defaultView?.addEventListener('scroll', scrollObserverOf(this), true)
         } else {
           dropdownEl(this).hidePopover()
           document.defaultView?.removeEventListener('scroll', scrollObserverOf(this), true)
@@ -204,6 +205,31 @@ export class DynamicSelect extends HTMLElement {
         })
     }
   }
+}
+
+/** @type {WeakMap<DynamicSelect, () => void>} */
+const scrollObserverMap = new WeakMap()
+/**
+ *
+ * @param {DynamicSelect} dynamicSelect
+ * @returns
+ */
+function scrollObserverOf (dynamicSelect) {
+  const result = scrollObserverMap.get(dynamicSelect)
+  if (!result) {
+    const ref = new WeakRef(dynamicSelect)
+    const newObserver = () => {
+      const element = ref.deref()
+      if (!element || !element.open) {
+        document.defaultView?.removeEventListener('scroll', newObserver, true)
+        return
+      }
+      updateDropdownPosition(element)
+    }
+    scrollObserverMap.set(dynamicSelect, newObserver)
+    return newObserver
+  }
+  return result
 }
 
 /**
