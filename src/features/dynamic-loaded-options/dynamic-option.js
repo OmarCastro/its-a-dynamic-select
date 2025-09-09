@@ -1,12 +1,14 @@
 import { dataLoaderOf } from '../data-loading/fetch-data'
 import { optionElementOfData, dataObjectOfOption } from '../../utils/option-data.js'
+import { getDynamicOptions } from '../../utils/dynamic-select-dom.js'
+/** @import {DynamicSelect} from '../../utils/dynamic-select-dom.js' */
 /** @import {OptionData} from '../../utils/option-data.js' */
 
-/** @type {WeakMap<HTMLElement, DynamicOptionsData>} */
+/** @type {WeakMap<DynamicSelect, DynamicOptionsData>} */
 const dataLoaderData = new WeakMap()
 
 /**
- * @param {HTMLElement} element - target element
+ * @param {DynamicSelect} element - target element
  * @returns {DynamicOptionsData} dataloader of element
  */
 export function dynamicOptionsOf (element) {
@@ -20,7 +22,7 @@ export function dynamicOptionsOf (element) {
 
 /**
  * Creates a dataloader for an element
- * @param {WeakRef<HTMLElement>} elementRef - weak reference of element. We do not want to have any strong reference chain pointing to
+ * @param {WeakRef<DynamicSelect>} elementRef - weak reference of element. We do not want to have any strong reference chain pointing to
  * globally allocated `dataLoaderData`, effectively creating a memory leak
  * @returns {DynamicOptionsData} - created dataloader for element
  */
@@ -149,24 +151,6 @@ export function optionFromData (optionData, selectedValues) {
   const option = optionElementOfData(optionData)
   option.selected = selectedValues.has(optionData.value)
   return option
-}
-
-/**
- * @param {HTMLElement} element
- */
-const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
-
-/**
- * @template {string} T
- * @param {T} selector - css selector
- * @returns {(element: HTMLElement) => import('typed-query-selector/parser.js').ParseSelector<T, Element>} type guarded query function
- */
-function shadowQuery (selector) {
-  return (element) => {
-    const result = element.shadowRoot?.querySelector(selector)
-    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
-    return result
-  }
 }
 
 /**

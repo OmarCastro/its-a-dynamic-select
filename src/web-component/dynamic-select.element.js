@@ -7,8 +7,9 @@ import { templatesOf } from '../features/templates/templates'
 import { configurationOf } from '../features/configuration/configuration'
 import { dynamicOptionsOf } from '../features/dynamic-loaded-options/dynamic-option'
 import { computeOnce } from '../utils/memoization'
+import * as dom from '../utils/dynamic-select-dom'
+import { dropdownPositionUpdaterOf } from '../features/dropdown-reflects-select-position-and-visibility/dropdown-position-updater'
 /** @import { OptionData } from '../utils/option-data' */
-/** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
 
 const loadTemplate = computeOnce(() => {
   const templateElement = document.createElement('template')
@@ -22,13 +23,8 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const searchInputEl = shadowQuery('input.search-input')
-const inputEl = shadowQuery('span.input')
-const dropdownEl = shadowQuery('dialog.dropdown')
-const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
-
-const isSearchInputEl = elementMatcher('input.search-input')
-const isDeselectButton = elementMatcher('.multiselect-option[data-value] > button.deselect-option')
+const { searchInputEl, inputEl, dropdownEl, valueListEl } = dom
+const { isSearchInputEl, isDeselectButton, getHostDynamicSelect } = dom
 
 const optionsObserver = new MutationObserver(mutation => {
 
@@ -140,6 +136,8 @@ export class DynamicSelect extends HTMLElement {
     }
   }
 
+  get [dom.isDynamicSelectSymbol] () { return true }
+
   get multiple () {
     return this.hasAttribute('multiple')
   }
@@ -186,15 +184,14 @@ export class DynamicSelect extends HTMLElement {
       case 'open':
         if (this.open) {
           dropdownEl(this).showPopover()
-          updateDropdownPosition(this)
+          dropdownPositionUpdaterOf(this).startAnchoringToSelect()
           updateDropdownContent(this)
           dynamicOptionsOf(this).loadData().then(() => {
             updateDropdownContent(this)
           })
-          document.defaultView?.addEventListener('scroll', scrollObserverOf(this), true)
         } else {
           dropdownEl(this).hidePopover()
-          document.defaultView?.removeEventListener('scroll', scrollObserverOf(this), true)
+          dropdownPositionUpdaterOf(this).stopAnchoringToSelect()
         }
         break
       case 'data-filter':
@@ -205,31 +202,6 @@ export class DynamicSelect extends HTMLElement {
         })
     }
   }
-}
-
-/** @type {WeakMap<DynamicSelect, () => void>} */
-const scrollObserverMap = new WeakMap()
-/**
- *
- * @param {DynamicSelect} dynamicSelect
- * @returns
- */
-function scrollObserverOf (dynamicSelect) {
-  const result = scrollObserverMap.get(dynamicSelect)
-  if (!result) {
-    const ref = new WeakRef(dynamicSelect)
-    const newObserver = () => {
-      const element = ref.deref()
-      if (!element || !element.open) {
-        document.defaultView?.removeEventListener('scroll', newObserver, true)
-        return
-      }
-      updateDropdownPosition(element)
-    }
-    scrollObserverMap.set(dynamicSelect, newObserver)
-    return newObserver
-  }
-  return result
 }
 
 /**
@@ -363,32 +335,6 @@ function updateDropdownContent (dynamicSelect) {
 }
 
 /**
- * Updated dropdown content based on the content in dynamic select in light DOM
- * @param {DynamicSelect} dynamicSelect - web component element reference
- */
-function updateDropdownPosition (dynamicSelect) {
-  const dropdown = dropdownEl(dynamicSelect)
-  const input = inputEl(dynamicSelect)
-  const clientRect = input.getBoundingClientRect()
-  const isTopDirection = clientRect.bottom + dropdown.clientHeight > getViewportHeight()
-  dropdown.classList.toggle('top-direction', isTopDirection)
-  if (isTopDirection) {
-    dropdown.style.marginTop = `${clientRect.top}px`
-    dropdown.style.marginLeft = `${clientRect.left}px`
-  } else {
-    dropdown.style.marginTop = `${clientRect.bottom}px`
-    dropdown.style.marginLeft = `${clientRect.left}px`
-  }
-}
-
-/**
- * gets viewport height
- */
-function getViewportHeight () {
-  return window.visualViewport?.height ?? window.innerHeight
-}
-
-/**
  * Updates button content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
@@ -470,47 +416,5 @@ function handleDropdownOptionClick (event) {
     updateButtonContent(dynamicSelect)
     updateDropdownContent(dynamicSelect)
     dynamicSelect.open = false
-  }
-}
-
-/**
- * Gets hots DynamicSelect element from a shadow DOM element
- *
- * @param {EventTarget | null} target - target element in shadow DOM
- * @returns {DynamicSelect} host element
- */
-function getHostDynamicSelect (target) {
-  if (!(target instanceof Element)) throw Error('target is not an element')
-  const rootNode = target.getRootNode()
-  if (!(rootNode instanceof ShadowRoot)) throw Error('target is not inside a shadow dom')
-  const host = rootNode.host
-  if (!(host instanceof DynamicSelect)) throw Error('target is not inside a Dynamic Select shadow dom')
-  return host
-}
-
-/**
- * @template {string} T
- * @param {T} selector - css selector
- * @returns {(dynamicSelect: DynamicSelect) => ParseSelector<T, Element>} type guarded query function
- */
-function shadowQuery (selector) {
-  return (dynamicSelect) => {
-    const result = dynamicSelect.shadowRoot?.querySelector(selector)
-    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
-    return result
-  }
-}
-
-/**
- * @template {string} T
- * @param {T} selector - selector to match
- */
-function elementMatcher (selector) {
-/**
- * @param {EventTarget | null} element - target element
- * @returns {element is ParseSelector<T, Element>} type guarded element matcher
- */
-  return function (element) {
-    return element instanceof Element && element.matches(selector)
   }
 }
