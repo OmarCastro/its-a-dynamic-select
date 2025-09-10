@@ -43,7 +43,7 @@ export function templatesOf (element) {
       return loadSelectDefaultTemplates().singleSelectInput
     },
     get multiSelectInput () {
-      return loadSelectDefaultTemplates().singleSelectInput
+      return loadSelectDefaultTemplates().multiSelectInput
     }
   }
 }
