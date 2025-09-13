@@ -3,8 +3,9 @@ import defaultTemplatesHtml from './default-select-templates.inline.html'
 
 /**
  * @typedef {object} Templates
- * @property {HTMLTemplateElement} option - options in the dropdown
- * @property {HTMLTemplateElement} selectedOption - options in the button
+ * @property {HTMLTemplateElement} option - option template in the dropdown and button
+ * @property {HTMLTemplateElement} singleSelectInput - single select button template
+ * @property {HTMLTemplateElement} multiSelectInput - multi select button template
  */
 
 const loadSelectDefaultTemplates = computeOnce(() => {
@@ -28,9 +29,8 @@ const loadSelectDefaultTemplates = computeOnce(() => {
 })
 
 /**
- *
- * @param {HTMLElement} element
- * @returns
+ * @param {HTMLElement} element - target element
+ * @returns {Templates} templates object of `element`
  */
 export function templatesOf (element) {
   return {
