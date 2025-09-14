@@ -2,12 +2,19 @@ import { computeOnce } from '../../utils/memoization'
 import defaultTemplatesHtml from './default-select-templates.inline.html'
 
 /**
- * @typedef {object} Templates
+ * @typedef {object} MutableTemplates
  * @property {HTMLTemplateElement} option - option template in the dropdown and button
  * @property {HTMLTemplateElement} singleSelectInput - single select button template
  * @property {HTMLTemplateElement} multiSelectInput - multi select button template
  */
 
+/**
+ * @typedef {Readonly<MutableTemplates>} Templates
+ */
+
+/**
+ * @returns {Templates} default templates to use as fallback
+ */
 const loadSelectDefaultTemplates = computeOnce(() => {
   const templatesRootElement = document.createElement('template')
   templatesRootElement.innerHTML = defaultTemplatesHtml
