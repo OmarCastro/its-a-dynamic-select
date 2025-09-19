@@ -4,27 +4,23 @@
 }
 
 .collapse-arrow:not(.option *){
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 8 8" fill="none" stroke="black" stroke-width="1.5"><path d="M0.5 3.5L4 6.5L7.5 3.5"></path></svg>');
-  background-size: 0.75em 0.75em;
-  background-repeat: no-repeat;
-  background-position: center;
-  height: 1lh;
-  width: 1em;
+    --arrow-size: 0.2em;
+    margin-left: 0.5em;
+    margin-right: 0.5ch;
+  padding: var(--arrow-size);
   display: inline-block;
-
-  /* trick to align empty inline block with text, add whitespace character so it has a baseline which will automatically align with text */
-  &::before {
-    content: "\2060";
-  }
+  border: solid currentColor;
+  opacity: 70%;
+  border-width: 0 var(--arrow-size) var(--arrow-size) 0;
+  display: inline-block;
+  transform: rotate(45deg);
+  transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
 }
 
 
 
-
-
 :host([open]) .collapse-arrow:not(.option *){
-
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 8 8" fill="none" stroke="black" stroke-width="1.5"><path d="M0.5 6.5L4 3.5L7.5 6.5"></path></svg>');
+  transform: rotate(225deg)
 }
 
 .multiselect-option:not(.option *)  {
