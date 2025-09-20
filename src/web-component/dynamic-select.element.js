@@ -24,7 +24,7 @@ const loadStyles = computeOnce(() => {
 })
 
 const { searchInputEl, inputEl, dropdownEl, valueListEl } = dom
-const { isSearchInputEl, isDeselectButton, getHostDynamicSelect } = dom
+const { isSearchInputEl, isDeselectButton, isClearButton, getHostDynamicSelect } = dom
 
 const optionsObserver = new MutationObserver(mutation => {
 
@@ -381,6 +381,10 @@ function handleSelectValueButtonClick (event) {
     if (selectOption == null) { return }
     selectOption.selected = false
     dynamicOptionsOf(dynamicSelect).toggleValue(selectOption.value, false)
+    updateButtonContent(dynamicSelect)
+  } else if (isClearButton(target)) {
+    const dynamicSelect = getHostDynamicSelect(target)
+    dynamicSelect.valueAsArray = []
     updateButtonContent(dynamicSelect)
   } else {
     const dynamicSelect = getHostDynamicSelect(event.target)

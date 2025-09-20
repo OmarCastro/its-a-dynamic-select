@@ -1,50 +1,49 @@
-
-.multi-input:not(.option *) {
-    padding: 0.5em;
+:host {
+    display: inline-block
 }
 
-.collapse-arrow:not(.option *){
+.multi-input:not(.option *) {
+    line-height: 2em;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.collapse-arrow:not(.option *) {
+    
     --arrow-size: 0.2em;
     margin-left: 0.5em;
     margin-right: 0.5ch;
-  padding: var(--arrow-size);
-  display: inline-block;
-  border: solid currentColor;
-  opacity: 70%;
-  border-width: 0 var(--arrow-size) var(--arrow-size) 0;
-  display: inline-block;
-  transform: rotate(45deg);
-  transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
-}
+    height: 0;
+    padding: var(--arrow-size);
+    display: inline-block;
+    border: solid currentColor;
+    opacity: 70%;
+    border-width: 0 var(--arrow-size) var(--arrow-size) 0;
+    display: inline-block;
+    transform: translateY(calc(var(--arrow-size) * -1)) rotate(45deg);
+    transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
+    
 
-
-
-:host([open]) .collapse-arrow:not(.option *){
-  transform: rotate(225deg)
-}
-
-.multiselect-option:not(.option *)  {
-    border: 2px solid rgba(0, 0, 0, 0.5);
-    border-radius: 0.5em;
-    margin-right: 0.5em;
-    margin-top: 0.5em;
-    padding: 0.2em 0.5em;
-    white-space: nowrap;
-    & > .deselect-option {
-        appearance: none;
-        border: none;
-        background: none;
-        padding-left: 0.5em;
-        opacity: 0.5;
-        cursor:pointer;
-        &::after {
-            content: "x";
-        }
-        &:hover {
-            opacity: 1;
-        }
+    :host([open]) &{
+        transform: translateY(calc(var(--arrow-size) * -1)) rotate(225deg)
     }
 }
+
+
+
+.multiselect-option:not(.option *)  {
+    line-height: 1em;
+    border: 2px solid rgba(0, 0, 0, 0.5);
+    border-radius: 0.5em;
+    margin: 0.2em 0.25em;
+    padding: 0.2em 0.5em;
+    white-space: nowrap;
+    display: inline-flex;
+    gap: .5ch;
+    align-items: center;
+}
+
 
 
 ul:not(.option *)  {
@@ -88,3 +87,38 @@ li.selected.option-value:not(.option *)  {
 :host > .container > .dynamic-options {
     display: none;
 }
+
+
+.multiselect-option:not(.option *) > .deselect-option,
+.clear-button:not(.option *) {
+    --b: .15em; /* thickness */
+    --s: .2em; /* space around */            
+    --c: currentColor;
+    content: " ";
+    display: inline-block;
+    
+    height: 1em;
+    aspect-ratio: 1;
+
+    box-sizing: border-box;
+    --g:conic-gradient(var(--c) 0 0) no-repeat 50%/;
+    background: 
+        var(--g) var(--b) calc(100% - 2*var(--s)),
+        var(--g) calc(100% - 2*var(--s)) var(--b);
+    rotate: 45deg;
+    opacity: 0.5;
+
+    appearance: none;
+    border: none;
+
+
+    &:hover {
+        cursor:pointer;
+        opacity: 1;
+    }
+}
+
+.multi-input:not(.option *):not(:has(.multiselect-option:nth-child(2))) .clear-button {
+    display: none
+}
+
