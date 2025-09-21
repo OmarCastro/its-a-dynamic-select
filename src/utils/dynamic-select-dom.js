@@ -9,6 +9,7 @@ export const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
 
 export const isSearchInputEl = elementMatcher('input.search-input')
 export const isDeselectButton = elementMatcher('.multiselect-option[data-value] > button.deselect-option')
+export const isClearButton = elementMatcher('a.clear-button:not(.option *)')
 export const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
 
 export const isDynamicSelectSymbol = Symbol('its-a-dynamic-select')
@@ -56,9 +57,8 @@ function elementMatcher (selector) {
 }
 
 /**
- *
- * @param {Element} element
- * @returns {element is DynamicSelect}
+ * @param {Element} element target element
+ * @returns {element is DynamicSelect} true if element is the dynamic-select component, false otherwise
  */
 export function isDynamicSelect (element) {
   return element[isDynamicSelectSymbol] === true
