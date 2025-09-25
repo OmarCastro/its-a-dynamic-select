@@ -38,12 +38,12 @@ function createDropdownPositionUpdaterFor (elementRef) {
   const getElement = () => {
     const element = elementRef.deref()
     if (!element) {
-      removeScrollListener()
+      removeListenersForPotentialPositionChange()
       throw new Error('element no longer exists')
     }
     return element
   }
-  const scrollChangeCallback = () => {
+  const potentialPositionChangeCallback = () => {
     const element = getElement()
     if (!element.open) {
       api.stopAnchoringToSelect()
@@ -52,23 +52,33 @@ function createDropdownPositionUpdaterFor (elementRef) {
     updateDropdownPosition(element)
   }
 
-  const addScrollListener = () => document.defaultView?.addEventListener('scroll', scrollChangeCallback, true)
-  const removeScrollListener = () => document.defaultView?.removeEventListener('scroll', scrollChangeCallback, true)
+  const addScrollListener = () => document.defaultView?.addEventListener('scroll', potentialPositionChangeCallback, true)
+  const removeScrollListener = () => document.defaultView?.removeEventListener('scroll', potentialPositionChangeCallback, true)
+  const addResizeListener = () => document.defaultView?.addEventListener('resize', potentialPositionChangeCallback)
+  const removeResizeListener = () => document.defaultView?.removeEventListener('resize', potentialPositionChangeCallback)
+  const addListenersForPotentialPositionChange = () => {
+    addScrollListener()
+    addResizeListener()
+  }
+
+  const removeListenersForPotentialPositionChange = () => {
+    removeScrollListener()
+    removeResizeListener()
+  }
 
   /** @type {DropdownPositionUpdater} */
   const api = {
     startAnchoringToSelect: () => {
       const element = getElement()
       updateDropdownPosition(element)
-      addScrollListener()
+      addListenersForPotentialPositionChange()
       intersectionObserver.observe(element)
     },
     stopAnchoringToSelect () {
       const element = getElement()
       intersectionObserver.unobserve(element)
-      removeScrollListener()
+      removeListenersForPotentialPositionChange()
     }
-
   }
   return api
 }
@@ -81,22 +91,27 @@ export function updateDropdownPosition (dynamicSelect) {
   const dropdown = dropdownEl(dynamicSelect)
   const input = inputEl(dynamicSelect)
   const clientRect = input.getBoundingClientRect()
-  const isTopDirection = clientRect.bottom + dropdown.clientHeight > getViewportHeight()
+  const viewportRect = getViewportRect()
+  const isTopDirection = clientRect.bottom + dropdown.clientHeight > viewportRect.height
+  const isLeftDirection = clientRect.left + dropdown.clientWidth > viewportRect.width
+  const xPosition = isTopDirection ? clientRect.top : clientRect.bottom
+  const yPosition = isLeftDirection ? Math.min(viewportRect.width, clientRect.right) : Math.max(0, clientRect.left)
   dropdown.classList.toggle('top-direction', isTopDirection)
-  if (isTopDirection) {
-    dropdown.style.marginTop = `${clientRect.top}px`
-    dropdown.style.marginLeft = `${clientRect.left}px`
-  } else {
-    dropdown.style.marginTop = `${clientRect.bottom}px`
-    dropdown.style.marginLeft = `${clientRect.left}px`
-  }
+  dropdown.classList.toggle('left-direction', isLeftDirection)
+  dropdown.style.marginTop = `${xPosition}px`
+  dropdown.style.marginLeft = `${yPosition}px`
 }
 
 /**
- * gets viewport height
+ * @returns {DOMRectReadOnly} viewport rect
  */
-function getViewportHeight () {
-  return window.visualViewport?.height ?? window.innerHeight
+function getViewportRect () {
+  const { visualViewport } = window
+  if (!visualViewport) {
+    return new DOMRectReadOnly(0, 0, window.innerWidth, window.innerHeight)
+  }
+  const { offsetLeft, offsetTop, width, height } = visualViewport
+  return new DOMRectReadOnly(offsetLeft, offsetTop, width, height)
 }
 
 /**

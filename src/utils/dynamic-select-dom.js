@@ -6,11 +6,11 @@ export const searchInputEl = shadowQuery('input.search-input')
 export const inputEl = shadowQuery('span.input')
 export const dropdownEl = shadowQuery('dialog.dropdown')
 export const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
+export const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
 
 export const isSearchInputEl = elementMatcher('input.search-input')
 export const isDeselectButton = elementMatcher('.multiselect-option[data-value] > button.deselect-option')
 export const isClearButton = elementMatcher('a.clear-button:not(.option *)')
-export const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
 
 export const isDynamicSelectSymbol = Symbol('its-a-dynamic-select')
 

@@ -74,9 +74,15 @@ li.selected.option-value:not(.option *)  {
 
 :host > .container > .dropdown {
     border: none;
+    box-sizing: border-box;
     &.top-direction {
         transform: translateY(-100%);
-        box-sizing: border-box;
+    }
+    &.left-direction {
+        transform: translateX(-100%);
+    }
+    &.top-direction.left-direction {
+        transform: translate(-100%, -100%);
     }
 }
 
