@@ -1,10 +1,17 @@
 /**
+ * @typedef {object} Configuration
  *
+ * Configurations of Dynamic Select boxes
+ *
+ * @property {number} minQueryLength - minimum number of characters in the filter
+ *  text input on dropdown to filter data in the option list, defaults to 3
+ * @property {number} debounceQueryDuration - number of milliseconds for the
+ *   text input to wait for updates before filtering the data
+ */
+
+/**
  * @param {HTMLElement} element
- * @returns {Readonly<{
- * minQueryLength: number;
- * debounceQueryDuration: number;
- * }>} configurations object
+ * @returns {Readonly<Configuration>} configurations object
  */
 export function configurationOf (element) {
   return Object.freeze({
