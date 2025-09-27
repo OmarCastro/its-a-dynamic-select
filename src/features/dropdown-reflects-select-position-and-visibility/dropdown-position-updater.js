@@ -1,4 +1,5 @@
 import { dropdownEl, inputEl, isDynamicSelect } from '../../utils/dynamic-select-dom'
+import { centerDropdownPosition, shouldCenterDropdown } from '../centers-dropdown-to-screen-on-mobile/dropdown-mobile-position'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom' */
 
 /** @type {WeakMap<DynamicSelect, DropdownPositionUpdater>} */
@@ -84,10 +85,14 @@ function createDropdownPositionUpdaterFor (elementRef) {
 }
 
 /**
- * Updated dropdown content based on the content in dynamic select in light DOM
+ * Update dropdown content based on the content in dynamic select in light DOM
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 export function updateDropdownPosition (dynamicSelect) {
+  if (shouldCenterDropdown()) {
+    centerDropdownPosition(dynamicSelect)
+    return
+  }
   const dropdown = dropdownEl(dynamicSelect)
   const input = inputEl(dynamicSelect)
   const clientRect = input.getBoundingClientRect()
