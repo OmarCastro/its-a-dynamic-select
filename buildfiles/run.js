@@ -667,8 +667,8 @@ async function minifyHtml (htmlText) {
 
   const fullpageRegexCheck = /^<(!doctype\s+)?html/i
   if (fullpageRegexCheck.test(htmlText)) {
-  return parsed.documentElement.outerHTML
-}
+    return parsed.documentElement.outerHTML
+  }
   return parsed.head.innerHTML + parsed.body.innerHTML
 }
 
@@ -684,7 +684,7 @@ async function minifyDOM (domElement) {
 
   const defaultMinificationState = { whitespaceMinify: '1-space' }
   const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
-  walkElementMinification(domElement, initialMinificationState)
+  await walkElementMinification(domElement, initialMinificationState)
   return domElement
 
   /**
@@ -712,7 +712,11 @@ async function minifyDOM (domElement) {
    * @param {Element} currentElement - current element to minify
    * @param {MinificationState} minificationState - current minificationState
    */
-  function walkElementMinification (currentElement, minificationState) {
+  async function walkElementMinification (currentElement, minificationState) {
+    if (currentElement.tagName.toLowerCase() === 'template') {
+      currentElement.innerHTML = await minifyHtml(currentElement.innerHTML)
+      return
+    }
     const { whitespaceMinify } = minificationState
     const childNodes = currentElement?.childNodes?.values()
     if (!childNodes) { return }
@@ -726,7 +730,7 @@ async function minifyDOM (domElement) {
         minifyTextNode(node, whitespaceMinify)
       } else if (node.nodeType === ELEMENT_NODE) {
         const updatedState = updateMinificationStateForElement(node, minificationState)
-        walkElementMinification(node, updatedState)
+        await walkElementMinification(node, updatedState)
       }
     }
   }
