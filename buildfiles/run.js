@@ -439,7 +439,7 @@ async function prepareRelease () {
   const currentVersion = packageJson.version
 
   const { gt } = await import('semver')
-  if (!gt(currentVersion, publishedVersion)) {
+  if (publishedVersion !== 'unreleased' && !gt(currentVersion, publishedVersion)) {
     throw Error(`current version (${currentVersion}) must be higher than latest published version (${publishedVersion})`)
   }
   logEndStage()
