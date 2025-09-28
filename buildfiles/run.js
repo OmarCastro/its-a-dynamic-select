@@ -684,7 +684,7 @@ async function minifyDOM (domElement) {
 
   const defaultMinificationState = { whitespaceMinify: '1-space' }
   const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
-  await walkElementMinification(domElement, initialMinificationState)
+  walkElementMinification(domElement, initialMinificationState)
   return domElement
 
   /**
@@ -712,9 +712,18 @@ async function minifyDOM (domElement) {
    * @param {Element} currentElement - current element to minify
    * @param {MinificationState} minificationState - current minificationState
    */
-  async function walkElementMinification (currentElement, minificationState) {
+  function walkElementMinification (currentElement, minificationState) {
     if (currentElement.tagName.toLowerCase() === 'template') {
-      currentElement.innerHTML = await minifyHtml(currentElement.innerHTML)
+      /*
+        <template> elemetnt works differently from other components.
+        It has no permitted content, so it does not have child nodes,
+        (`Node.childNodes` property of a <template> element is always empty)
+        we have to minify the innerHTML instead
+      */
+      const div = currentElement.ownerDocument.createElement('div')
+      div.append(currentElement.content)
+      walkElementMinification(div, minificationState)
+      currentElement.innerHTML = div.innerHTML
       return
     }
     const { whitespaceMinify } = minificationState
@@ -730,7 +739,7 @@ async function minifyDOM (domElement) {
         minifyTextNode(node, whitespaceMinify)
       } else if (node.nodeType === ELEMENT_NODE) {
         const updatedState = updateMinificationStateForElement(node, minificationState)
-        await walkElementMinification(node, updatedState)
+        walkElementMinification(node, updatedState)
       }
     }
   }
