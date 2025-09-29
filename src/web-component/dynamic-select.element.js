@@ -9,6 +9,7 @@ import { dynamicOptionsOf } from '../features/dynamic-loaded-options/dynamic-opt
 import { computeOnce } from '../utils/memoization'
 import * as dom from '../utils/dynamic-select-dom'
 import { dropdownPositionUpdaterOf } from '../features/dropdown-reflects-select-position-and-visibility/dropdown-position-updater'
+import { isMobile } from '../utils/is-mobile'
 /** @import { OptionData } from '../utils/option-data' */
 
 const loadTemplate = computeOnce(() => {
@@ -48,6 +49,7 @@ export class DynamicSelect extends HTMLElement {
     searchInputEl(this).addEventListener('input', handleSearchInputChange)
     inputEl(this).addEventListener('click', handleSelectValueButtonClick)
     dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
+    dropdownEl(this).addEventListener('pointerdown', handleDropdownPointerDown)
     optionsObserver.observe(this, optionsObserverOptions)
   }
 
@@ -183,14 +185,22 @@ export class DynamicSelect extends HTMLElement {
     switch (name) {
       case 'open':
         if (this.open) {
-          dropdownEl(this).showPopover()
+          if (isMobile()) {
+            dropdownEl(this).showModal()
+          } else {
+            dropdownEl(this).showPopover()
+          }
           dropdownPositionUpdaterOf(this).startAnchoringToSelect()
           updateDropdownContent(this)
           dynamicOptionsOf(this).loadData().then(() => {
             updateDropdownContent(this)
           })
         } else {
-          dropdownEl(this).hidePopover()
+          if (isMobile()) {
+            dropdownEl(this).close()
+          } else {
+            dropdownEl(this).hidePopover()
+          }
           dropdownPositionUpdaterOf(this).stopAnchoringToSelect()
         }
         break
@@ -397,7 +407,21 @@ function handleSelectValueButtonClick (event) {
  */
 function handleDropdownToggle (event) {
   const dynamicSelect = getHostDynamicSelect(event.target)
-  dynamicSelect.open = dropdownEl(dynamicSelect).matches(':popover-open')
+  dynamicSelect.open = dropdownEl(dynamicSelect).matches(':popover-open,:open')
+}
+
+/**
+ * @param {PointerEvent} event - input event
+ */
+function handleDropdownPointerDown (event) {
+  const { target, currentTarget, clientX, clientY } = event
+  const isClickingOnDialog = target === currentTarget
+  if (isClickingOnDialog && currentTarget instanceof HTMLElement) {
+    const { left, right, bottom, top } = currentTarget.getBoundingClientRect()
+    if (clientX < left || clientX > right || clientY < top || clientY > bottom) {
+      getHostDynamicSelect(target).open = false
+    }
+  }
 }
 
 /**
