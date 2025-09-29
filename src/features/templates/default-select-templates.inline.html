@@ -5,13 +5,15 @@
     <span data-value="$.value"><slot name="$.text"></slot></span>
 </template>
 <template id="single-select-input">
-    <button class="selected-value">
+    <span class="selected-value">
+        <button class="background-button"></button>
         <span class="option"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
         <span class="collapse-arrow" role="presentation"></span>
-    </button>
+    </span>
 </template>
 <template id="multi-select-input">
-    <button class="multi-input">
+    <span class="multi-input">
+        <button class="background-button"></button>
         <span class="selected-options">
         <template data-each="$.selectedOptions">
             <span data-value="$.value" class="option multiselect-option">
@@ -22,5 +24,5 @@
         </span>
         <a class="clear-button"></a>
         <i class="collapse-arrow" role="presentation"></i>
-    </button>
+    </span>
 </template>
