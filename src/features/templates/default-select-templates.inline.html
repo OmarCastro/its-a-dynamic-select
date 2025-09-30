@@ -26,3 +26,24 @@
         <i class="collapse-arrow" role="presentation"></i>
     </span>
 </template>
+<template id="dropdown-list">
+    <template data-each="$.ungroupedOptions">
+        <li class="option" data-value="$.value" aria-selected="$.selected">
+            <slot data-value="$." name="option"></slot>
+        </li>
+    </template>
+    <template data-each="$.optionGroups">
+        <li class="option-group">
+            <header>
+                <slot name="$.groupName"></slot>
+            </header>
+            <ul class="value-list">
+                <template data-each="$.options">
+                    <li class="option" data-value="$.value" aria-selected="$.selected">
+                        <slot data-value="$." name="option"></slot>
+                    </li>
+                </template>
+            </ul>
+        </li>
+    </template>
+</template>
