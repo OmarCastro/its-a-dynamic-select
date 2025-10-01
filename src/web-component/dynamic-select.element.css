@@ -20,16 +20,14 @@
         z-index: 1;
         position: relative;
         pointer-events: none;
-
     }
-
-
 }
 
 .selected-value:not(.option *) {
     position: relative;
     color: buttontext;
     padding: 0.125em .5em;
+
     & > .background-button {
         position: absolute;
         inset: 0;
@@ -58,7 +56,6 @@
     transform: translateY(calc(var(--arrow-size) * -1)) rotate(45deg);
     transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
     pointer-events: none;
-    
 
     :host([open]) &{
         transform: translateY(calc(var(--arrow-size) * -1)) rotate(225deg)
@@ -90,20 +87,18 @@ li > header:not(.option *)  {
     font-weight: bold;
 }
 
-li > ul > li.option-value:not(.option *)  {
+li > ul > li.option:not(.option *)  {
     padding-left: 1em;
 }
 
-li.option-value:not(.option *):hover {
-    background-color: bisque;
-}
-
-li.selected.option-value:not(.option *)  {
+li[aria-selected=true].option:not(.option *),
+li.option:not(.option *):hover {
     background-color: bisque;
 }
 
 @media screen and (forced-colors: active) {
-   li.option-value:not(.option *):hover {
+   li[aria-selected=true].option:not(.option *),
+   li.option:not(.option *):hover {
         background-color: Mark;
         color: MarkText;
         & > * {
@@ -111,17 +106,6 @@ li.selected.option-value:not(.option *)  {
             color: inherit;
         }
     }
-
-    li.selected.option-value:not(.option *)  {
-        background-color: Mark;
-        color: MarkText;
-        & > * {
-            background-color: inherit;
-            color: inherit;
-        }
-
-    }
- 
 }
 
 :host > .container {
@@ -175,7 +159,6 @@ li.selected.option-value:not(.option *)  {
     border: none;
     color: inherit;
     pointer-events: all;
-
 
 
     &:hover {
