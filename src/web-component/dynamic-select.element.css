@@ -91,14 +91,14 @@ li > ul > li.option:not(.option *)  {
     padding-left: 1em;
 }
 
-li[aria-selected=true].option:not(.option *),
-li.option:not(.option *):hover {
-    background-color: bisque;
+li[aria-selected=true].option-value:not(.option *),
+li.option-value:not(.option *):hover {
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 @media screen and (forced-colors: active) {
-   li[aria-selected=true].option:not(.option *),
-   li.option:not(.option *):hover {
+   li[aria-selected=true].option-value:not(.option *),
+   li.option-value:not(.option *):hover {
         background-color: Mark;
         color: MarkText;
         & > * {
@@ -169,5 +169,9 @@ li.option:not(.option *):hover {
 
 .multi-input:not(.option *):not(:has(.multiselect-option:nth-child(2))) .clear-button {
     display: none
+}
+
+.option-checked-indicator:not(.option *){
+    float: right;
 }
 

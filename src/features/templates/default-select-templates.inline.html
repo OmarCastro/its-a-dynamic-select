@@ -28,8 +28,11 @@
 </template>
 <template id="dropdown-list">
     <template data-each="$.ungroupedOptions">
-        <li class="option" data-value="$.value" aria-selected="$.selected">
-            <slot data-value="$." name="option"></slot>
+        <li class="option-value" data-value="$.value" aria-selected="$.selected">
+            <label>
+                <span class="option"><slot data-value="$." name="option"></slot></span>
+                <input value="$.value" class="option-checked-indicator" type="$.checkedIndicatorType" checked="$?.selected">
+            </label>
         </li>
     </template>
     <template data-each="$.optionGroups">
@@ -39,8 +42,11 @@
             </header>
             <ul class="value-list">
                 <template data-each="$.options">
-                    <li class="option" data-value="$.value" aria-selected="$.selected">
-                        <slot data-value="$." name="option"></slot>
+                    <li class="option-value" data-value="$.value" aria-selected="$.selected">
+                        <label>
+                            <span class="option"><slot data-value="$." name="option"></slot></span>
+                            <input value="$.value" class="option-checked-indicator" type="$.checkedIndicatorType" checked="$?.selected">
+                        </label>
                     </li>
                 </template>
             </ul>

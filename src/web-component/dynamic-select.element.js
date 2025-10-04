@@ -220,7 +220,7 @@ export class DynamicSelect extends HTMLElement {
  * @param {DynamicSelect} dynamicSelect - web component element reference
  * @returns {{
  *    ungroupedOptions: OptionData[],
- *    optionGroups: {groupName:string, options: OptionData[]}[]
+ *    optionGroups: {[groupName:string]: OptionData[]}
  * }} - dropdown data
  */
 function getDropdownListData (dynamicSelect) {
@@ -273,11 +273,30 @@ function getDropdownListData (dynamicSelect) {
     }
     return {
       ungroupedOptions: filteredUngrouped,
-      optionGroups: Object.entries(filteredOptionGroups).map(([groupName, options]) => ({ groupName, options }))
+      optionGroups: filteredOptionGroups
     }
   }
 
-  return { ungroupedOptions, optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({ groupName, options })) }
+  return { ungroupedOptions, optionGroups }
+}
+
+/**
+ * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ * @returns {{
+ *    ungroupedOptions: (OptionData & {checkedIndicatorType: "radio" | "checkbox"})[],
+ *    optionGroups: {groupName:string, options: (OptionData & {checkedIndicatorType: "radio" | "checkbox"})[]}[]
+ * }} - dropdown data
+ */
+function getDropdownTemplateData (dynamicSelect) {
+  const { ungroupedOptions, optionGroups } = getDropdownListData(dynamicSelect)
+
+  const checkedIndicatorType = dynamicSelect.multiple ? 'checkbox' : 'radio'
+  return {
+    ungroupedOptions: ungroupedOptions.map(option => ({ ...option, checkedIndicatorType })),
+    optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({ groupName, options: options.map(option => ({ ...option, checkedIndicatorType })) }))
+
+  }
 }
 
 /**
@@ -295,7 +314,7 @@ const filterMatcher = (filter) => {
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateDropdownContent (dynamicSelect) {
-  const dropdownData = getDropdownListData(dynamicSelect)
+  const dropdownData = getDropdownTemplateData(dynamicSelect)
   const { dropdownList, option: optionTemplate } = templatesOf(dynamicSelect)
   const listFragment = applyTemplate(dropdownList, dropdownData)
   listFragment.querySelectorAll('slot[name="option"]').forEach(slot => {
@@ -393,7 +412,7 @@ function handleDropdownPointerDown (event) {
 function handleDropdownOptionClick (event) {
   const { target } = event
   if (!(target instanceof Element)) { return }
-  const liTarget = target.closest('li.option:not(.option *)')
+  const liTarget = target.closest('li.option-value:not(.option *)')
   if (!(liTarget instanceof HTMLLIElement)) { return }
   const value = liTarget.dataset.value
   if (typeof value !== 'string') return
