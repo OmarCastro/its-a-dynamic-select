@@ -43,6 +43,13 @@ function applyTemplateAux (currentElement, currentData) {
     if (value.startsWith('$.')) {
       const newValue = normalizeValue(getFromStringPath(currentData, value.slice(2)))
       currentElement.setAttribute(name, newValue)
+    } else if (value.startsWith('$?.')) {
+      const newValue = !!getFromStringPath(currentData, value.slice(3))
+      if (newValue) {
+        currentElement.setAttribute(name, '')
+      } else {
+        currentElement.removeAttribute(name)
+      }
     } else if (value.startsWith('$$')) {
       currentElement.setAttribute(name, value.slice(1))
     }

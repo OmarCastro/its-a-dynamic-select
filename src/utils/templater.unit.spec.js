@@ -53,7 +53,7 @@ test('applyTemplate - should escape the result', async ({ dom, expect }) => {
 `)
 })
 
-test('applyTemplate - attributes that do not start with "$." are not applied', async ({ dom, expect }) => {
+test('applyTemplate - attributes that do not start with "$." or "$?." are not applied', async ({ dom, expect }) => {
   const { document } = dom
   document.body.innerHTML = `
 <template id="test1">
@@ -79,7 +79,7 @@ test('applyTemplate - attributes that do not start with "$." are not applied', a
 `)
 })
 
-test('applyTemplate - slots with name that do not start with "$." are not applied', async ({ dom, expect }) => {
+test('applyTemplate - slots with name that do not start with "$." or "$?." are not applied', async ({ dom, expect }) => {
   const { document } = dom
   document.body.innerHTML = `
 <template id="test1">
@@ -130,6 +130,60 @@ test('applyTemplate - "$$" token is used to escape initial "$" on slot name and 
   <div title="$.prop1">
     <slot name="$.prop2">
   </slot></div>
+`)
+})
+
+test('applyTemplate - attributes starting with "$?." that results in falsy value removes the attribute', async ({ dom, expect }) => {
+  const { document } = dom
+  document.body.innerHTML = `
+<template id="test1">
+  <div title="prop1" data-flagged="$?.prop3">
+    <slot name="$.prop2"/>
+  </div>
+</template>
+`
+
+  const data = {
+    prop1: 'hello world',
+    prop2: 'lorem ipsum',
+    prop3: false
+  }
+
+  const template = document.body.querySelector('#test1')
+
+  const result = applyTemplate(template, data)
+  const div = document.createElement('div')
+  div.append(result)
+  expect(div.innerHTML).toBe(`
+  <div title="prop1">
+    lorem ipsum</div>
+`)
+})
+
+test('applyTemplate - attributes starting with "$?." that results in truthy value makes attribute present but empty', async ({ dom, expect }) => {
+  const { document } = dom
+  document.body.innerHTML = `
+<template id="test1">
+  <div title="prop1" data-flagged="$?.prop3">
+    <slot name="$.prop2"/>
+  </div>
+</template>
+`
+
+  const data = {
+    prop1: 'hello world',
+    prop2: 'lorem ipsum',
+    prop3: true
+  }
+
+  const template = document.body.querySelector('#test1')
+
+  const result = applyTemplate(template, data)
+  const div = document.createElement('div')
+  div.append(result)
+  expect(div.innerHTML).toBe(`
+  <div title="prop1" data-flagged="">
+    lorem ipsum</div>
 `)
 })
 
