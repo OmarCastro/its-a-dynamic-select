@@ -32,20 +32,21 @@ function createDynamicOptionsDataFor (elementRef) {
     if (!element) { throw new Error('element no longer exists') }
     return element
   }
+  /** @type {DynamicOptionsData} */
   const api = {
     selectedValues: new Set(),
-    get optionsData () {
-      return api.options.map(dataObjectOfOption)
-    },
     get options () {
       return [...getDynamicOptions(getElement()).querySelectorAll(':scope > option')]
+    },
+    get optionsData () {
+      return api.options.map(dataObjectOfOption)
     },
     get optionsMap () {
       return Object.fromEntries(api.options.map(option => [option.value, option]))
     },
     status: 'empty',
-    loadData: () => loadData(getElement(), api),
-    loadNextData: () => loadNextData(getElement(), api),
+    loadData: () => loadData(getElement()),
+    loadNextData: () => loadNextData(getElement()),
     get values () {
       return Iterator.from(api.options)
         .filter(option => option.selected)
@@ -57,7 +58,8 @@ function createDynamicOptionsDataFor (elementRef) {
       api.options.forEach(option => { option.selected = values.includes(option.value) })
     },
 
-    toggleValue (value, selected) {
+    toggleValue (value, force) {
+      const selected = force == null ? !api.selectedValues.has(value) : force
       if (selected) {
         api.selectedValues.delete(value)
       } else {
@@ -73,19 +75,19 @@ function createDynamicOptionsDataFor (elementRef) {
         .toArray()
     }
   }
-  return /** @type {DynamicOptionsData} */(api)
+  return api
 }
 
 /**
- *
- * @param element
- * @param api
+ * Loads data of dynamic select. Loads first page if paginated
+ * @param {DynamicSelect} element - target dynamic select element
  */
-async function loadData (element, api) {
+async function loadData (element) {
   const loader = dataLoaderOf(element)
   const dynamicOptionsElement = getDynamicOptions(element)
   try {
     const result = await loader.fetchData()
+    const api = dynamicOptionsOf(element)
     const { selectedValues } = api
     const optionsMap = api.optionsMap
     for (const data of result.data) {
@@ -100,15 +102,15 @@ async function loadData (element, api) {
 }
 
 /**
- *
- * @param element
- * @param api
+ * Loads next page.
+ * @param {DynamicSelect} element - target dynamic select element
  */
-async function loadNextData (element, api) {
+async function loadNextData (element) {
   const loader = dataLoaderOf(element)
   const dynamicOptionsElement = getDynamicOptions(element)
   try {
     const result = await loader.fetchNextData()
+    const api = dynamicOptionsOf(element)
     const { selectedValues } = api
     const optionsMap = api.optionsMap
     for (const data of result.data) {
@@ -155,12 +157,26 @@ export function optionFromData (optionData, selectedValues) {
 
 /**
  * @typedef {object} DynamicOptionsData
- * @property {OptionData[]} optionsData
- * @property {HTMLOptionElement[]} options
- * @property {"loading"|"paginated"|"loadedWithAllData"|"empty"} status
- * @property {() => Promise<void>} loadData
- * @property {() => Promise<void>} loadNextData
- * @property {string[]} values
- * @property {HTMLOptionElement[]} selectedOptions
- * @property {(value: string, selected: boolean) => void} toggleValue
+ *
+ * Manages dynamic select's dynamically generated options, be it by fetching it
+ * from an URL or other source, such as calling `details.respondWith()` on
+ * "fetch" event
+ *
+ * @property {HTMLOptionElement[]} options - List of dynamically generated options
+ * @property {OptionData[]} optionsData - `options` mapped to data
+ * @property {Set<string>} selectedValues - Dynamically selected values, does not reflect 100% to values:
+ *   you can set any list of values on the selected values, but if the option does not exist it will
+ *   be excluded on the `values`. When the option exists (is loaded asynchronously), the it will be
+ *   it will be automatically added to `values`
+ * @property {{[k: string]: HTMLOptionElement}} optionsMap - Map of value to HTMLOptionElement
+ * @property {"loading"|"paginated"|"fullyLoaded"|"empty"} status Dynamic options state:
+ *      - `"loading"`: loading data
+ *      - `"paginated"`: data loaded and has a next page
+ *      - `"fullyLoaded"`: data loaded. All pages are loaded if paginated
+ *      - `"empty"`: no data loaded at all
+ * @property {() => Promise<void>} loadData - loads data of dynamic select. Loads first page if paginated
+ * @property {() => Promise<void>} loadNextData - Loads next page. Only used in paginated data.
+ * @property {string[]} values - values applied to select
+ * @property {HTMLOptionElement[]} selectedOptions - selected option elements
+ * @property {(value: string, selected?: boolean) => void} toggleValue - toggle value of select
  */
