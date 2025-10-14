@@ -9,7 +9,7 @@ import { dynamicOptionsOf } from '../features/dynamic-loaded-options/dynamic-opt
 import { computeOnce } from '../utils/memoization'
 import * as dom from '../utils/dynamic-select-dom'
 import { dropdownPositionUpdaterOf, updateDropdownPosition } from '../features/dropdown-reflects-select-position-and-visibility/dropdown-position-updater'
-import { isMobile } from '../utils/is-mobile'
+import { isMobile, MobileDetectionObserver } from '../utils/mobile-detection'
 /** @import { OptionData } from '../utils/option-data' */
 
 const loadTemplate = computeOnce(() => {
@@ -38,6 +38,13 @@ const optionsObserverOptions = {
   attributeFilter: ['data-of-option']
 }
 
+const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
+  for (const mutation of mutations) {
+    console.log('AAAAAAAA')
+    inputEl(mutation.target).toggleAttribute('data-mobile', mutation.isMobile)
+  }
+})
+
 export class DynamicSelect extends HTMLElement {
   constructor () {
     super()
@@ -52,6 +59,7 @@ export class DynamicSelect extends HTMLElement {
     dropdownEl(this).addEventListener('pointerdown', handleDropdownPointerDown)
     dropdownEl(this).addEventListener('click', handleDropdownOptionClick)
     optionsObserver.observe(this, optionsObserverOptions)
+    mobileDetectionObserver.observe(this)
   }
 
   connectedCallback () {

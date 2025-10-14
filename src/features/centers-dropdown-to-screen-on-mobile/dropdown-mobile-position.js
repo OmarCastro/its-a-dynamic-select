@@ -1,5 +1,5 @@
 import { dropdownEl } from '../../utils/dynamic-select-dom'
-import { isMobile } from '../../utils/is-mobile.js'
+import { isMobile } from '../../utils/mobile-detection.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom' */
 
 /**
