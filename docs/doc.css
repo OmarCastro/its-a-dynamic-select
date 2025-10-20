@@ -407,6 +407,10 @@ dialog.img-zoom img {
     overflow: scroll;
     & > .empty-space {
         height: 100vmax;
-        width: 100vmax;
+        width: 150vmax;
+    }
+
+    & > .horizontally-centered-select-box {
+        margin-left: 100vmax;
     }
 }
