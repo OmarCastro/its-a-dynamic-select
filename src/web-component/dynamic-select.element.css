@@ -27,6 +27,7 @@
     position: relative;
     color: buttontext;
     padding: 0.125em .5em;
+    white-space: nowrap;
 
     & > .background-button {
         position: absolute;
@@ -93,7 +94,7 @@ li > ul > li.option:not(.option *)  {
 
 li[aria-selected=true].option-value:not(.option *),
 li.option-value:not(.option *):hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 @media screen and (forced-colors: active) {
@@ -128,7 +129,7 @@ li.option-value:not(.option *):hover {
 }
 
 :host > .container > .input {
-    display: inline-block;
+    display: inline-flex
 }
 
 :host > .container > .dynamic-options {
