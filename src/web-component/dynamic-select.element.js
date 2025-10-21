@@ -40,7 +40,6 @@ const optionsObserverOptions = {
 
 const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
   for (const mutation of mutations) {
-    console.log('AAAAAAAA')
     inputEl(mutation.target).toggleAttribute('data-mobile', mutation.isMobile)
   }
 })
