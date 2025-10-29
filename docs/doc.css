@@ -55,10 +55,7 @@ body {
 }
 
 /* Smartphones (portrait and landscape) ----------- */
-@media only screen and (
-    ((max-width : 480px) and (orientation: portrait)) or
-    ((max-height : 480px) and (orientation: landscape))
-){
+@media screen and (max-width : 480px) and (orientation: portrait), screen and (max-height : 480px) and (orientation: landscape){
     body > .sidebar {
         display: none;
     }
