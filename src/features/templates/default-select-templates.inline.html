@@ -26,6 +26,19 @@
         <i class="collapse-arrow" role="presentation"></i>
     </span>
 </template>
+<template id="multi-select-input--mobile">
+    <span class="multi-input">
+        <button class="background-button"></button>
+        <span class="selected-options">
+        <template data-each="$.selectedOptions">
+            <span data-value="$.value" class="option multiselect-option">
+                <slot data-value="$." name="selected-option"></slot>
+            </span>
+        </template>
+        </span>
+        <i class="collapse-arrow" role="presentation"></i>
+    </span>
+</template>
 <template id="dropdown-list">
     <template data-each="$.ungroupedOptions">
         <li class="option-value" data-value="$.value" aria-selected="$.selected">

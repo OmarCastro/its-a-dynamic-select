@@ -41,6 +41,7 @@ const optionsObserverOptions = {
 const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
   for (const mutation of mutations) {
     inputEl(mutation.target).toggleAttribute('data-mobile', mutation.isMobile)
+    updateButtonContent(mutation.target)
   }
 })
 
@@ -338,9 +339,9 @@ function updateDropdownContent (dynamicSelect) {
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateButtonContent (dynamicSelect) {
-  const { option: optionTemplate, multiSelectInput, singleSelectInput } = templatesOf(dynamicSelect)
+  const { option: optionTemplate, multiSelectInput, mobileMultiSelectInput, singleSelectInput } = templatesOf(dynamicSelect)
   const isMultiple = dynamicSelect.multiple
-  const buttonTemplate = isMultiple ? multiSelectInput : singleSelectInput
+  const buttonTemplate = isMultiple ? isMobile() ? mobileMultiSelectInput : multiSelectInput : singleSelectInput
   const selectedOptionsVal = dynamicSelect.selectedOptions.map(dataObjectOfOption)
   const data = {
     isMultiple,

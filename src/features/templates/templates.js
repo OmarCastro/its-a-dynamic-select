@@ -6,6 +6,7 @@ import defaultTemplatesHtml from './default-select-templates.inline.html'
  * @property {HTMLTemplateElement} option - option template in the dropdown and button
  * @property {HTMLTemplateElement} singleSelectInput - single select button template
  * @property {HTMLTemplateElement} multiSelectInput - multi select button template
+ * @property {HTMLTemplateElement} mobileMultiSelectInput - mobile ui for multi select button template
  * @property {HTMLTemplateElement} dropdownList - dropdown option list template
  */
 
@@ -32,6 +33,7 @@ const loadSelectDefaultTemplates = computeOnce(() => {
     option: query('option'),
     singleSelectInput: query('single-select-input'),
     multiSelectInput: query('multi-select-input'),
+    mobileMultiSelectInput: query('multi-select-input--mobile'),
     dropdownList: query('dropdown-list'),
   })
   return templates
@@ -53,6 +55,9 @@ export function templatesOf (element) {
     },
     get multiSelectInput () {
       return loadSelectDefaultTemplates().multiSelectInput
+    },
+    get mobileMultiSelectInput () {
+      return loadSelectDefaultTemplates().mobileMultiSelectInput
     },
     get dropdownList () {
       return loadSelectDefaultTemplates().dropdownList
