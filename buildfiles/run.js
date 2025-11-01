@@ -147,9 +147,13 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
     }
 
     for (const task of tasks) {
-      await task()
+      try {
+        await task()
+      } catch (e) {
+        console.error(e)
+        break
+      }
     }
-
     updateDevServer()
   }
 }
