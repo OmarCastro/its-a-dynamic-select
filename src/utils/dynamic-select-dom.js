@@ -8,6 +8,8 @@ export const dropdownEl = shadowQuery('dialog.dropdown')
 export const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
 export const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
 
+export const dropdownOptionList = shadowQueryAll('li.option-value:not(.option *)')
+
 export const isSearchInputEl = elementMatcher('input.search-input')
 export const isDeselectButton = elementMatcher('.multiselect-option[data-value] > button.deselect-option')
 export const isClearButton = elementMatcher('a.clear-button:not(.option *)')
@@ -38,6 +40,19 @@ function shadowQuery (selector) {
   return (dynamicSelect) => {
     const result = dynamicSelect.shadowRoot?.querySelector(selector)
     if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
+    return result
+  }
+}
+
+/**
+ * @template {string} T
+ * @param {T} selector - css selector
+ * @returns {(dynamicSelect: DynamicSelect) => NodeListOf<ParseSelector<T, Element>>} type guarded query function
+ */
+function shadowQueryAll (selector) {
+  return (dynamicSelect) => {
+    const result = dynamicSelect.shadowRoot?.querySelectorAll(selector)
+    if (result == null) throw Error('shadow is not yet defined')
     return result
   }
 }

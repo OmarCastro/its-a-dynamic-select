@@ -18,7 +18,7 @@
         <template data-each="$.selectedOptions">
             <span data-value="$.value" class="option multiselect-option">
                 <slot data-value="$." name="selected-option"></slot>
-                <button class="deselect-option"></button>
+                <button class="deselect-option" tabindex="-1"></button>
             </span>
         </template>
         </span>
@@ -41,7 +41,7 @@
 </template>
 <template id="dropdown-list">
     <template data-each="$.ungroupedOptions">
-        <li class="option-value" data-value="$.value" aria-selected="$.selected">
+        <li class="option-value" data-value="$.value" aria-selected="$.selected" data-focused="$?.focused">
             <label>
                 <span class="option"><slot data-value="$." name="option"></slot></span>
                 <input value="$.value" class="option-checked-indicator" type="$.checkedIndicatorType" checked="$?.selected">
@@ -55,7 +55,7 @@
             </header>
             <ul class="value-list">
                 <template data-each="$.options">
-                    <li class="option-value" data-value="$.value" aria-selected="$.selected">
+                    <li class="option-value" data-value="$.value" aria-selected="$.selected" data-focused="$?.focused">
                         <label>
                             <span class="option"><slot data-value="$." name="option"></slot></span>
                             <input value="$.value" class="option-checked-indicator" type="$.checkedIndicatorType" checked="$?.selected">

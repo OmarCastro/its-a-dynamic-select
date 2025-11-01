@@ -92,6 +92,10 @@ li > ul > li.option:not(.option *)  {
     padding-left: 1em;
 }
 
+li[data-focused].option-value:not(.option *) {
+    outline: dashed currentColor;
+}
+
 li[aria-selected=true].option-value:not(.option *),
 li.option-value:not(.option *):hover {
     background-color: rgba(0, 0, 0, 0.1);
@@ -136,6 +140,9 @@ li.option-value:not(.option *):hover {
     display: none;
 }
 
+.multi-input--input-field:not(.option *){
+    background: none;
+}
 
 .multiselect-option:not(.option *) > .deselect-option,
 .clear-button:not(.option *) {

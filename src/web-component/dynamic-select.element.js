@@ -24,7 +24,7 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const { searchInputEl, inputEl, dropdownEl, valueListEl } = dom
+const { searchInputEl, inputEl, dropdownEl, valueListEl, dropdownOptionList } = dom
 const { isSearchInputEl, isDeselectButton, isClearButton, getHostDynamicSelect } = dom
 
 const optionsObserver = new MutationObserver(mutation => {
@@ -55,6 +55,7 @@ export class DynamicSelect extends HTMLElement {
 
     searchInputEl(this).addEventListener('input', handleSearchInputChange)
     inputEl(this).addEventListener('click', handleSelectValueButtonClick)
+    searchInputEl(this).addEventListener('keydown', handleSearchInputKeyDown)
     dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
     dropdownEl(this).addEventListener('pointerdown', handleDropdownPointerDown)
     dropdownEl(this).addEventListener('click', handleDropdownOptionClick)
@@ -300,10 +301,11 @@ function getDropdownTemplateData (dynamicSelect) {
   const { ungroupedOptions, optionGroups } = getDropdownListData(dynamicSelect)
 
   const checkedIndicatorType = dynamicSelect.multiple ? 'checkbox' : 'radio'
+  const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
+  let focusIndex = dropdownOptions.findIndex(el => el.hasAttribute('data-focused'))
   return {
-    ungroupedOptions: ungroupedOptions.map(option => ({ ...option, checkedIndicatorType })),
-    optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({ groupName, options: options.map(option => ({ ...option, checkedIndicatorType })) }))
-
+    ungroupedOptions: ungroupedOptions.map(option => ({ ...option, checkedIndicatorType, focused: focusIndex-- === 0 })),
+    optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({ groupName, options: options.map(option => ({ ...option, checkedIndicatorType, focused: focusIndex-- === 0 })) }))
   }
 }
 
@@ -368,6 +370,40 @@ function handleSearchInputChange (event) {
 }
 
 /**
+ * @param {KeyboardEvent} event - input event
+ */
+function handleSearchInputKeyDown (event) {
+  const { target, code } = event
+  console.log('AAA')
+  const focusAttr = 'data-focused'
+  if (code === 'ArrowDown' || code === 'ArrowUp') {
+    const dynamicSelect = getHostDynamicSelect(target)
+    const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
+    if (dropdownOptions.length <= 0) { return }
+    const focusIndex = dropdownOptions.findIndex(el => el.hasAttribute(focusAttr))
+    if (focusIndex >= 0) {
+      dropdownOptions[focusIndex].removeAttribute(focusAttr)
+    }
+    if (event.code === 'ArrowDown') {
+      const nextFocusIndex = focusIndex + 1 >= dropdownOptions.length ? 0 : focusIndex + 1
+      dropdownOptions[nextFocusIndex].setAttribute(focusAttr, '')
+    } else {
+      const previousFocusIndex = focusIndex <= 0 ? dropdownOptions.length - 1 : focusIndex - 1
+      dropdownOptions[previousFocusIndex].setAttribute(focusAttr, '')
+    }
+  } else if (code === 'Enter') {
+    const dynamicSelect = getHostDynamicSelect(target)
+    const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
+    const focusedElement = dropdownOptions.find(el => el.hasAttribute('data-focused'))
+    if (focusedElement instanceof HTMLLIElement) {
+      const value = focusedElement.dataset.value
+      if (typeof value !== 'string') return
+      handleDropdownSelect(value, dynamicSelect)
+    }
+  }
+}
+
+/**
  * @param {Event} event - input event
  */
 function handleSelectValueButtonClick (event) {
@@ -424,7 +460,14 @@ function handleDropdownOptionClick (event) {
   if (!(liTarget instanceof HTMLLIElement)) { return }
   const value = liTarget.dataset.value
   if (typeof value !== 'string') return
-  const dynamicSelect = getHostDynamicSelect(liTarget)
+  handleDropdownSelect(value, getHostDynamicSelect(liTarget))
+}
+
+/**
+ * @param {string} value - selectValue
+ * @param {DynamicSelect} dynamicSelect - Dynamic Select
+ */
+function handleDropdownSelect (value, dynamicSelect) {
   if (dynamicSelect.multiple) {
     const valueSet = new Set(dynamicSelect.valueAsArray)
     const toggledValue = valueSet.symmetricDifference(new Set([value]))
@@ -437,5 +480,6 @@ function handleDropdownOptionClick (event) {
     updateButtonContent(dynamicSelect)
     updateDropdownContent(dynamicSelect)
     dynamicSelect.open = false
+    inputEl(dynamicSelect).querySelector('button')?.focus()
   }
 }
