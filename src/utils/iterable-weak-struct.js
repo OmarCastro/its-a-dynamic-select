@@ -30,7 +30,7 @@ export class IterableWeakMap {
   /**
    * Executes a provided function once per each key/value pair in the IterableWeakMap
    * @param {(value : V, key : K, map : this) => void} callback - forEach callback
-   * @param {*} [thisArg] - value of `this` variable in `callback`, optional
+   * @param { unknown } [thisArg] - value of `this` variable in `callback`, optional
    */
   forEach (callback, thisArg) {
     for (const [key, value] of this.entries()) { callback.call(thisArg, value, key, this) }
@@ -135,7 +135,7 @@ export class IterableWeakSet {
   /**
    *
    * @param {(value : V, set : this) => void} callback - forEach callback
-   * @param {*} [thisArg] - value of `this` variable in `callback`, optional
+   * @param { unknown } [thisArg] - value of `this` variable in `callback`, optional
    */
   forEach (callback, thisArg) {
     for (const value of this.entries()) { callback.call(thisArg, value, this) }
@@ -215,8 +215,8 @@ function * iterateKeys (struct) {
 
 /**
  * Deletes a key from an iterable weak struct
- * @param {object} key - target key
- * @param {IterableWeakSet<object> | IterableWeakMap<object, *>} struct - target weak struct
+ * @param {WeakKey} key - target key
+ * @param {IterableWeakSet<WeakKey> | IterableWeakMap<WeakKey, unknown>} struct - target weak struct
  * @returns {boolean} true if deleted, false if not found
  */
 function deleteKey (key, struct) {
@@ -230,13 +230,15 @@ function deleteKey (key, struct) {
 
 const dataOf = (() => {
   /**
-   * @type {WeakMap<*, IterableWeakMapData<object,*>>} valueMap
+   * @type {WeakMap<WeakKey, IterableWeakMapData<never, never>>} valueMap
    */
   const map = new WeakMap()
 
   /**
-   * @param {IterableWeakSet<object> | IterableWeakMap<object, *>} iter - target weak struct to initialize
-   * @returns {IterableWeakMapData<*, *>} target weak struct data
+   * @template {WeakKey} K
+   * @template V
+   * @param {IterableWeakSet<K> | IterableWeakMap<K, V>} iter - target weak struct to initialize
+   * @returns {IterableWeakMapData<K, V>} target weak struct data
    */
   function init (iter) {
     const keySet = new Set()
