@@ -15,7 +15,7 @@ export class IterableWeakMap {
 
   /** @returns {number} the number of elements in the IterableWeakMap */
   get size () {
-    return dataOf(this).keySet.size
+    return dataOf(this).size
   }
 
   /**
@@ -28,7 +28,7 @@ export class IterableWeakMap {
   }
 
   /**
-   * Executes a provided function once per each key/value pair in the IterableWeakMap
+   * Executes a provided function once per each key/value pair in the IterableWeakMap, in insertion order.
    * @param {(value : V, key : K, map : this) => void} callback - forEach callback
    * @param { unknown } [thisArg] - value of `this` variable in `callback`, optional
    */
@@ -88,7 +88,7 @@ export class IterableWeakMap {
 
   /**
    * @yields {[K, V]} - map entry
-   * @returns {Generator<[K, V], void>} an iterable of key, value pairs for every entry in the IterableWeakMap.
+   * @returns {Generator<[K, V], void>} an iterable of key, value pairs for every entry in the IterableWeakMap, in insertion order
    */
   * entries () {
     const { refWeakMap } = dataOf(this)
@@ -121,7 +121,7 @@ export class IterableWeakSet {
 
   /** @returns {number} the number of (unique) elements in Set */
   get size () {
-    return dataOf(this).keySet.size
+    return dataOf(this).size
   }
 
   /**
@@ -133,12 +133,12 @@ export class IterableWeakSet {
   }
 
   /**
-   *
-   * @param {(value : V, set : this) => void} callback - forEach callback
+   * Executes a provided function once for each value in this set, in insertion order.
+   * @param {(value : V, key : V, set : this) => void} callback - forEach callback
    * @param { unknown } [thisArg] - value of `this` variable in `callback`, optional
    */
   forEach (callback, thisArg) {
-    for (const value of this.entries()) { callback.call(thisArg, value, this) }
+    for (const value of this.entries()) { callback.call(thisArg, value, value, this) }
   }
 
   /**
@@ -243,7 +243,14 @@ const dataOf = (() => {
   function init (iter) {
     const keySet = new Set()
     const refWeakMap = new WeakMap()
-    const result = { keySet, refWeakMap }
+    const result = {
+      keySet,
+      refWeakMap,
+      get size () {
+        keySet.forEach(ref => { if (!ref.deref()) { keySet.delete(ref) } })
+        return keySet.size
+      }
+    }
     map.set(iter, result)
     return result
   }
@@ -266,4 +273,5 @@ const dataOf = (() => {
  * @typedef {object} IterableWeakMapData
  * @property {WeakMap<K, {ref: WeakRef<K> , value: V}>} refWeakMap - weakmap of weak refs and values
  * @property {Set<WeakRef<K>>} keySet - iterable set of weak keys
+ * @property {number} size - weak keys amount on the map
  */
