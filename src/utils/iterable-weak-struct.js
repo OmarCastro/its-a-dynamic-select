@@ -15,7 +15,7 @@ export class IterableWeakMap {
 
   /** @returns {number} the number of elements in the IterableWeakMap */
   get size () {
-    return dataOf(this).size
+    return getSize(this)
   }
 
   /**
@@ -25,6 +25,13 @@ export class IterableWeakMap {
    */
   delete (key) {
     return deleteKey(key, this)
+  }
+
+  /**
+   * Removes all elements from the map.
+   */
+  clear () {
+    clear(this)
   }
 
   /**
@@ -121,7 +128,7 @@ export class IterableWeakSet {
 
   /** @returns {number} the number of (unique) elements in Set */
   get size () {
-    return dataOf(this).size
+    return getSize(this)
   }
 
   /**
@@ -130,6 +137,13 @@ export class IterableWeakSet {
    */
   delete (value) {
     deleteKey(value, this)
+  }
+
+  /**
+   * Removes all elements from the set.
+   */
+  clear () {
+    clear(this)
   }
 
   /**
@@ -166,7 +180,7 @@ export class IterableWeakSet {
 
   /**
    * @yields {V} - map entry value
-   * @returns {Generator<V, void>} - generator object of map values
+   * @returns {Generator<V, void>} - generator object of set values
    */
   * keys () {
     yield * iterateKeys(this)
@@ -174,7 +188,7 @@ export class IterableWeakSet {
 
   /**
    * @yields {V} - map entry value
-   * @returns {Generator<V, void>} - generator object of map values
+   * @returns {Generator<V, void>} - generator object of set values
    */
   * values () {
     yield * iterateKeys(this)
@@ -182,10 +196,10 @@ export class IterableWeakSet {
 
   /**
    * @yields {V} - map entry value
-   * @returns {Generator<V, void>} - generator object of map values
+   * @returns {Generator<V, void>} - generator object of set values
    */
   * entries () {
-    for (const value of this.keys()) { yield value }
+    yield * iterateKeys(this)
   }
 
   [Symbol.iterator] () {
@@ -228,6 +242,32 @@ function deleteKey (key, struct) {
   return true
 }
 
+/**
+ * clears an iterable weak struct
+ * @param {IterableWeakSet<WeakKey> | IterableWeakMap<WeakKey, unknown>} struct - target weak struct
+ */
+function clear (struct) {
+  const { keySet, refWeakMap } = dataOf(struct)
+  const array = Array.from(keySet)
+  for (const ref of array) {
+    const deref = ref.deref()
+    if (deref) {
+      refWeakMap.delete(deref)
+    }
+  }
+  keySet.clear()
+}
+
+/**
+ * Gets actual size of iterable weak struct
+ * @param {IterableWeakSet<WeakKey> | IterableWeakMap<WeakKey, unknown>} struct - target weak struct
+ */
+function getSize (struct) {
+  const { keySet } = dataOf(struct)
+  keySet.forEach(ref => { if (!ref.deref()) { keySet.delete(ref) } })
+  return keySet.size
+}
+
 const dataOf = (() => {
   /**
    * @type {WeakMap<WeakKey, IterableWeakMapData<never, never>>} valueMap
@@ -246,10 +286,6 @@ const dataOf = (() => {
     const result = {
       keySet,
       refWeakMap,
-      get size () {
-        keySet.forEach(ref => { if (!ref.deref()) { keySet.delete(ref) } })
-        return keySet.size
-      }
     }
     map.set(iter, result)
     return result
@@ -273,5 +309,4 @@ const dataOf = (() => {
  * @typedef {object} IterableWeakMapData
  * @property {WeakMap<K, {ref: WeakRef<K> , value: V}>} refWeakMap - weakmap of weak refs and values
  * @property {Set<WeakRef<K>>} keySet - iterable set of weak keys
- * @property {number} size - weak keys amount on the map
  */
