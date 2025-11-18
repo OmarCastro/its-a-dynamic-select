@@ -4,7 +4,10 @@ const rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?
 /** Used to match backslashes in property paths. */
 const reEscapeChar = /\\(\\)?/g
 
-/** Used to memoize `stringToPath()` results. */
+/**
+ * Used to memoize `stringToPath()` results.
+ * @type {{[stringPath: string]: ReturnType<typeof stringToPath>}}
+ */
 const stringToPathCache = {}
 
 /**
@@ -34,16 +37,16 @@ export function stringToPath (string) {
 /**
  * Get object data from a string path
  *
- * @param {*} obj - target object
+ * @param {unknown} obj - target object
  * @param {string} stringPath - string path
- * @returns {*} result from string path
+ * @returns {unknown} result from string path
  */
 export function getFromStringPath (obj, stringPath) {
   if (obj == null) { return obj }
   const pathArray = stringToPath(stringPath)
   let current = obj
   for (const section of pathArray) {
-    current = obj[section]
+    current = current[/** @type {never} */(section)]
     if (current == null) { return current }
   }
   return current
