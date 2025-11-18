@@ -72,9 +72,9 @@ function elementMatcher (selector) {
 }
 
 /**
- * @param {Element} element target element
- * @returns {element is DynamicSelect} true if element is the dynamic-select component, false otherwise
+ * @param {Node} node target DOM Node
+ * @returns {node is DynamicSelect} true if node is a DynamicSelect web component, false otherwise
  */
-export function isDynamicSelect (element) {
-  return element[isDynamicSelectSymbol] === true
+export function isDynamicSelect (node) {
+  return node ? /** @type {DynamicSelect} */(node)[isDynamicSelectSymbol] === true : false
 }
