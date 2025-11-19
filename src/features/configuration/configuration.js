@@ -9,17 +9,22 @@
  *   text input to wait for updates before filtering the data
  */
 
+export const defaultValues = Object.freeze({
+  minQueryLength: 3,
+  debounceQueryDuration: 250,
+})
+
 /**
- * @param {HTMLElement} element
+ * @param {HTMLElement} element - target element
  * @returns {Readonly<Configuration>} configurations object
  */
 export function configurationOf (element) {
   return Object.freeze({
     get minQueryLength () {
-      return getConfigInteger(element, { attribute: 'data-min-query-length', config: 'minQueryLength', defaultValue: 3 })
+      return getConfigPositiveIntegerOrZero(element, { attribute: 'data-min-query-length', config: 'minQueryLength' })
     },
     get debounceQueryDuration () {
-      return getConfigInteger(element, { attribute: 'data-debounce-query-duration', config: 'debounceQueryDuration', defaultValue: 250 })
+      return getConfigPositiveIntegerOrZero(element, { attribute: 'data-debounce-query-duration', config: 'debounceQueryDuration' })
     },
   })
 }
@@ -29,24 +34,23 @@ export function configurationOf (element) {
  * @param {HTMLElement} element - target Element
  * @param {object} params - object parameters
  * @param {string} params.attribute - attribute name to query for
- * @param {string} params.config - config property name to search for
- * @param {number} params.defaultValue - default value to be used if not found
+ * @param {keyof typeof defaultValues} params.config - config property name to search for
  * @returns {number} validConfigName
  */
-function getConfigInteger (element, { attribute, config, defaultValue }) {
-  return validIntegerOrNull(element.getAttribute(attribute)) ??
-    validIntegerOrNull(element.constructor?.['config']?.[config]) ??
-    defaultValue
+function getConfigPositiveIntegerOrZero (element, { attribute, config }) {
+  return validPositiveIntegerPlusZeroOrNull(element.getAttribute(attribute)) ??
+    validPositiveIntegerPlusZeroOrNull(element.constructor?.['config']?.[config]) ??
+    defaultValues[config]
 }
 
 /**
  *
- * @param {*} numericValue - target value
+ * @param {unknown} numericValue - target value
  * @returns {number | null} `numericValue` if integer, otherwise null
  */
-function validIntegerOrNull (numericValue) {
+function validPositiveIntegerPlusZeroOrNull (numericValue) {
   if (typeof numericValue === 'string') {
-    numericValue = Number.parseInt(numericValue)
+    numericValue = Number.parseFloat(numericValue)
   }
-  return Number.isInteger(numericValue) ? numericValue : null
+  return typeof numericValue === 'number' && Number.isInteger(numericValue) && numericValue >= 0 ? numericValue : null
 }
