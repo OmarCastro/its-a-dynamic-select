@@ -40,9 +40,10 @@ export default [
       'unicorn/prefer-node-protocol': ['error'],
       'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
+      'jsdoc/reject-any-type': 0,
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
-      'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
+      'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
       '@cspell/spellchecker': 0
     },
   },
