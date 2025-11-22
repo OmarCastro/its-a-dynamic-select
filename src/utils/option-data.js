@@ -10,7 +10,7 @@ import { isPlainObject } from './object.js'
  * @property {string} value - option value
  * @property {"fetch"|"option"} origin - gets where the data is from
  * @property { {
- *  [x:string]: any,
+ *  [x:string]: unknown,
  *  text: string,
  *  value: string,
  *  group?: string
