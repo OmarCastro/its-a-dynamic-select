@@ -10,8 +10,8 @@
  * }
  *
  * @example
- * const lines = ['name,age', 'John,30'];
- * for (const row of parseCSV(lines)) {
+ * const chunkArray = ['name,age\n', 'John,30'];
+ * for (const row of parseCSV(chunkArray)) {
  *   console.log(row);
  * }
  */
@@ -44,23 +44,23 @@ export function parseCSV (input, delimiter = ',') {
 }
 
 /**
- * @param {*} object - target object
+ * @param {unknown} object - target object
  * @returns {object is Iterable} - true if iterable, false otherwise
  */
-const isIterable = object => typeof object[Symbol.iterator] === 'function'
+const isIterable = object => typeof object?.[Symbol.iterator] === 'function'
 
 /**
- * @param {*} object - target object
+ * @param {unknown} object - target object
  * @returns {object is AsyncIterable} - true if iterable, false otherwise
  */
-const isAsyncIterable = object => typeof object[Symbol.asyncIterator] === 'function'
+const isAsyncIterable = object => typeof object?.[Symbol.asyncIterator] === 'function'
 
 /**
  * Parses CSV from a synchronous iterable of strings.
  *
  * @param {Iterable<string>} iterable - Iterable of string chunks.
  * @param {string} [delimiter] - CSV delimiter.
- * @yields {[field: string]: string} parsed CSV row
+ * @yields {{[field: string]: string}} parsed CSV row
  */
 function * parseCSVSync (iterable, delimiter = ',') {
   let buffer = ''
@@ -94,9 +94,9 @@ function * parseCSVSync (iterable, delimiter = ',') {
 /**
  * Parses CSV from an async iterable of string chunks.
  *
- * @param {AsyncIterable<string | Buffer>} asyncIterable - Async iterable of chunks.
+ * @param {AsyncIterable<string>} asyncIterable - Async iterable of chunks.
  * @param {string} [delimiter] - CSV delimiter.
- * @yields {[field: string]: string} parsed CSV row
+ * @yields {{[field: string]: string}} parsed CSV row
  */
 async function * parseCSVAsync (asyncIterable, delimiter = ',') {
   let buffer = ''
