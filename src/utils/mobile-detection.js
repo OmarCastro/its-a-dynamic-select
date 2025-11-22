@@ -10,6 +10,10 @@ export const isLandscapeMobile = () => landscapeMobileMatchMedia.matches && hasT
 
 export const isMobile = () => isPortraitMobile() || isLandscapeMobile()
 
+/**
+ * Map of created observers with its data
+ * @type {IterableWeakMap<MobileDetectionObserver, MobileDetectionObserverData>}
+ */
 const observerData = new IterableWeakMap()
 
 /**
@@ -18,10 +22,10 @@ const observerData = new IterableWeakMap()
 function updateData () {
   const isNowMobile = isMobile()
   for (const data of observerData.values()) {
-    const { currentIsMobile, observingElements, callback } = data
+    const { currentIsMobile, observingNodes, callback } = data
     if (currentIsMobile === isNowMobile) { continue }
     data.currentIsMobile = isNowMobile
-    const events = Iterator.from(observingElements).map(element => ({
+    const events = Iterator.from(observingNodes).map(element => ({
       target: element,
       isMobile: isNowMobile
     })).toArray()
@@ -36,25 +40,52 @@ let observeMatchMedia = () => {
 }
 
 export class MobileDetectionObserver {
+  /** @type {MobileDetectionObserverData} */
+  #data
+  /**
+   * @param {MobileDetectionObserverCallback} callback - observer callback
+   */
   constructor (callback) {
-    observerData.set(this, {
+    this.#data = {
       callback,
-      observingElements: new IterableWeakSet(),
-      currentIsMobile: null
-    })
+      observingNodes: new IterableWeakSet(),
+      currentIsMobile: undefined
+    }
+    observerData.set(this, this.#data)
   }
 
-  observe (element) {
+  /**
+   * @param {Node} node - target element to observe
+   */
+  observe (node) {
     observeMatchMedia()
-    const data = observerData.get(this)
-    if (data.currentIsMobile === null) {
+    const data = this.#data
+    if (data.currentIsMobile === undefined) {
       data.currentIsMobile = isMobile()
     }
-    const { currentIsMobile, callback, observingElements } = data
-    observingElements.add(element)
+    const { currentIsMobile, callback, observingNodes } = data
+    observingNodes.add(node)
     callback([{
-      target: element,
+      target: node,
       isMobile: currentIsMobile
     }])
   }
 }
+
+/**
+ * @typedef {object} MobileDetectionObserverData
+ * @property {boolean} [currentIsMobile] - flag saved on observer to determine if the mode changed
+ * @property {MobileDetectionObserverCallback} callback - observer callback
+ * @property {IterableWeakSet<Node>} observingNodes - observer callback
+ */
+
+/**
+ * @callback MobileDetectionObserverCallback
+ * @param {MobileStateMutationRecord[]} mutations - mutations happened for each observing element
+ */
+
+/**
+ * @typedef {object} MobileStateMutationRecord
+ * @property {Node} target - observing element
+ * @property {boolean} isMobile - flag to determine if it's on mobile mode
+ */
