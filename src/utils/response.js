@@ -77,7 +77,7 @@ function splitLinkEntries (header) {
   let inAngleBrackets = false
   let firstAngleBrackets = true
 
-  for (let i = 0; i < header.length; i++) {
+  for (let i = 0, e = header.length; i < e; i++) {
     const char = header[i]
     if ((inAngleBrackets && char !== '>') || (inQuotes && char !== '"')) {
       current += char
@@ -99,6 +99,7 @@ function splitLinkEntries (header) {
     if (char === ';') {
       subEntry.push(current)
       current = ''
+      continue
     }
 
     if (char === ',') {
@@ -120,8 +121,8 @@ function splitLinkEntries (header) {
 }
 
 /**
- * @param {string[]} headerEntry
- * @returns {LinkHeaderEntry|null}
+ * @param {string[]} headerEntry - `Link` header entry
+ * @returns {LinkHeaderEntry|null} parser header entry, or null if invalid
  */
 function parseLinkHeaderEntry (headerEntry) {
   const [uri, ...params] = headerEntry
