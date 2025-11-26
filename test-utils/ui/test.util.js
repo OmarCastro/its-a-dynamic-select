@@ -1,14 +1,22 @@
-import { test as base } from '@playwright/test'
+/* eslint-disable no-empty-pattern */
+import { test as base, expect } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-await mkdir('reports/.tmp/coverage/ui/tmp', { recursive: true })
-
 export const test = base.extend({
+  step: async ({}, use) => {
+    await use(test.step)
+  },
+  expect: async ({}, use) => {
+    await use(expect)
+  },
+
   page: async ({ browserName, page }, use) => {
     if (browserName !== 'chromium') {
       return await use(page)
     }
+
+    await mkdir('reports/.tmp/coverage/ui/tmp', { recursive: true })
 
     await page.coverage.startJSCoverage()
     await use(page)
@@ -30,5 +38,3 @@ export const test = base.extend({
     }
   },
 })
-
-export { expect } from '@playwright/test'
