@@ -1,6 +1,8 @@
 import { test } from '../../test-utils/unit/test.util.js'
 import { IterableWeakMap, IterableWeakSet } from './iterable-weak-struct.js'
 
+test.describe.configure({ mode: 'parallel' })
+
 test('IterableWeakMap - iterates over entries', ({ expect }) => {
   const map = new IterableWeakMap()
   const key1 = { hello: 'world' }
