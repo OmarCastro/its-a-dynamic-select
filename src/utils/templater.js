@@ -1,7 +1,7 @@
 import { getFromStringPath } from './string-path'
 
 /**
- * @param {*} value - value to normalize
+ * @param {unknown} value - value to normalize
  * @returns {string} normalized value
  */
 function normalizeValue (value) {
@@ -12,7 +12,7 @@ function normalizeValue (value) {
  * Converts `string` to a property path array.
  *
  * @param {Element} currentElement The string to convert.
- * @param {Record<string, any>} currentData The string to convert.
+ * @param {Record<string, unknown>} currentData The string to convert.
  */
 function applyTemplateAux (currentElement, currentData) {
   switch (currentElement.tagName) {
@@ -64,7 +64,7 @@ function applyTemplateAux (currentElement, currentData) {
  * Converts `string` to a property path array.
  *
  * @param {HTMLTemplateElement} template The string to convert.
- * @param {Record<string, any>} data The string to convert.
+ * @param {Record<string, unknown>} data The string to convert.
  * @returns {DocumentFragment} Returns the property path array.
  */
 export function applyTemplate (template, data) {

@@ -39,7 +39,7 @@ export function getHostDynamicSelect (target) {
 function shadowQuery (selector) {
   return (dynamicSelect) => {
     const result = dynamicSelect.shadowRoot?.querySelector(selector)
-    if (!result) throw Error(`Error: no "${JSON.stringify(selector)}" found in dynamic select shadow DOM`)
+    if (!result) throw Error(`Error: no ${JSON.stringify(selector)} found in dynamic select shadow DOM`)
     return result
   }
 }

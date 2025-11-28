@@ -195,7 +195,7 @@ li.option-value:not(.option *):hover {
     width: 90vw;
     overscroll-behavior: contain;
 
-     & .filters {
+    & .filters {
         position: relative;
         text-align: center;
     }
