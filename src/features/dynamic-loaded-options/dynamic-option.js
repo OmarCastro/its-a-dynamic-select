@@ -39,7 +39,7 @@ function createDynamicOptionsDataFor (elementRef) {
       return [...getDynamicOptions(getElement()).querySelectorAll(':scope > option')]
     },
     get optionsData () {
-      return api.options.map(dataObjectOfOption)
+      return api.options.map(option => Object.freeze({ ...dataObjectOfOption(option), origin: 'fetch' }))
     },
     get optionsMap () {
       return Object.fromEntries(api.options.map(option => [option.value, option]))
