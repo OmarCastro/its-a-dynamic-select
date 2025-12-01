@@ -16,7 +16,8 @@ To help navigate this file is divided by sections:
 @section 11 versioning utilities
 @section 12 badge utilities
 @section 13 module graph utilities
-@section 14 build tools plugins
+@section 14 docker utilities
+@section 15 build tools plugins
 */
 import process from 'node:process'
 import fs, { readFile as fsReadFile, writeFile } from 'node:fs/promises'
@@ -64,6 +65,10 @@ const tasks = {
   test: {
     description: 'tests the project',
     cb: async () => { await execTests(); process.exit(0) },
+  },
+  'test:in-docker': {
+    description: 'tests the project',
+    cb: async () => { await testInDocker(); process.exit(0) },
   },
   lint: {
     description: 'validates the code',
@@ -128,7 +133,9 @@ await main()
 async function execDevEnvironment ({ openBrowser = false } = {}) {
   await openDevServer({ openBrowser })
   await Promise.all([execlintCodeOnChanged(), buildTest()])
-  await execTests()
+  const testTask = (await isDockerRunning()) ? testInDocker : execTests
+
+  await testTask()
   await buildDocs()
 
   const srcPath = pathFromProject('src')
@@ -141,7 +148,7 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
     console.log(`\n[watcher] files changed: ${JSON.stringify(filenames, null, 2)}\n\n`)
     let tasks = []
     if (Object.keys(filenames).some(name => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
-      tasks = [execlintCodeOnChanged, buildTest, execTests, buildDocs]
+      tasks = [execlintCodeOnChanged, buildTest, testTask, buildDocs]
     } else {
       tasks = [execlintCodeOnChanged, buildTest, buildDocs]
     }
@@ -1251,7 +1258,38 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   </svg>`
 }
 
-// @section 14 build tools plugins
+// @section 14 docker utilities
+
+async function isDockerRunning () {
+  const exitCode = await cmdSpawn('docker info', { stdio: 'ignore' })
+  return exitCode === 0
+}
+
+async function runInDocker ({ command, imageName, volumes, workdir, env, rmOnFinish }) {
+  const volumeParams = volumes ? Object.entries(volumes).map(([host, guest]) => `-v '${host}:${guest}' `) : ''
+  const envParams = env ? Object.entries(env).map(([key, val]) => `-e '${key}=${val}' `) : ''
+  const workdirParam = workdir ? `-w '${workdir}' ` : ''
+  const rmParam = rmOnFinish ? '--rm ' : ''
+  await cmdSpawn(`docker run -t ${rmParam}${volumeParams}${envParams}${workdirParam} ${imageName} ${command}`)
+}
+
+async function testInDocker () {
+  const packageJson = await readPackageJson()
+  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
+  const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
+  const workdir = '/playwright'
+  await runInDocker({
+    command: 'npm test',
+    rmOnFinish: true,
+    imageName,
+    workdir,
+    volumes: {
+      [pathFromProject('.')]: workdir
+    }
+  })
+}
+
+// @section 15 build tools plugins
 
 /**
  * @returns {Promise<import('esbuild').Plugin>} - esbuild plugin
