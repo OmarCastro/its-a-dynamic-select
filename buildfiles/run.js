@@ -1265,15 +1265,18 @@ async function isDockerRunning () {
   return exitCode === 0
 }
 
-async function runInDocker ({ command, imageName, volumes, workdir, env, rmOnFinish }) {
+async function runInDocker ({ command, imageName, volumes, workdir, env, user, rmOnFinish }) {
   const volumeParams = volumes ? Object.entries(volumes).map(([host, guest]) => `-v '${host}:${guest}' `) : ''
   const envParams = env ? Object.entries(env).map(([key, val]) => `-e '${key}=${val}' `) : ''
   const workdirParam = workdir ? `-w '${workdir}' ` : ''
+  const userParam = user ? `-u '${user}' ` : ''
   const rmParam = rmOnFinish ? '--rm ' : ''
-  await cmdSpawn(`docker run -t ${rmParam}${volumeParams}${envParams}${workdirParam} ${imageName} ${command}`)
+  await cmdSpawn(`docker run -t ${rmParam}${userParam}${volumeParams}${envParams}${workdirParam} ${imageName} ${command}`)
 }
 
 async function testInDocker () {
+  const { userInfo } = await import('node:os')
+  const { uid, gid } = userInfo()
   const packageJson = await readPackageJson()
   const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
   const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
@@ -1282,6 +1285,7 @@ async function testInDocker () {
     command: 'npm test',
     rmOnFinish: true,
     imageName,
+    user: `${uid}:${gid}`,
     workdir,
     volumes: {
       [pathFromProject('.')]: workdir
