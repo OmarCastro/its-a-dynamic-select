@@ -1,4 +1,4 @@
-import { linkHeaderOf } from '../../utils/response'
+import { linkHeaderOf } from '../../utils/response.js'
 /** @import {ParsedResponse} from '../data-loading/fetch-data' */
 
 /**

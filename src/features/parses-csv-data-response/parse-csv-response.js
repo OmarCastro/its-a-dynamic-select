@@ -1,5 +1,5 @@
-import { parseCSV } from '../../utils/csv-parser'
-import { linkHeaderOf, toTextStream } from '../../utils/response'
+import { parseCSV } from '../../utils/csv-parser.js'
+import { linkHeaderOf, toTextStream } from '../../utils/response.js'
 /** @import {ParsedResponse} from '../data-loading/fetch-data' */
 /**
  * Checks if response is a valid CSV response

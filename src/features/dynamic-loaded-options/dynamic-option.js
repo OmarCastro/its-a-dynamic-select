@@ -1,4 +1,4 @@
-import { dataLoaderOf } from '../data-loading/fetch-data'
+import { dataLoaderOf } from '../data-loading/fetch-data.js'
 import { optionElementOfData, dataObjectOfOption } from '../../utils/option-data.js'
 import { getDynamicOptions } from '../../utils/dynamic-select-dom.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom.js' */

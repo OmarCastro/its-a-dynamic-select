@@ -1,4 +1,4 @@
-import { computeOnce } from '../../utils/memoization'
+import { computeOnce } from '../../utils/memoization.js'
 import defaultTemplatesHtml from './default-select-templates.inline.html'
 
 /**

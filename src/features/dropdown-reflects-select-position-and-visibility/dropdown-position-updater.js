@@ -1,4 +1,4 @@
-import { dropdownEl, inputEl, isDynamicSelect } from '../../utils/dynamic-select-dom'
+import { dropdownEl, inputEl, isDynamicSelect } from '../../utils/dynamic-select-dom.js'
 import { centerDropdownPosition, shouldCenterDropdown } from '../centers-dropdown-to-screen-on-mobile/dropdown-mobile-centering.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom' */
 

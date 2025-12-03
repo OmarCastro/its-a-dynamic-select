@@ -1,4 +1,4 @@
-import { getFromStringPath } from './string-path'
+import { getFromStringPath } from './string-path.js'
 
 /**
  * @param {unknown} value - value to normalize
