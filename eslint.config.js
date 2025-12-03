@@ -2,8 +2,9 @@ import globals from 'globals'
 import neostandard from 'neostandard'
 import jsdoc from 'eslint-plugin-jsdoc'
 import js from '@eslint/js'
-import cspellESLintPluginRecommended from '@cspell/eslint-plugin/recommended'
+import cspellESLintPluginRecommended from '@cspell/eslint-plugin/recommended.js'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
+import importPlugin from 'eslint-plugin-import'
 
 export default [
   {
@@ -21,6 +22,7 @@ export default [
   {
     plugins: {
       unicorn: eslintPluginUnicorn,
+      import: importPlugin,
     },
     languageOptions: {
       globals: {
@@ -44,6 +46,7 @@ export default [
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
       'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
+      'import/extensions': ['error', 'always'],
       '@cspell/spellchecker': 0
     },
   },
