@@ -1,5 +1,5 @@
 import { dropdownEl, inputEl, isDynamicSelect } from '../../utils/dynamic-select-dom'
-import { centerDropdownPosition, shouldCenterDropdown } from '../centers-dropdown-to-screen-on-mobile/dropdown-mobile-position'
+import { centerDropdownPosition, shouldCenterDropdown } from '../centers-dropdown-to-screen-on-mobile/dropdown-mobile-centering.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom' */
 
 /** @type {WeakMap<DynamicSelect, DropdownPositionUpdater>} */
