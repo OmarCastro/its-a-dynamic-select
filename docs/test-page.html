@@ -14,6 +14,10 @@
             display: block;
             font: 16px Arial;
         }
+
+        body:has(.test-case:target) .test-case:not(:target){
+            display: none
+        }
         
         .test-example {
             display: block;
@@ -23,14 +27,57 @@
         </style>
     </head>
     <body>
-        
-        <h3>basic select</h3>
-        <div class="test-example">
-            <dynamic-select class="dynamic-select--hello-world">
-                <option value="hello">hello</option>
-                <option value="world">world</option>
-            </dynamic-select>    
+        <div class="test-case" id="test-basic-select">
+            <h3>basic select</h3>
+            <div class="test-example">
+                <dynamic-select class="dynamic-select--hello-world">
+                    <option value="hello">hello</option>
+                    <option value="world">world</option>
+                </dynamic-select>    
+            </div>
         </div>
+        <div class="test-case" id="test-group-select">
+            <h3>option group</h3>
+            <div class="test-example">
+                <dynamic-select class="dynamic-select--option-group">
+            <option value="">Choose a food</option>
+            <optgroup label="Fruit">
+                <option value="apple">Apples</option>
+                <option value="banana">Bananas</option>
+                <option value="blueberry">Blueberries</option>
+                <option value="coconut">Coconuts</option>
+                <option value="cherry">Cherries</option>
+                <option value="damson">Damsons</option>
+                <option value="mango">Mangoes</option>
+                <option value="orange">Oranges</option>
+                <option value="pear">Pears</option>
+                <option value="pineapple">Pineapples</option>
+                <option value="strawberry">Strawberries</option>
+            </optgroup>
+            <optgroup label="Vegetables">
+                <option value="artichoke">Artichokes</option>
+                <option value="broccoli">Broccoli</option>
+                <option value="cabbage">Cabbages</option>
+                <option value="carrots">Carrots</option>
+            </optgroup>
+            <optgroup label="Meat">
+                <option value="beef">Beef</option>
+                <option value="chicken">Chicken</option>
+                <option value="pork">Pork</option>
+            </optgroup>
+            <optgroup label="Fish">
+                <option value="catfish">Catfish</option>
+                <option value="cod">Cod</option>
+                <option value="haddock">Haddock</option>
+                <option value="salmon">Salmon</option>
+                <option value="turbot">Turbot</option>
+                <option value="tuna">Tuna</option>
+            </optgroup>
+            </dynamic-select>    
+            </div>
+        </div>
+        
+        
 
     </body>
 </html>
