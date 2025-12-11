@@ -52,7 +52,7 @@ function createDataLoaderFor (elementRef) {
 /**
  *
  * @param {HTMLElement} element - target element
- * @param dataToFetch
+ * @param {DataToFetch} dataToFetch - info for data fetch
  */
 function dispatchFetchDataEvent (element, dataToFetch) {
   let customResponse = null
@@ -128,8 +128,8 @@ async function fetchNextData (element) {
 
 /**
  *
- * @param {HTMLElement} element
- * @param {DataToFetch} dataToFetch
+ * @param {HTMLElement} element - target element
+ * @param {DataToFetch} dataToFetch -
  */
 async function fetchFromDataToFetch (element, dataToFetch) {
   const fetchRecord = addToFetchHistory(element, {
@@ -159,6 +159,15 @@ async function fetchFromDataToFetch (element, dataToFetch) {
 
     if ('error' in fetchRecord.result) {
       throw Error(fetchRecord.result.error)
+    }
+    return fetchRecord.result
+  }
+
+  if (!url) {
+    fetchRecord.completed = true
+    fetchRecord.result = {
+      data: [],
+      hasMore: false,
     }
     return fetchRecord.result
   }
@@ -228,7 +237,7 @@ async function parseRespondWithCall (paramOfRespondWith) {
  * @returns {Promise<ParsedResponse | ParseError>} parse result
  */
 async function parseResponse (response) {
-  if (isValidResponse(response)) {
+  if (response.ok) {
     if (isCSVResponse(response)) {
       return await parseCSVResponse(response)
     } else if (isJsonResponse(response)) {
@@ -262,20 +271,17 @@ function addToFetchHistory (element, record) {
 }
 
 /**
- *
- * @param {HTMLElement} element
+ * @param {HTMLElement} element - target element
  */
 const getQueryValue = element => element.getAttribute('data-filter') ?? ''
 
 /**
- *
- * @param {HTMLElement} element
+ * @param {HTMLElement} element - target element
  */
 const getDataSource = element => element.getAttribute('data-src') ?? ''
 
 /**
- *
- * @param {HTMLElement} element
+ * @param {HTMLElement} element - target element
  */
 const getUrlToFetch = element => {
   const src = getDataSource(element)
@@ -288,15 +294,6 @@ const getUrlToFetch = element => {
     srcURL.searchParams.set('q', query)
   }
   return srcURL.href
-}
-
-/**
- *
- * @param {Response} response
- * @returns
- */
-function isValidResponse (response) {
-  return response.ok
 }
 
 /**
@@ -364,5 +361,7 @@ function isValidResponse (response) {
  */
 
 /**
- * @typedef {*} DataToFetch
+ * @typedef {object} DataToFetch
+ * @property {string} query - search filter applied to search
+ * @property {string} url - request URL endpoint
  */
