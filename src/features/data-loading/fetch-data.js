@@ -246,7 +246,6 @@ async function parseResponse (response) {
       return {
         error: 'invalid response, expected JSON or CSV response, guarantee that Content-type header is set correctly to "text/csv" or "application/json"',
         stage: 'parse fetch response'
-
       }
     }
   }
@@ -257,9 +256,10 @@ async function parseResponse (response) {
 }
 
 /**
- *
- * @param {HTMLElement} element
- * @param {FetchRecord} record
+ * Adds a record to fetch history of an element data loader
+ * Each data loader has an history to at most 128 records. Large enough to debug, small enough to not have a big memory footprint
+ * @param {HTMLElement} element - target element to get data loader of
+ * @param {FetchRecord} record - fetch record to save
  */
 function addToFetchHistory (element, record) {
   const { fetchHistory } = dataLoaderOf(element)
