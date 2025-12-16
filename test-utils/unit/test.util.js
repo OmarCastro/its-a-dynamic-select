@@ -31,7 +31,7 @@ const fn = async () => {
     const { window } = await importModule(importStr)
 
     importStr = './fetch-mock'
-    const { fetchMockApi, cleanup: cleanupFetchMock } = await importModule(importStr)
+    const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule(importStr)
 
     return (description, test) => {
       globalThis.Deno.test(`${description}`, async (t) => {
@@ -39,9 +39,11 @@ const fn = async () => {
           step: t.step,
           expect,
           dom: window,
-          fetch: fetchMockApi
+          get fetch () {
+            return setupFetchMock()
+          }
         })
-        cleanupFetchMock()
+        teardownFetchMock()
       })
     }
   }
@@ -56,7 +58,7 @@ const fn = async () => {
     const { window, resetDom } = await importModule(importStr)
 
     importStr = './fetch-mock'
-    const { fetchMockApi, cleanup: cleanupFetchMock } = await importModule(importStr)
+    const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule(importStr)
 
     /** @type {any} */
     const test = base.extend({
@@ -71,8 +73,9 @@ const fn = async () => {
         await use(expect)
       },
       fetch: async ({}, use) => {
-        await use(fetchMockApi)
-        cleanupFetchMock()
+        const api = setupFetchMock()
+        await use(api)
+        teardownFetchMock()
       },
     })
 
@@ -81,7 +84,7 @@ const fn = async () => {
     // init unit tests to be run in browser
 
     const { expect } = await import('expect')
-    const { fetchMockApi, cleanup: cleanupFetchMock } = await import('./fetch-mock')
+    const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule('./fetch-mock')
 
     return async (description, test) => {
       console.log('-' + description)
@@ -93,10 +96,12 @@ const fn = async () => {
           },
           dom: window,
           expect,
-          fetch: fetchMockApi,
+          get fetch () {
+            return setupFetchMock()
+          }
         })
       } finally {
-        cleanupFetchMock()
+        teardownFetchMock()
       }
     }
   }
