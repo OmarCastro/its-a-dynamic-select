@@ -17,7 +17,6 @@ test('dataLoaderOf - without any defined endpoint return an empty result', async
 })
 
 test('dataLoaderOf - without a endpoint return an valid result', async ({ expect, dom, fetch }) => {
-  const oldFetch = globalThis.fetch
   const { document } = dom
   const { body } = document
   body.innerHTML = `
@@ -32,8 +31,6 @@ test('dataLoaderOf - without a endpoint return an valid result', async ({ expect
   const element = body.querySelector('.test')
 
   const data = await dataLoaderOf(element).fetchData()
-
-  globalThis.fetch = oldFetch
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
 })
