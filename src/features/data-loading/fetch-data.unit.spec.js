@@ -9,7 +9,7 @@ test('dataLoaderOf - calling on the same element returns the same object', async
   expect(dataLoaderOf(element)).toBe(dataLoaderOf(element))
 })
 
-test('dataLoaderOf - without any defined endpoint return an empty result', async ({ expect, dom }) => {
+test('dataLoaderOf - fetching data without any defined endpoint returns an empty result', async ({ expect, dom }) => {
   const { body } = dom.document
   body.innerHTML = '<div class="test"></div>'
   const element = body.querySelector('.test')
@@ -19,7 +19,7 @@ test('dataLoaderOf - without any defined endpoint return an empty result', async
   expect(data).toEqual({ data: [], hasMore: false })
 })
 
-test('dataLoaderOf - without a endpoint return an valid result', async ({ expect, dom, fetch }) => {
+test('dataLoaderOf - fetching data with a valid endpoint return an valid result', async ({ expect, dom, fetch }) => {
   fetch.mock(/.*test/, Response.json([
     { id: 'sdsd', text: 'sss' }
   ]))
@@ -30,6 +30,15 @@ test('dataLoaderOf - without a endpoint return an valid result', async ({ expect
   const data = await dataLoaderOf(element).fetchData()
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
+})
+
+test('dataLoaderOf - error fetching data will propagate the error', async ({ expect, dom, fetch }) => {
+  fetch.mock(/.*test/, Error('example error'))
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="/test"></div>'
+  const loader = dataLoaderOf(body.querySelector('.test'))
+
+  await expect(() => loader.fetchData()).rejects.toThrow(Error('example error'))
 })
 
 test('dataLoaderOf - fetching next data when hasMore is false returns an empty result', async ({ expect, dom }) => {

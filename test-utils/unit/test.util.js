@@ -125,7 +125,7 @@ export const test = await fn()
  * @property {typeof import('expect').expect} expect - expect API
  * @property {TestAPICall} step - test step
  * @property {Window} dom - dom fixture
- * @property {typeof import('./fetch-mock').fetchMockApi} fetch - dom fixture
+ * @property {import('./fetch-mock').MockApi} fetch - dom fixture
  */
 
 /**
