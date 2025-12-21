@@ -20,6 +20,7 @@ test('dataLoaderOf - fetching data without any defined endpoint returns an empty
 })
 
 test('dataLoaderOf - fetching data with a valid endpoint return an valid result', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
   fetch.mock(/.*test/, Response.json([
     { id: 'sdsd', text: 'sss' }
   ]))
@@ -33,6 +34,7 @@ test('dataLoaderOf - fetching data with a valid endpoint return an valid result'
 })
 
 test('dataLoaderOf - error fetching data will propagate the error', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
   fetch.mock(/.*test/, Error('example error'))
   const { body } = dom.document
   body.innerHTML = '<div class="test" data-src="/test"></div>'

@@ -1,72 +1,81 @@
-const oldFetch = globalThis.fetch
-
-/**
- * @param {Parameters<typeof oldFetch>} args - fetch() arguments
- * @this  {{fetchHistory: FetchHistoryEntry[], mockedEntries: any[]}}
- */
-async function customFetch (...args) {
-  const { fetchHistory, mockedEntries } = this
-  const inputs = args
-  let output = null
-  try {
-    const inputToSearch = (() => {
-      const input = inputs[0]
-      if (typeof input === 'string') return input
-      if (input instanceof URL) return input.toString()
-      if (input instanceof Request) return input.url.toString()
-    })()
-    const mockedEntry = mockedEntries.findLast(({ regex }) => regex.test(inputToSearch))
-    const response = mockedEntry?.response
-    if (!response) {
-      throw Error(`no fetch mock found for url ${inputToSearch}`)
-    }
-    output = response
-  } catch (e) {
-    output = e
-  }
-  const isError = output instanceof Error
-  const historyEntry = {
-    inputs, output, isError
-  }
-  fetchHistory.push(historyEntry)
-  if (isError) {
-    throw output
-  }
-  return output
-}
-
-/**
- * @param {RegExp} regex - regex to test url
- * @param {Response|Error} response - fetch response, can be an error to simulate a fetch error (e.g. DNS error)
- */
-export function mockFetch (regex, response) {
-  this.push({ regex, response })
-}
+const originalFetch = globalThis.fetch
 
 /**
  * Setup fetch mock fixture
  * @returns {MockApi} mock api
  */
 export function setup () {
-  /** @type {FetchHistoryEntry[]} */
-  const fetchHistory = []
-  const mockedEntries = []
-  /** @type {MockApi} */
-  const mockApi = Object.freeze({
-    fetchHistory,
-    mock (regex, response) {
-      mockedEntries.push({ regex, response })
-    }
-  })
-  globalThis.fetch = customFetch.bind({ fetchHistory, mockedEntries })
-  return mockApi
+  const mockData = {
+    fetchHistory: [],
+    mockedEntries: [],
+    isErrorThrownOnMockNotFound: false
+  }
+  globalThis.fetch = customFetch.bind(null, mockData)
+  return buildApi(mockData)
 }
 
 /**
  * teardown fetch mock fixture
  */
 export function teardown () {
-  globalThis.fetch = oldFetch
+  globalThis.fetch = originalFetch
+}
+
+/**
+ * @param {MockData} mockData - mock data object binded to this function
+ * @returns {MockApi} mock api
+ */
+const buildApi = (mockData) => Object.freeze({
+  get fetchHistory () {
+    return [...mockData.fetchHistory]
+  },
+  mock (regex, response) {
+    mockData.mockedEntries.push({ regex, response })
+  },
+  throwErrorOnNonMockedRequests () {
+    mockData.isErrorThrownOnMockNotFound = true
+  }
+})
+
+/**
+ * @param {Parameters<typeof originalFetch>[0]} fetchParam - original `fetch()` arguments
+ */
+const getHrefFromFetchRequest = (fetchParam) => {
+  if (typeof fetchParam === 'string') return fetchParam
+  if (fetchParam instanceof URL) return fetchParam.toString()
+  if (fetchParam instanceof Request) return fetchParam.url.toString()
+  return ''
+}
+
+/**
+ * @param {MockData} mockData - mock data object binded to this function
+ * @param {Parameters<typeof originalFetch>} args - original `fetch()` arguments
+ */
+async function customFetch (mockData, ...args) {
+  const { fetchHistory, mockedEntries, isErrorThrownOnMockNotFound } = mockData
+  let output = null
+  try {
+    const inputToSearch = getHrefFromFetchRequest(args[0])
+    const mockedEntry = mockedEntries.findLast(({ regex }) => regex.test(inputToSearch))
+    const response = mockedEntry?.response
+    if (response) {
+      output = response
+    } else if (isErrorThrownOnMockNotFound) {
+      throw Error(`no fetch mock found for url ${inputToSearch}`)
+    } else {
+      output = await originalFetch(...args)
+    }
+  } catch (e) {
+    output = e instanceof Error ? e : Error('error executing fetch()', { cause: e })
+  }
+  const historyEntry = {
+    inputs: args, output
+  }
+  fetchHistory.push(historyEntry)
+  if (output instanceof Error) {
+    throw output
+  }
+  return output
 }
 
 /**
@@ -77,9 +86,17 @@ export function teardown () {
  */
 
 /**
+ * @typedef {object} MockData
+ * @property {FetchHistoryEntry[]} fetchHistory - fetch history for this mock
+ * @property {any[]} mockedEntries - fetch history for this mock
+ * @property {boolean} isErrorThrownOnMockNotFound - mock an entry
+ */
+
+/**
  * @typedef {object} MockApi
  * @property {FetchHistoryEntry[]} fetchHistory - fetch history for this mock
  * @property {MockFetch} mock - mock an entry
+ * @property {() => void} throwErrorOnNonMockedRequests - throw error if a `fetch()` request made in the test is not yet mocked
  */
 
 /**
