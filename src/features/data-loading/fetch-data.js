@@ -89,8 +89,7 @@ async function fetchData (element) {
 }
 
 /**
- *
- * @param {HTMLElement} element
+ * @param {HTMLElement} element - target element to load data to
  */
 async function fetchNextData (element) {
   const loader = dataLoaderOf(element)

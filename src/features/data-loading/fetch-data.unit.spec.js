@@ -33,6 +33,28 @@ test('dataLoaderOf - fetching data with a valid endpoint return an valid result'
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
 })
 
+test('dataLoaderOf - add query params to url when requesting data', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
+  const response = Response.json([
+    { id: 'sdsd', text: 'sss' }
+  ])
+  fetch.mock(/.*test/, response)
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="/test"></div>'
+  const element = body.querySelector('.test')
+
+  const data = await dataLoaderOf(element).fetchData()
+
+  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
+  expect(fetch.fetchHistory).toEqual([{
+    inputs: [
+      'https://example.com/test'
+    ],
+    response
+  }
+  ])
+})
+
 test('dataLoaderOf - error fetching data will propagate the error', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   fetch.mock(/.*test/, Error('example error'))
