@@ -22,7 +22,7 @@ test('dataLoaderOf - fetching data without any defined endpoint returns an empty
 test('dataLoaderOf - fetching data with a valid endpoint return an valid result', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   fetch.mock(/.*test/, Response.json([
-    { id: 'sdsd', text: 'sss' }
+    { id: 'sdsd', text: 'hello world' }
   ]))
   const { body } = dom.document
   body.innerHTML = '<div class="test" data-src="/test"></div>'
@@ -30,13 +30,13 @@ test('dataLoaderOf - fetching data with a valid endpoint return an valid result'
 
   const data = await dataLoaderOf(element).fetchData()
 
-  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
+  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
 })
 
-test('dataLoaderOf - add query params to url when requesting data', async ({ expect, dom, fetch }) => {
+test('dataLoaderOf - for first query, use the defined url in data-src when requesting data', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   const response = Response.json([
-    { id: 'sdsd', text: 'sss' }
+    { id: 'sdsd', text: 'hello world' }
   ])
   fetch.mock(/.*test/, response)
   const { body } = dom.document
@@ -45,12 +45,34 @@ test('dataLoaderOf - add query params to url when requesting data', async ({ exp
 
   const data = await dataLoaderOf(element).fetchData()
 
-  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'sss' }], hasMore: false })
+  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
   expect(fetch.fetchHistory).toEqual([{
     inputs: [
       'https://example.com/test'
     ],
-    response
+    output: response
+  }
+  ])
+})
+
+test('dataLoaderOf - when query has filter, add filter as query param on when requesting data', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
+  const response = Response.json([
+    { id: 'sdsd', text: 'hello world' }
+  ])
+  fetch.mock(/.*test/, response)
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="/test" data-filter="hello"></div>'
+  const element = body.querySelector('.test')
+
+  const data = await dataLoaderOf(element).fetchData()
+
+  expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
+  expect(fetch.fetchHistory).toEqual([{
+    inputs: [
+      'https://example.com/test?q=hello'
+    ],
+    output: response
   }
   ])
 })
