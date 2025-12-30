@@ -56,8 +56,7 @@ export default [
       '@cspell/spellchecker': ['warn', {
         cspell: {
           words: [
-            'CIEDE', 'NTSC', 'Kotsarenko', 'Vysniauskas', 'Tristimulus', 'Sylvania', 'Ultralume',
-            'CIELAB', 'Gaurav', 'Sharma', 'Wencheng', 'Edul', 'Dalal', 'Ultralume',
+            'datafetch',
           ]
         }
       }]
