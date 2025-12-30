@@ -98,8 +98,8 @@ async function fetchNextData (element) {
     return await fetchData(element)
   }
   if (!currentData.hasMore) {
-    // no need to fetch since we have all data
-    return currentData
+    // no need to fetch since we have all the data, return an empty result
+    return Object.freeze({ data: [], hasMore: false })
   }
 
   const dataToFetch = (() => {
