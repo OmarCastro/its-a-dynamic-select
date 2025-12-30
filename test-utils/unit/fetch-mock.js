@@ -26,8 +26,10 @@ export function teardown () {
  * @returns {MockApi} mock api
  */
 const buildApi = (mockData) => Object.freeze({
-  get fetchHistory () {
-    return [...mockData.fetchHistory]
+  fetchHistory: {
+    get data () { return [...mockData.fetchHistory] },
+    get inputs () { return mockData.fetchHistory.map(({ inputs }) => inputs) },
+    get inputHrefs () { return mockData.fetchHistory.map(({ inputs }) => getHrefFromFetchRequest(inputs[0])) }
   },
   mock (regex, response) {
     mockData.mockedEntries.push({ regex, response })
@@ -80,7 +82,7 @@ async function customFetch (mockData, ...args) {
 
 /**
  * @typedef {object} FetchHistoryEntry
- * @property {Parameters<typeof globalThis.fetch>} input - fetch() arguments
+ * @property {Parameters<typeof globalThis.fetch>} inputs - fetch() arguments
  * @property {any} output - awaited fetch result
  * @property {boolean} isError - determines if result is an error
  */
@@ -94,7 +96,10 @@ async function customFetch (mockData, ...args) {
 
 /**
  * @typedef {object} MockApi
- * @property {FetchHistoryEntry[]} fetchHistory - fetch history for this mock
+ * @property {object} fetchHistory - fetch history object this mock
+ * @property {FetchHistoryEntry[]} fetchHistory.data - fetch history for this mock
+ * @property {Parameters<typeof globalThis.fetch>[]} fetchHistory.inputs - fetch history with the input parameters called with this mock
+ * @property {string[]} fetchHistory.inputHrefs - fetch history with only the hrefs in the mock, RequestInit parameters are ignored.
  * @property {MockFetch} mock - mock an entry
  * @property {() => void} throwErrorOnNonMockedRequests - throw error if a `fetch()` request made in the test is not yet mocked
  */

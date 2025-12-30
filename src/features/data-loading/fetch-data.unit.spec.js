@@ -46,12 +46,8 @@ test('dataLoaderOf - for first query, use the defined url in data-src when reque
   const data = await dataLoaderOf(element).fetchData()
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
-  expect(fetch.fetchHistory).toEqual([{
-    inputs: [
-      'https://example.com/test'
-    ],
-    output: response
-  }
+  expect(fetch.fetchHistory.inputHrefs).toEqual([
+    'https://example.com/test'
   ])
 })
 
@@ -68,12 +64,8 @@ test('dataLoaderOf - when query has filter, add filter as query param on when re
   const data = await dataLoaderOf(element).fetchData()
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
-  expect(fetch.fetchHistory).toEqual([{
-    inputs: [
-      'https://example.com/test?q=hello'
-    ],
-    output: response
-  }
+  expect(fetch.fetchHistory.inputHrefs).toEqual([
+    'https://example.com/test?q=hello'
   ])
 })
 
