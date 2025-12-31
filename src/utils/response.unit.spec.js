@@ -1,5 +1,5 @@
 import { test } from '../../test-utils/unit/test.util.js'
-import { linkHeaderOf, toTextStream } from './response.js'
+import { linkHeaderOf, toTextStream, parseHasMoreHeader } from './response.js'
 
 test('linkHeaderOf - returns parsed header from string', ({ expect }) => {
   const linkHeaderContent = '<https://api.example.com/issues?page=2>; param1="val1", <https://api.example.com/issues?page=4>, <https://api.example.com/issues?page=10> ;param2="val2", <https://api.example.com/issues?page=1>; rel="first"'
@@ -88,4 +88,55 @@ test('toTextStream - returns empty if no body', async ({ expect }) => {
   const result = await Array.fromAsync(toTextStream(response))
 
   expect(result).toEqual([])
+})
+
+test('parseHasMoreHeader - returns false if no "has-more" header is defined', async ({ expect }) => {
+  const response = new Response()
+  const result = parseHasMoreHeader(response)
+  expect(result).toBe(false)
+})
+
+test('parseHasMoreHeader - returns false if no "has-more" header is invalid', async ({ expect }) => {
+  const response = new Response()
+  response.headers.set('has-more', 'fdsfsdf')
+  const result = parseHasMoreHeader(response)
+  expect(result).toBe(false)
+})
+
+test('parseHasMoreHeader - returns false if no "has-more" header is false', async ({ expect }) => {
+  const response = new Response()
+  response.headers.set('has-more', 'false')
+  const result = parseHasMoreHeader(response)
+  expect(result).toBe(false)
+})
+
+test('parseHasMoreHeader - returns true if no "has-more" header is true', async ({ expect }) => {
+  const response = new Response()
+  response.headers.set('has-more', 'true')
+  const result = parseHasMoreHeader(response)
+  expect(result).toBe(true)
+})
+
+test('parseHasMoreHeader - header and value are case-insensitive', async ({ expect }) => {
+  const response = new Response()
+  response.headers.set('HaS-More', 'TruE')
+  const result = parseHasMoreHeader(response)
+  expect(result).toBe(true)
+})
+
+test('parseHasMoreHeader - uses "X-has-more" as fallback', async ({ expect }) => {
+  const response1 = new Response()
+  response1.headers.set('X-HaS-More', 'TruE')
+
+  const response2 = new Response()
+  response2.headers.set('X-HaS-More', 'TruE')
+  response2.headers.set('has-more', 'false')
+
+  const response3 = new Response()
+  response3.headers.set('X-HaS-More', 'TruE')
+  response3.headers.set('has-more', 'faddasd')
+
+  expect(parseHasMoreHeader(response1)).toBe(true)
+  expect(parseHasMoreHeader(response2)).toBe(false)
+  expect(parseHasMoreHeader(response3)).toBe(false) // ignore falback header even if it is invalid
 })

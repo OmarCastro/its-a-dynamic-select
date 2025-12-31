@@ -1,4 +1,4 @@
-import { linkHeaderOf } from '../../utils/response.js'
+import { linkHeaderOf, parseHasMoreHeader } from '../../utils/response.js'
 /** @import {ParsedResponse} from '../data-loading/fetch-data' */
 
 /**
@@ -24,7 +24,7 @@ export async function parseJsonResponse (response) {
  */
 function parseJsonArrayResponse (json, response) {
   const linkHeader = linkHeaderOf(response)
-  const hasNextHeader = response.headers.get('X-Has-More')?.toLowerCase() === 'true'
+  const hasNextHeader = parseHasMoreHeader(response)
   const data = json
   if (linkHeader.byRel.next) {
     return {
@@ -58,7 +58,7 @@ function parseJsonObjectResponse (json, response) {
   const { links, hasMore, records } = json.links
   const data = records
   const nextLink = links.next || linkHeaderOf(response).byRel.next?.[0]?.url
-  const useHasMore = hasMore ?? response.headers.get('X-Has-More')?.toLowerCase() === 'true'
+  const useHasMore = hasMore ?? parseHasMoreHeader(response)
 
   if (nextLink) {
     return {

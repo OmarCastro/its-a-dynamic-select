@@ -38,6 +38,26 @@ export function linkHeaderOf (responseOrHeader) {
 }
 
 /**
+ * Parses "X-Has-More" as well as "Has-More" header from response to
+ * detect if there is more data to fetch
+ * Note: "Has-More" has higher priority than "X-Has-More"
+ * @param {Response} response - response from fetch
+ * @returns {boolean} parsed "Has more" response header
+ */
+export function parseHasMoreHeader (response) {
+  if (!(response instanceof Response)) {
+    return false
+  }
+  for (const headerName of ['Has-More', 'X-Has-More']) {
+    const header = response.headers.get(headerName)
+    if (header) {
+      return header.toLowerCase() === 'true'
+    }
+  }
+  return false
+}
+
+/**
  * Parses Link HTTP header used for pagination only
  * @param {string?} header - response from fetch
  * @returns {LinkHeader} parser Link header

@@ -1,5 +1,5 @@
 import { parseCSV } from '../../utils/csv-parser.js'
-import { linkHeaderOf, toTextStream } from '../../utils/response.js'
+import { linkHeaderOf, toTextStream, parseHasMoreHeader } from '../../utils/response.js'
 /** @import {ParsedResponse} from '../data-loading/fetch-data' */
 /**
  * Checks if response is a valid CSV response
@@ -14,7 +14,7 @@ export async function parseCSVResponse (response) {
   }
 
   const linkHeader = linkHeaderOf(response)
-  const hasNextHeader = response.headers.get('X-Has-More')?.toLowerCase() === 'true'
+  const hasNextHeader = parseHasMoreHeader(response)
   const data = await Array.fromAsync(parseCSV(toTextStream(response)))
   if (linkHeader.byRel.next) {
     return {
