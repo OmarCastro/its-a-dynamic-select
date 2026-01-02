@@ -109,10 +109,12 @@ async function fetchNextData (element) {
         url: currentData.href
       }
     }
-    if (currentData.navigationMode === 'cursor') {
+    if (currentData.navigationMode === 'after_value') {
+      const latestValue = currentData.data.at(-1)?.value
+      const additionalQueryParams = latestValue ? { after: String(latestValue) } : {}
       return {
         query: getQueryValue(element),
-        url: getUrlToFetch(element)
+        url: getUrlToFetch(element, additionalQueryParams)
       }
     }
   })()
@@ -221,7 +223,7 @@ async function parseRespondWithCall (paramOfRespondWith) {
       return {
         data: records,
         hasMore: true,
-        navigationMode: 'cursor'
+        navigationMode: 'after_value'
       }
     }
   }
@@ -281,8 +283,9 @@ const getDataSource = element => element.getAttribute('data-src') ?? ''
 
 /**
  * @param {HTMLElement} element - target element
+ * @param additionalQueryParams
  */
-const getUrlToFetch = element => {
+const getUrlToFetch = (element, additionalQueryParams = {}) => {
   const src = getDataSource(element)
   if (!src) {
     return src
@@ -291,6 +294,9 @@ const getUrlToFetch = element => {
   const srcURL = new URL(src, window.location.href)
   if (query) {
     srcURL.searchParams.set('q', query)
+  }
+  for (const [name, value] of Object.entries(additionalQueryParams)) {
+    srcURL.searchParams.set(name, value)
   }
   return srcURL.href
 }
@@ -322,12 +328,12 @@ const getUrlToFetch = element => {
  */
 
 /**
- * @typedef {object} CursorPaginatedParsedResponse
- * @property {"cursor"} navigationMode - navigation mode
+ * @typedef {object} AfterLastValuePaginatedParsedResponse
+ * @property {"after_value"} navigationMode - navigation mode
  */
 
 /**
- * @typedef {ParsedNoMoreResponse | (ParsedHasMoreResponse & (CursorPaginatedParsedResponse | LinkPaginatedParsedResponse))} ParsedResponse
+ * @typedef {ParsedNoMoreResponse | (ParsedHasMoreResponse & (AfterLastValuePaginatedParsedResponse | LinkPaginatedParsedResponse))} ParsedResponse
  */
 
 /**

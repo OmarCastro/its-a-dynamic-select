@@ -24,7 +24,7 @@ export async function parseJsonResponse (response) {
  */
 function parseJsonArrayResponse (json, response) {
   const linkHeader = linkHeaderOf(response)
-  const hasNextHeader = parseHasMoreHeader(response)
+  const hasMoreHeader = parseHasMoreHeader(response)
   const data = json
   if (linkHeader.byRel.next) {
     return {
@@ -34,10 +34,10 @@ function parseJsonArrayResponse (json, response) {
       data
     }
   }
-  if (hasNextHeader) {
+  if (hasMoreHeader) {
     return {
       hasMore: true,
-      navigationMode: 'cursor',
+      navigationMode: 'after_value',
       data
     }
   }
@@ -71,7 +71,7 @@ function parseJsonObjectResponse (json, response) {
   if (useHasMore) {
     return {
       hasMore: true,
-      navigationMode: 'cursor',
+      navigationMode: 'after_value',
       data
     }
   }

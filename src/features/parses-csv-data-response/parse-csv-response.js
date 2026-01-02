@@ -27,7 +27,7 @@ export async function parseCSVResponse (response) {
   if (hasNextHeader) {
     return {
       hasMore: true,
-      navigationMode: 'cursor',
+      navigationMode: 'after_value',
       data
     }
   }
