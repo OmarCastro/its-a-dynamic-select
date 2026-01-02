@@ -77,6 +77,9 @@ async function customFetch (mockData, ...args) {
   if (output instanceof Error) {
     throw output
   }
+  if (output instanceof Response) {
+    return output.clone()
+  }
   return output
 }
 
