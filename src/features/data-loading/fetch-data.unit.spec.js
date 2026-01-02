@@ -125,3 +125,48 @@ test('dataLoaderOf - uses link pagination when response contains a "Link" header
     'https//example.com/test?cursor=test_cursor'
   ])
 })
+
+test('dataLoaderOf - uses "after value" pagination when response contains an "Has-More: true" header', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="test"></div>'
+  const response1 = Response.json([{ value: '1', text: 'hello world' }])
+  response1.headers.append('Has-More', 'true')
+  fetch.mock(/.*test/, response1)
+  const response2 = Response.json([{ value: '2', text: 'hello werl' }])
+  response2.headers.append('Has-More', 'false')
+  fetch.mock(/.*after=1/, response2)
+
+  const expectedData1 = {
+    data: [{ value: '1', text: 'hello world' }],
+    hasMore: true,
+    navigationMode: 'after_value',
+  }
+
+  const expectedData2 = {
+    data: [{ value: '2', text: 'hello werl' }],
+    hasMore: false
+  }
+
+  const expectedData3 = {
+    data: [],
+    hasMore: false
+  }
+
+  const expectedFetchUrls = [
+    'https://example.com/test',
+    'https://example.com/test?after=1'
+  ]
+
+  const element = body.querySelector('.test')
+  const data1 = await dataLoaderOf(element).fetchData()
+  const data2 = await dataLoaderOf(element).fetchNextData()
+  const data3 = await dataLoaderOf(element).fetchNextData()
+
+  expect({ data1, data2, data3, fetchUrls: fetch.fetchHistory.inputHrefs }).toEqual({
+    data1: expectedData1,
+    data2: expectedData2,
+    data3: expectedData3,
+    fetchUrls: expectedFetchUrls
+  })
+})
