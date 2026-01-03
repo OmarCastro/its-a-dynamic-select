@@ -55,9 +55,9 @@ function parseJsonArrayResponse (json, response) {
  * @returns {ParsedResponse} parsed response
  */
 function parseJsonObjectResponse (json, response) {
-  const { links, hasMore, records } = json.links
+  const { links, hasMore, records } = json
   const data = records
-  const nextLink = links.next || linkHeaderOf(response).byRel.next?.[0]?.url
+  const nextLink = typeof links?.next === 'string' ? links.next : linkHeaderOf(response).byRel.next?.[0]?.url
   const useHasMore = hasMore ?? parseHasMoreHeader(response)
 
   if (nextLink) {
