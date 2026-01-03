@@ -92,7 +92,7 @@ test('dataLoaderOf - fetching next data when hasMore is false returns an empty r
   expect(data2).toEqual({ data: [], hasMore: false })
 })
 
-test('dataLoaderOf - uses link pagination when response contains a "Link" header', async ({ expect, dom, fetch }) => {
+test('dataLoaderOf - uses link pagination when json array response contains a "Link" header with "next" rel', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   const { body } = dom.document
   body.innerHTML = '<div class="test" data-src="test"></div>'
@@ -100,6 +100,104 @@ test('dataLoaderOf - uses link pagination when response contains a "Link" header
   response1.headers.append('Link', '<https//example.com/test?cursor=test_cursor>; rel="next"')
   fetch.mock(/.*test/, response1)
   const response2 = Response.json([{ id: '2', text: 'hello werl' }])
+
+  fetch.mock(/.*cursor=test_cursor/, response2)
+
+  const element = body.querySelector('.test')
+  const data1 = await dataLoaderOf(element).fetchData()
+  const data2 = await dataLoaderOf(element).fetchNextData()
+  const data3 = await dataLoaderOf(element).fetchNextData()
+
+  expect(data1).toEqual({
+    data: [{ id: '1', text: 'hello world' }],
+    hasMore: true,
+    navigationMode: 'link',
+    href: 'https//example.com/test?cursor=test_cursor',
+  })
+  expect(data2).toEqual({
+    data: [{ id: '2', text: 'hello werl' }],
+    hasMore: false
+  })
+  expect(data3).toEqual({ data: [], hasMore: false })
+
+  expect(fetch.fetchHistory.inputHrefs).toEqual([
+    'https://example.com/test',
+    'https//example.com/test?cursor=test_cursor'
+  ])
+})
+
+test('dataLoaderOf - uses link pagination when csv response contains a "Link" header with "next" rel', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="test"></div>'
+  const response1 = new Response(
+`value,text
+1,hello world
+2,test 1`, {
+  headers: new Headers({
+    'Content-Type': 'text/csv',
+    Link: '<https//example.com/test?cursor=test_cursor>; rel="next"',
+  })
+}
+  )
+  fetch.mock(/.*test/, response1)
+
+  const response2 = new Response(
+`value,text
+3,lorem ipsum
+4,test 2`, {
+  headers: new Headers({
+    'Content-Type': 'text/csv',
+  })
+})
+  fetch.mock(/.*cursor=test_cursor/, response2)
+
+  const element = body.querySelector('.test')
+  const data1 = await dataLoaderOf(element).fetchData()
+  const data2 = await dataLoaderOf(element).fetchNextData()
+  const data3 = await dataLoaderOf(element).fetchNextData()
+
+  expect(data1).toEqual({
+    data: [
+      { value: '1', text: 'hello world' },
+      { value: '2', text: 'test 1' },
+    ],
+    hasMore: true,
+    navigationMode: 'link',
+    href: 'https//example.com/test?cursor=test_cursor',
+  })
+  expect(data2).toEqual({
+    data: [
+      { value: '3', text: 'lorem ipsum' },
+      { value: '4', text: 'test 2' },
+    ],
+    hasMore: false
+  })
+  expect(data3).toEqual({ data: [], hasMore: false })
+
+  expect(fetch.fetchHistory.inputHrefs).toEqual([
+    'https://example.com/test',
+    'https//example.com/test?cursor=test_cursor'
+  ])
+})
+
+test('dataLoaderOf - uses link pagination when response object contains a "links" property with next field', async ({ expect, dom, fetch }) => {
+  fetch.throwErrorOnNonMockedRequests()
+  const { body } = dom.document
+  body.innerHTML = '<div class="test" data-src="test"></div>'
+  const response1 = Response.json({
+    links: {
+      next: 'https//example.com/test?cursor=test_cursor'
+    },
+    records: [{ id: '1', text: 'hello world' }]
+  })
+  fetch.mock(/.*test/, response1)
+  const response2 = Response.json({
+    links: {
+      next: null
+    },
+    records: [{ id: '2', text: 'hello werl' }]
+  })
 
   fetch.mock(/.*cursor=test_cursor/, response2)
 
