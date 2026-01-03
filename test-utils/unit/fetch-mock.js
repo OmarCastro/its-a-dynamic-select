@@ -32,7 +32,11 @@ const buildApi = (mockData) => Object.freeze({
     get inputHrefs () { return mockData.fetchHistory.map(({ inputs }) => getHrefFromFetchRequest(inputs[0])) }
   },
   mock (regex, response) {
-    mockData.mockedEntries.push({ regex, response })
+    const entry = {
+      regex,
+      response: response instanceof Response ? response.clone() : response
+    }
+    mockData.mockedEntries.push(entry)
   },
   throwErrorOnNonMockedRequests () {
     mockData.isErrorThrownOnMockNotFound = true
