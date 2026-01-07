@@ -183,8 +183,16 @@ li.option-value:not(.option *):hover {
     float: right;
 }
 
-:host > .container > .input:not([data-mobile]) + .dropdown .option-checked-indicator{
+
+
+:host > .container > .input:not([data-mobile]) + .dropdown {
+  & .option-checked-indicator {
     display: none;
+  }
+
+  & > .buttons {
+    display: none;
+  }
 }
 
 :host > .container > .input[data-mobile] + .dropdown {
@@ -218,5 +226,9 @@ li.option-value:not(.option *):hover {
     & li[aria-selected=true].option-value:not(.option *),
     & li.option-value:not(.option *):hover {
         background-color: transparent;
+    }
+
+    & > .buttons {
+      display: block;
     }
 }
