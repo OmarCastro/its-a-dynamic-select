@@ -189,10 +189,24 @@ li.option-value:not(.option *):hover {
   & .option-checked-indicator {
     display: none;
   }
+}
 
-  & > .buttons {
+.buttons:not(.option *){
     display: none;
-  }
+    text-align: right;
+
+    & button {
+      appearance: none;
+      background: none;
+      border: none;
+      margin: 1em;
+      font-weight: bold;
+    }
+
+    &:is(:host([multiple]) > .container > .input[data-mobile] + .dropdown *){
+      display: flex;
+      flex-direction: row-reverse;
+    }
 }
 
 :host > .container > .input[data-mobile] + .dropdown {
@@ -226,9 +240,5 @@ li.option-value:not(.option *):hover {
     & li[aria-selected=true].option-value:not(.option *),
     & li.option-value:not(.option *):hover {
         background-color: transparent;
-    }
-
-    & > .buttons {
-      display: block;
     }
 }
