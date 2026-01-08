@@ -1,6 +1,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-empty-pattern */
 // @ts-nocheck
+/** @import {Expect} from 'expect' */
 /**
  * this file adapts the test to their own environment
  *
@@ -18,7 +19,7 @@ const importModule = (str) => import(str)
 let importStr
 
 /**
- * @returns {Promise<Test>} adapted tests
+ * @returns {Promise<{test: Test, expect: Expect}>} adapted tests
  */
 const fn = async () => {
   if (globalThis.Deno != null) {
@@ -33,7 +34,7 @@ const fn = async () => {
     importStr = './fetch-mock'
     const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule(importStr)
 
-    return (description, test) => {
+    const test = (description, test) => {
       globalThis.Deno.test(`${description}`, async (t) => {
         await test({
           step: t.step,
@@ -46,6 +47,8 @@ const fn = async () => {
         teardownFetchMock()
       })
     }
+
+    return { test, expect }
   }
 
   if (globalThis.window == null) {
@@ -79,14 +82,14 @@ const fn = async () => {
       },
     })
 
-    return test
+    return { test, expect }
   } else {
     // init unit tests to be run in browser
 
     const { expect } = await import('expect')
     const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule('./fetch-mock')
 
-    return async (description, test) => {
+    const test = async (description, test) => {
       console.log('-' + description)
       try {
         return test({
@@ -104,10 +107,12 @@ const fn = async () => {
         teardownFetchMock()
       }
     }
+
+    return { test, expect }
   }
 }
 
-export const test = await fn()
+export const { test, expect } = await fn()
 
 /**
  * @callback Test
