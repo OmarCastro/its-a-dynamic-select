@@ -6,6 +6,8 @@ export const searchInputEl = shadowQuery('input.search-input')
 export const inputEl = shadowQuery('span.input')
 export const dropdownEl = shadowQuery('dialog.dropdown')
 export const valueListEl = shadowQuery('dialog.dropdown > ul.value-list')
+export const okButtonEl = shadowQuery('dialog.dropdown > .buttons > .ok')
+export const cancelButtonEl = shadowQuery('dialog.dropdown > .buttons > .cancel')
 export const getDynamicOptions = shadowQuery('div.dynamic-options:not(.option *)')
 
 export const dropdownOptionList = shadowQueryAll('li.option-value:not(.option *)')

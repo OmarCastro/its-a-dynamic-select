@@ -10,6 +10,7 @@ import { computeOnce } from '../utils/memoization.js'
 import * as dom from '../utils/dynamic-select-dom.js'
 import { dropdownPositionUpdaterOf, updateDropdownPosition } from '../features/dropdown-reflects-select-position-and-visibility/dropdown-position-updater.js'
 import { isMobile, MobileDetectionObserver } from '../utils/mobile-detection.js'
+import { applyI18nOnSelectInputs } from '../features/dropdown-inputs-are-internationalized/dropdown-i18n.js'
 /** @import { OptionData } from '../utils/option-data' */
 
 const loadTemplate = computeOnce(() => {
@@ -64,6 +65,7 @@ export class DynamicSelect extends HTMLElement {
     dropdownEl(this).addEventListener('click', handleDropdownOptionClick)
     optionsObserver.observe(this, optionsObserverOptions)
     mobileDetectionObserver.observe(this)
+    applyI18nOnSelectInputs(this)
   }
 
   connectedCallback () {
