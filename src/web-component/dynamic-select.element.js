@@ -49,6 +49,9 @@ const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
   }
 })
 
+/** @type {WeakMap<DynamicSelect, Set<string>>} */
+const selectedOptionWeakMap = new WeakMap()
+
 export class DynamicSelect extends HTMLElement {
   constructor () {
     super()
@@ -63,6 +66,8 @@ export class DynamicSelect extends HTMLElement {
     dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
     dropdownEl(this).addEventListener('pointerdown', handleDropdownPointerDown)
     dropdownEl(this).addEventListener('click', handleDropdownOptionClick)
+    dom.okButtonEl(this).addEventListener('click', handleOkButtonClick)
+    dom.cancelButtonEl(this).addEventListener('click', handleCancelButtonClick)
     optionsObserver.observe(this, optionsObserverOptions)
     mobileDetectionObserver.observe(this)
     applyI18nOnSelectInputs(this)
@@ -216,6 +221,7 @@ export class DynamicSelect extends HTMLElement {
             updateDropdownContent(this)
           })
         } else {
+          selectedOptionWeakMap.delete(this)
           if (isMobile()) {
             dropdownEl(this).close()
           } else {
@@ -479,6 +485,12 @@ function handleDropdownOptionClick (event) {
  */
 function handleDropdownSelect (value, dynamicSelect) {
   if (dynamicSelect.multiple) {
+    if (isMobile()) {
+      const valueSet = selectedOptionWeakMap.get(dynamicSelect)
+      if (!valueSet) {
+        selectedOptionWeakMap.set(dynamicSelect, new Set(dynamicSelect.valueAsArray))
+      }
+    }
     const valueSet = new Set(dynamicSelect.valueAsArray)
     const toggledValue = valueSet.symmetricDifference(new Set([value]))
     dynamicSelect.valueAsArray = [...toggledValue]
@@ -492,4 +504,30 @@ function handleDropdownSelect (value, dynamicSelect) {
     dynamicSelect.open = false
     inputEl(dynamicSelect).querySelector('button')?.focus()
   }
+}
+
+/**
+ *
+ * @param {Event} event
+ */
+function handleOkButtonClick (event) {
+  const { target } = event
+  const dynamicSelect = getHostDynamicSelect(target)
+  dynamicSelect.open = false
+}
+
+/**
+ *
+ * @param {Event} event
+ */
+function handleCancelButtonClick (event) {
+  const { target } = event
+  const dynamicSelect = getHostDynamicSelect(target)
+
+  const valueSet = selectedOptionWeakMap.get(dynamicSelect) ?? new Set(dynamicSelect.valueAsArray)
+  if (valueSet) {
+    dynamicSelect.valueAsArray = [...valueSet]
+  }
+  updateButtonContent(dynamicSelect)
+  dynamicSelect.open = false
 }
