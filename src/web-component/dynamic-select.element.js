@@ -508,7 +508,7 @@ function handleDropdownSelect (value, dynamicSelect) {
 
 /**
  *
- * @param {Event} event
+ * @param {Event} event - click event
  */
 function handleOkButtonClick (event) {
   const { target } = event
@@ -518,7 +518,7 @@ function handleOkButtonClick (event) {
 
 /**
  *
- * @param {Event} event
+ * @param {Event} event - click event
  */
 function handleCancelButtonClick (event) {
   const { target } = event

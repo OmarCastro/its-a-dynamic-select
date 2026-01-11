@@ -111,7 +111,7 @@ async function fetchNextData (element) {
     }
     if (currentData.navigationMode === 'after_value') {
       const latestValue = currentData.data.at(-1)?.value
-      const additionalQueryParams = latestValue ? { after: String(latestValue) } : {}
+      const additionalQueryParams = latestValue ? Object.freeze({ after: String(latestValue) }) : {}
       return {
         query: getQueryValue(element),
         url: getUrlToFetch(element, additionalQueryParams)
@@ -283,7 +283,7 @@ const getDataSource = element => element.getAttribute('data-src') ?? ''
 
 /**
  * @param {HTMLElement} element - target element
- * @param additionalQueryParams
+ * @param {Record<string, string>} additionalQueryParams - query parameters to add to resulting url
  */
 const getUrlToFetch = (element, additionalQueryParams = {}) => {
   const src = getDataSource(element)
