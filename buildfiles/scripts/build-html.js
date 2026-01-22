@@ -26,6 +26,7 @@ if (document == null) {
 await import('prismjs/plugins/keep-markup/prism-keep-markup.js')
 await import('prismjs/components/prism-json.js')
 await import('prismjs/components/prism-bash.js')
+await import('prismjs/components/prism-csv.js')
 
 const projectPath = new URL('../../', import.meta.url)
 const docsPath = new URL('docs', projectPath).pathname
@@ -123,6 +124,12 @@ queryAll('script.json-example').forEach(element => {
 queryAll('script.js-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-js ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
+  element.replaceWith(pre)
+})
+
+queryAll('script.csv-example').forEach(element => {
+  const pre = document.createElement('pre')
+  pre.innerHTML = exampleCode`<code class="language-csv ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 

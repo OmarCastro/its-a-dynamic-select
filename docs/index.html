@@ -247,7 +247,21 @@
             </{{elementName}}>
             </script>
 
-            <h4>response</h4>
+            <script type="text/plain" class="js-example">
+              document.body.addEventListener('datafetch', (event) => {
+                if (event.target?.matches('[data-src="example-src-1"]')) {
+                  event.detail.respondWith([{
+                    value: '1',
+                    text: 'option 1'
+                  }, {
+                    value: '2',
+                    text: 'option 2'
+                  }])
+                }
+              })
+            </script>
+
+            <h4>CSV response</h4>
 
             <dynamic-select data-src="example-src-2">
             </dynamic-select>
@@ -256,6 +270,33 @@
             <{{elementName}} data-src="example-src-2">
             </{{elementName}}>
             </script>
+
+            <script type="text/plain" class="csv-example">
+              value,text
+              1,option 1
+              2,option 2
+              3,option 3
+            </script>
+
+            <h4>Json array response</h4>
+
+            <dynamic-select data-src="example-src-3">
+            </dynamic-select>
+
+            <script type="text/plain" class="html-example">
+            <{{elementName}} data-src="example-src-2">
+            </{{elementName}}>
+            </script>
+
+            <script type="text/plain" class="json-example">
+              [
+                {"value": "1", "text": "json option 1"},
+                {"value": "2", "text": "json option 2"},
+                {"value": "3", "text": "json option 3"},
+                {"value": "4", "text": "json option 4"}
+              ]
+            </script>
+
 
             <h3>Dropdown reacts to position changes</h3>
 

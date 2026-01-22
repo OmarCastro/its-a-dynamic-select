@@ -103,5 +103,16 @@ document.body.addEventListener('datafetch', (event) => {
 `)
     response.headers.set('content-type', 'text/csv')
     event.detail.respondWith(response)
+    return
+  }
+
+  if (event.target?.matches('[data-src="example-src-3"]')) {
+    const response = Response.json([
+      { value: '1', text: 'json option 1' },
+      { value: '2', text: 'json option 2' },
+      { value: '3', text: 'json option 3' },
+      { value: '4', text: 'json option 4' }
+    ])
+    event.detail.respondWith(response)
   }
 })
