@@ -24,10 +24,14 @@
 }
 
 .selected-value:not(.option *) {
+    --arrow-size: 0.2em;
+    width: 100%;
     position: relative;
     color: buttontext;
     padding: 0.125em .5em;
     white-space: nowrap;
+    min-height: 1lh;
+    padding-right: calc(var(--arrow-size) + 2em);
 
     & > .background-button {
         position: absolute;
@@ -43,8 +47,6 @@
 
 
 .collapse-arrow:not(.option *) {
-    
-    --arrow-size: 0.2em;
     margin-left: 0.5em;
     margin-right: 0.5ch;
     height: 0;
@@ -57,6 +59,9 @@
     transform: translateY(calc(var(--arrow-size) * -1)) rotate(45deg);
     transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
     pointer-events: none;
+    position: absolute;
+    right: calc(var(--arrow-size) + 0.5em);
+    top: calc(50% - var(--arrow-size));
 
     :host([open]) &{
         transform: translateY(calc(var(--arrow-size) * -1)) rotate(225deg)
@@ -116,6 +121,7 @@ li.option-value:not(.option *):hover {
 :host > .container {
     display: inline-block;
     position: relative;
+    width: 100%;
 }
 
 :host > .container > .dropdown {
@@ -133,7 +139,9 @@ li.option-value:not(.option *):hover {
 }
 
 :host > .container > .input {
-    display: inline-flex
+    display: inline-flex;
+    width: 100%;
+
 }
 
 :host > .container > .dynamic-options {
