@@ -10,6 +10,8 @@
     position: relative;
     color: buttontext;
     padding: 0.125em .5em;
+    width: 100%;
+
 
     & > .background-button {
         position: absolute;
@@ -20,18 +22,19 @@
         z-index: 1;
         position: relative;
         pointer-events: none;
+        flex: 1;
     }
 }
 
 .selected-value:not(.option *) {
-    --arrow-size: 0.2em;
     width: 100%;
     position: relative;
     color: buttontext;
     padding: 0.125em .5em;
-    white-space: nowrap;
     min-height: 1lh;
-    padding-right: calc(var(--arrow-size) + 2em);
+    white-space: nowrap;
+    
+    display: flex;
 
     & > .background-button {
         position: absolute;
@@ -42,11 +45,13 @@
         z-index: 1;
         position: relative;
         pointer-events: none;
+        flex: 1;
     }
 }
 
 
 .collapse-arrow:not(.option *) {
+    --arrow-size: 0.2em;
     margin-left: 0.5em;
     margin-right: 0.5ch;
     height: 0;
@@ -59,9 +64,7 @@
     transform: translateY(calc(var(--arrow-size) * -1)) rotate(45deg);
     transform-origin: calc(50% + var(--arrow-size)/2) calc(50% + var(--arrow-size)/2);
     pointer-events: none;
-    position: absolute;
-    right: calc(var(--arrow-size) + 0.5em);
-    top: calc(50% - var(--arrow-size));
+    align-self: center;
 
     :host([open]) &{
         transform: translateY(calc(var(--arrow-size) * -1)) rotate(225deg)

@@ -227,11 +227,10 @@
             </{{elementName}}>
             </script>
 
+            <h3>Multiple selection with custom width</h3>
 
-             <h3>Multiple selection with limited width</h3>
 
-
-            <dynamic-select multiple style="width: 30ch">
+            <dynamic-select multiple style="width: 40ch">
                 <option>Lorem</option>
                 <option selected>Ipsum</option>
                 <option>Dolor</option>
@@ -240,7 +239,29 @@
             </dynamic-select>
 
             <script type="text/plain" class="html-example">
-            <{{elementName}} multiple style="width: 30ch">
+            <{{elementName}} multiple style="width: 40ch">
+                <option>Lorem</option>
+                <option selected>Ipsum</option>
+                <option>Dolor</option>
+                <option selected>Sit</option>
+                <option>Amet</option>
+            </{{elementName}}>
+            </script>
+
+
+             <h3>Multiple selection with limited width</h3>
+
+
+            <dynamic-select multiple style="max-width: 40ch">
+                <option>Lorem</option>
+                <option selected>Ipsum</option>
+                <option>Dolor</option>
+                <option selected>Sit</option>
+                <option>Amet</option>
+            </dynamic-select>
+
+            <script type="text/plain" class="html-example">
+            <{{elementName}} multiple style="max-width: 40ch">
                 <option>Lorem</option>
                 <option selected>Ipsum</option>
                 <option>Dolor</option>
