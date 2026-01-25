@@ -489,7 +489,7 @@ function helpText () {
   const usageLine = fromNPM ? 'npm run <task>' : 'run <task>'
   return `Usage: ${usageLine}
 
-Tasks: 
+Tasks:
   ${tasksToShow.map(([key, value]) => `${key.padEnd(maxTaskLength, ' ')}  ${value.description}`).join('\n  ')}
   ${'help, --help, -h'.padEnd(maxTaskLength, ' ')}  ${helpTask.description}`
 }
@@ -862,7 +862,7 @@ async function * watchDirs (...dirs) {
     yield new Promise(resolve => {
       if (batch.length > 0) {
         resolve({ filenames: batch })
-        batch = []
+        batch = {}
       } else {
         currentResolver = resolve
       }
@@ -1239,15 +1239,15 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   <style>
     text { fill: #222; }
     rect { fill: #ddd; stroke: #222 }
-    polyline {stroke: #ddd; stroke-linejoin: round} 
-    polyline.outer {stroke: #222;} 
-    #arrowhead path {stroke: #222; fill: #ddd; stroke-linejoin: round} 
+    polyline {stroke: #ddd; stroke-linejoin: round}
+    polyline.outer {stroke: #222;}
+    #arrowhead path {stroke: #222; fill: #ddd; stroke-linejoin: round}
     @media (prefers-color-scheme: dark) {
       text { fill: #eee; }
       rect { fill: #444; stroke:#eee }
-      polyline {stroke: #222; } 
-      polyline.outer {stroke: #eee;}   
-      #arrowhead path {stroke: #eee; fill: #222; } 
+      polyline {stroke: #222; }
+      polyline.outer {stroke: #eee;}
+      #arrowhead path {stroke: #eee; fill: #222; }
     }</style>
   <title>Module graph</title>${defs}
   <g shape-rendering="geometricPrecision" fill="none" >${inputsLinesSvg}</g>
