@@ -333,6 +333,32 @@
             </script>
 
 
+             <h3>templating</h3>
+
+            <dynamic-select data-src="example-src-countries">
+              <template data-for="option">
+                <span>
+                  <span style="display: inline-block;width: 20ch;"><slot name="$.data.Continent"/></span>
+                  <span><slot name="$.text"/></span>
+                </span>
+              </template>
+            </dynamic-select>
+
+            <script type="text/plain" class="html-example">
+            <{{elementName}} data-src="example-src-countries">
+              <template data-for="option">
+                <span>
+                  <span style="display: inline-block;width: 20ch;" style="width: 20ch;"><slot name="$.data.Continent"/></span>
+                  <span><slot name="$.text"/></span>
+                </span>
+              </template>
+
+            </{{elementName}}>
+            </script>
+
+
+
+
             <h3>Dropdown reacts to position changes</h3>
 
             <div class="scrollable-example">
