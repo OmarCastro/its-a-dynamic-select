@@ -200,6 +200,12 @@ li.option-value:not(.option *):hover {
   & .option-checked-indicator {
     display: none;
   }
+
+  & .search-input {
+      width: 100%;
+      margin: auto;
+      box-sizing: border-box;
+  }
 }
 
 .buttons:not(.option *){

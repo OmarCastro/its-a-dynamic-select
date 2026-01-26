@@ -96,6 +96,7 @@ export function updateDropdownPosition (dynamicSelect) {
   const dropdown = dropdownEl(dynamicSelect)
   const input = inputEl(dynamicSelect)
   const clientRect = input.getBoundingClientRect()
+  dropdown.style.minWidth = `${clientRect.width}px`
   const viewportRect = getViewportRect()
   const isTopDirection = clientRect.bottom + dropdown.clientHeight > viewportRect.height
   const isLeftDirection = clientRect.left + dropdown.clientWidth > viewportRect.width
