@@ -69,7 +69,7 @@ function applyTemplateAux (currentElement, currentData) {
  */
 export function applyTemplate (template, data) {
   const clone = /** @type {DocumentFragment} */(template.content.cloneNode(true))
-  for (const child of clone.children) {
+  for (const child of [...clone.children]) {
     applyTemplateAux(child, data)
   }
 
