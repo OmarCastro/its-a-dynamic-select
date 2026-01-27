@@ -114,10 +114,18 @@ document.body.addEventListener('datafetch', (event) => {
       { value: '4', text: 'json option 4' }
     ])
     event.detail.respondWith(response)
+    return
   }
 
   if (event.target?.matches('[data-src="example-src-countries"]')) {
     const response = new Response(countriesCSV)
+    response.headers.set('content-type', 'text/csv')
+    event.detail.respondWith(response)
+    return
+  }
+
+  if (event.target?.matches('[data-src="example-src-countries-by-continent"]')) {
+    const response = new Response(countriesCSVGroupedByContinent)
     response.headers.set('content-type', 'text/csv')
     event.detail.respondWith(response)
   }
@@ -364,3 +372,5 @@ Western Sahara,EH,ESH,eh,WI,732,2461445,212,212,Africa,El-Aaiun,Africa/El_Aaiun,
 Yemen,YE,YEM,ye,YM,887,69543,967,967,Asia,Sanaa,Asia/Aden,Rial,ar-YE
 Zambia,ZM,ZMB,zm,ZA,894,895949,260,260,Africa,Lusaka,Africa/Maputo,Kwacha,"en-ZM,bem,loz,lun,lue,ny,toi"
 Zimbabwe,ZW,ZWE,zw,ZI,716,878675,263,263,Africa,Harare,Africa/Maputo,Dollar,"en-ZW,sn,nr,nd"`
+
+const countriesCSVGroupedByContinent = countriesCSV.replace('Continent', 'group')
