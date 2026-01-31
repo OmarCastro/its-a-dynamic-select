@@ -2,6 +2,7 @@
 
 /** @typedef {import('../web-component/dynamic-select.element.js').DynamicSelect} DynamicSelect */
 
+export const containerEl = shadowQuery('div.container')
 export const searchInputEl = shadowQuery('input.search-input')
 export const inputEl = shadowQuery('span.input')
 export const dropdownEl = shadowQuery('dialog.dropdown')

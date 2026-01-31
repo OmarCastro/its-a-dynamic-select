@@ -25,7 +25,7 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const { searchInputEl, inputEl, dropdownEl, valueListEl, dropdownOptionList, getHostDynamicSelect } = dom
+const { searchInputEl, inputEl, dropdownEl, valueListEl, dropdownOptionList, getHostDynamicSelect, containerEl } = dom
 const { isSearchInputEl, isDeselectButton, isClearButton, isDynamicSelect } = dom
 
 const optionsObserver = new MutationObserver(mutations => {
@@ -44,7 +44,11 @@ const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
   for (const mutation of mutations) {
     const { target, isMobile } = mutation
     if (!isDynamicSelect(target)) { continue }
-    inputEl(target).toggleAttribute('data-mobile', isMobile)
+    target.open = false
+    const uiModeStyleValue = getComputedStyle(target).getPropertyValue('--ui-mode')
+    const uiModeParsed = uiModeStyleValue.trim().toLowerCase()
+    const uiMode = ['mobile', 'desktop'].includes(uiModeParsed) ? uiModeParsed : null
+    containerEl(target).setAttribute('data-ui-mode', uiMode ?? (isMobile ? 'mobile' : 'desktop'))
     updateButtonContent(target)
   }
 })

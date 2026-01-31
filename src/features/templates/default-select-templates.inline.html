@@ -7,7 +7,9 @@
 <template id="single-select-input">
     <span class="selected-value">
         <button class="background-button"></button>
-        <span class="option"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
+        <span class="option">
+          <span class="option-content"><slot data-value="$.selectedOption" name="selected-option"></slot></span>
+        </span>
         <span class="collapse-arrow" role="presentation"></span>
     </span>
 </template>
@@ -17,7 +19,7 @@
         <span class="selected-options">
         <template data-each="$.selectedOptions">
             <span data-value="$.value" class="option multiselect-option">
-                <slot data-value="$." name="selected-option"></slot>
+                <span class="option-content"><slot data-value="$." name="selected-option"></slot></span>
                 <button class="deselect-option" tabindex="-1"></button>
             </span>
         </template>
@@ -32,7 +34,7 @@
         <span class="selected-options">
         <template data-each="$.selectedOptions">
             <span data-value="$.value" class="option multiselect-option">
-                <slot data-value="$." name="selected-option"></slot>
+                <span class="option-content"><slot data-value="$." name="selected-option"></slot></span>
             </span>
         </template>
         </span>
@@ -43,7 +45,7 @@
     <template data-each="$.ungroupedOptions">
         <li class="option-value" data-value="$.value" aria-selected="$.selected" data-focused="$?.focused">
             <label>
-                <span class="option"><slot data-value="$." name="option"></slot></span>
+                <span class="option"><span class="option-content"><slot data-value="$." name="option"></slot></span></span>
                 <input value="$.value" class="option-checked-indicator" type="$.checkedIndicatorType" checked="$?.selected">
             </label>
         </li>
