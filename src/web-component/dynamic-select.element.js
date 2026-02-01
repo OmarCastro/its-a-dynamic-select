@@ -215,13 +215,14 @@ export class DynamicSelect extends HTMLElement {
           } else {
             dropdownEl(this).showPopover()
           }
+          const loadData = dynamicOptionsOf(this).loadData()
           dropdownPositionUpdaterOf(this).startAnchoringToSelect()
           updateDropdownContent(this)
           if (isOnMobile) {
             // no need to open on-screen keyboard
             searchInputEl(this).blur()
           }
-          dynamicOptionsOf(this).loadData().then(() => {
+          loadData.then(() => {
             updateDropdownContent(this)
           })
         } else {

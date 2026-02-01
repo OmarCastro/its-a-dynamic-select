@@ -239,6 +239,10 @@
   }
 }
 
+.container[load-mode="async"][data-ui-mode="mobile"] .dropdown {
+  height: 90vh;
+}
+
 @media screen and (forced-colors: active) {
   .option-value:not(.option-content *) {
     &[aria-selected=true],&:hover {

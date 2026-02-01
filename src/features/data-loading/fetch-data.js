@@ -55,7 +55,7 @@ function createDataLoaderFor (elementRef) {
  * @param {DataToFetch} dataToFetch - info for data fetch
  */
 function dispatchFetchDataEvent (element, dataToFetch) {
-  let customResponse = null
+  let customResponse = /** @type {unknown} */(null)
   let respondWithCalls = 0
   const event = new CustomEvent('datafetch', {
     cancelable: true,
@@ -135,12 +135,17 @@ async function fetchNextData (element) {
 async function fetchFromDataToFetch (element, dataToFetch) {
   const fetchRecord = addToFetchHistory(element, {
     dataToFetch,
-    result: { status: 'dispatching event' },
+    loadingMode: 'sync',
+    status: 'dispatching event',
+    result: null,
     completed: false
   })
 
   const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
   if (respondWithCalls > 0) {
+    const isPromiseLike = typeof customResponse?.['then'] === 'function'
+    const isResponse = customResponse instanceof Response
+    fetchRecord.loadingMode = isPromiseLike || isResponse ? 'async' : 'sync'
     fetchRecord.result = await parseRespondWithCall(customResponse)
     fetchRecord.completed = true
 
@@ -153,9 +158,12 @@ async function fetchFromDataToFetch (element, dataToFetch) {
 
   const { url } = dataToFetch
   if (!event.defaultPrevented && url) {
-    fetchRecord.result = { status: 'fetching data' }
+    fetchRecord.loadingMode = 'async'
+    fetchRecord.status = 'fetching data'
     const response = await fetch(url)
+    fetchRecord.status = 'parsing response'
     fetchRecord.result = await parseResponse(response)
+    fetchRecord.status = Object.hasOwn(fetchRecord.result, 'error') ? 'error' : 'completed'
     fetchRecord.completed = true
 
     if ('error' in fetchRecord.result) {
@@ -165,6 +173,7 @@ async function fetchFromDataToFetch (element, dataToFetch) {
   }
 
   if (!url) {
+    fetchRecord.loadingMode = 'sync'
     fetchRecord.completed = true
     fetchRecord.result = {
       data: [],
@@ -173,6 +182,7 @@ async function fetchFromDataToFetch (element, dataToFetch) {
     return fetchRecord.result
   }
 
+  fetchRecord.loadingMode = 'sync'
   fetchRecord.completed = true
   fetchRecord.result = {
     error: 'no data loaded',
@@ -343,26 +353,34 @@ const getUrlToFetch = (element, additionalQueryParams = {}) => {
  */
 
 /**
- * @typedef {object} FetchingData
- * @property {string} status - error message
- */
-
-/**
  * @typedef {object} FetchRecordLoading
  * @property {DataToFetch} dataToFetch - error message
+ * @property {"sync"|"async"} loadingMode - flag to indicate if the record is being fetched synchronously or asynchronously
+ * @property {string} status - fetch status
  * @property {false} completed - completed flag
- * @property {FetchingData} result - stage where error happened
+ * @property {null} result - stage where error happened
  */
 
 /**
- * @typedef {object} FetchRecordCompleted
+ * @typedef {object} FetchRecordCompletedSuccess
  * @property {DataToFetch} dataToFetch - error message
+ * @property {"sync"|"async"} loadingMode - flag to indicate if the record is being fetched synchronously or asynchronously
+ * @property {"completed"} status - fetch status
  * @property {true} completed - completed flag
- * @property {ParseError | ParsedResponse} result - stage where error happened
+ * @property {ParsedResponse} result - stage where error happened
  */
 
 /**
- * @typedef {FetchRecordLoading | FetchRecordCompleted} FetchRecord
+ * @typedef {object} FetchRecordCompletedError
+ * @property {DataToFetch} dataToFetch - error message
+ * @property {"sync"|"async"} loadingMode - flag to indicate if the record is being fetched synchronously or asynchronously
+ * @property {"error"} status - fetch status
+ * @property {true} completed - completed flag
+ * @property {ParseError} result - stage where error happened
+ */
+
+/**
+ * @typedef {FetchRecordLoading | FetchRecordCompletedSuccess | FetchRecordCompletedError} FetchRecord
  */
 
 /**

@@ -1,6 +1,6 @@
 import { dataLoaderOf } from '../data-loading/fetch-data.js'
 import { optionElementOfData, dataObjectOfOption } from '../../utils/option-data.js'
-import { getDynamicOptions } from '../../utils/dynamic-select-dom.js'
+import { containerEl, getDynamicOptions } from '../../utils/dynamic-select-dom.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom.js' */
 /** @import {OptionData} from '../../utils/option-data.js' */
 
@@ -86,7 +86,9 @@ async function loadData (element) {
   const loader = dataLoaderOf(element)
   const dynamicOptionsElement = getDynamicOptions(element)
   try {
-    const result = await loader.fetchData()
+    const fetchData = loader.fetchData()
+    containerEl(element).setAttribute('load-mode', loader.fetchHistory.at(-1)?.loadingMode ?? 'sync')
+    const result = await fetchData
     const api = dynamicOptionsOf(element)
     const { selectedValues } = api
     const optionsMap = api.optionsMap
