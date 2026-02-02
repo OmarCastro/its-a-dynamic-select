@@ -346,11 +346,14 @@ const filterMatcher = (filter) => {
  */
 function updateDropdownContent (dynamicSelect) {
   const dropdownData = getDropdownTemplateData(dynamicSelect)
-  const { dropdownList, option: optionTemplate } = templatesOf(dynamicSelect)
+  const { dropdownList, option: optionTemplate, loadingNotification } = templatesOf(dynamicSelect)
   const listFragment = applyTemplate(dropdownList, dropdownData)
   listFragment.querySelectorAll('slot[name="option"]').forEach(slot => {
     const data = JSON.parse(slot.dataset.value || '{}')
     slot.replaceWith(applyTemplate(optionTemplate, data))
+  })
+  listFragment.querySelectorAll('slot[name="loading-notification"]').forEach(slot => {
+    slot.replaceWith(applyTemplate(loadingNotification, dropdownData))
   })
 
   const valueList = valueListEl(dynamicSelect)

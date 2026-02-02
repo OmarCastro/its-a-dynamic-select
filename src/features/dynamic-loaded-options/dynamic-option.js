@@ -85,9 +85,14 @@ function createDynamicOptionsDataFor (elementRef) {
 async function loadData (element) {
   const loader = dataLoaderOf(element)
   const dynamicOptionsElement = getDynamicOptions(element)
+  const container = containerEl(element)
+
   try {
     const fetchData = loader.fetchData()
-    containerEl(element).setAttribute('load-mode', loader.fetchHistory.at(-1)?.loadingMode ?? 'sync')
+    const isAsync = loader.fetchHistory.at(-1)?.loadingMode === 'async'
+    container.setAttribute('load-mode', isAsync ? 'async' : 'sync')
+    container.toggleAttribute('data-loading', isAsync)
+
     const result = await fetchData
     const api = dynamicOptionsOf(element)
     const { selectedValues } = api
@@ -100,6 +105,8 @@ async function loadData (element) {
     }
   } catch (e) {
     console.error(e)
+  } finally {
+    container.removeAttribute('data-loading')
   }
 }
 

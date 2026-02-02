@@ -8,6 +8,7 @@ import defaultTemplatesHtml from './default-select-templates.inline.html'
  * @property {HTMLTemplateElement} multiSelectInput - multi select button template
  * @property {HTMLTemplateElement} mobileMultiSelectInput - mobile ui for multi select button template
  * @property {HTMLTemplateElement} dropdownList - dropdown option list template
+ * @property {HTMLTemplateElement} loadingNotification - loading notification template
  */
 
 /**
@@ -35,6 +36,7 @@ const loadSelectDefaultTemplates = computeOnce(() => {
     multiSelectInput: query('multi-select-input'),
     mobileMultiSelectInput: query('multi-select-input--mobile'),
     dropdownList: query('dropdown-list'),
+    loadingNotification: query('loading-notification'),
   })
   return templates
 })
@@ -61,6 +63,9 @@ export function templatesOf (element) {
     },
     get dropdownList () {
       return loadSelectDefaultTemplates().dropdownList
-    }
+    },
+    get loadingNotification () {
+      return loadSelectDefaultTemplates().loadingNotification
+    },
   }
 }
