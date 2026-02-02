@@ -200,7 +200,7 @@ async function fetchFromDataToFetch (element, dataToFetch) {
 async function parseRespondWithCall (paramOfRespondWith) {
   const result = await Promise.resolve(paramOfRespondWith)
   if (result instanceof Response) {
-    const parsedResponse = await parseResponse(paramOfRespondWith)
+    const parsedResponse = await parseResponse(result)
     if ('error' in parsedResponse) {
       parsedResponse.error = `parse event .respondWith(Response): ${parsedResponse.error}`
     }

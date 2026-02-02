@@ -129,6 +129,16 @@ document.body.addEventListener('datafetch', (event) => {
     response.headers.set('content-type', 'text/csv')
     event.detail.respondWith(response)
   }
+
+  if (event.target?.matches('[data-src="example-src-1-second-delay"]')) {
+    event.detail.respondWith(new Promise(resolve => {
+      setTimeout(() => {
+        const response = new Response(countriesCSVGroupedByContinent)
+        response.headers.set('content-type', 'text/csv')
+        resolve(response)
+      }, 1000)
+    }))
+  }
 })
 
 const countriesCSV = `text,value,ISO3,Top Level Domain,FIPS,ISO Numeric,GeoNameID,E164,Phone Code,Continent,Capital,Time Zone in Capital,Currency,Language Codes

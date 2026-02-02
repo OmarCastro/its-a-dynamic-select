@@ -334,15 +334,22 @@
 
             <h4>CSV response with groups</h4>
 
-            <dynamic-select data-src="example-src-countries-by-continent">
-            </dynamic-select>
+            <dynamic-select data-src="example-src-countries-by-continent"></dynamic-select>
 
             <script type="text/plain" class="html-example">
-            <{{elementName}} data-src="example-src-countries-by-continent">
-            </{{elementName}}>
+            <{{elementName}} data-src="example-src-countries-by-continent"></{{elementName}}>
+            </script>
+
+            <h4>loading animation while waiting for response</h4>
+
+            <dynamic-select data-src="example-src-1-second-delay"></dynamic-select>
+
+            <script type="text/plain" class="html-example">
+            <{{elementName}} data-src="example-src-1-second-delay"></{{elementName}}>
             </script>
 
              <h3>templating</h3>
+             <h4>Option</h4>
 
             <dynamic-select data-src="example-src-countries">
               <template data-for="option">
@@ -364,6 +371,65 @@
 
             </{{elementName}}>
             </script>
+
+              <h4>Loading notification</h4>
+
+            <dynamic-select data-src="example-src-1-second-delay">
+              <template data-for="loading-notification">
+                <style>
+                  .center {
+                    display: flex;
+                    justify-content: center;
+                  }
+                  .loader {
+                      width: 48px;
+                      height: 48px;
+                      border: 5px solid currentColor;
+                      opacity: 50%;
+                      border-bottom-color: transparent;
+                      border-radius: 50%;
+                      display: inline-block;
+                      box-sizing: border-box;
+                      animation: rotation 1s linear infinite;
+                  }
+                  @keyframes rotation {
+                    0% {transform: rotate(0deg);}
+                    100% {transform: rotate(360deg);}
+                  }                 
+                </style>
+                <div class="center"><div class="loader"></div></div>
+              </template>
+            </dynamic-select>
+
+            <script type="text/plain" class="html-example">
+            <{{elementName}} data-src="example-src-1-second-delay">
+              <template data-for="loading-notification">
+                <style>
+                  .center {
+                    display: flex;
+                    justify-content: center;
+                  }
+                  .loader {
+                      width: 48px;
+                      height: 48px;
+                      border: 5px solid currentColor;
+                      opacity: 50%;
+                      border-bottom-color: transparent;
+                      border-radius: 50%;
+                      display: inline-block;
+                      box-sizing: border-box;
+                      animation: rotation 1s linear infinite;
+                  }
+                  @keyframes rotation {
+                    0% {transform: rotate(0deg);}
+                    100% {transform: rotate(360deg);}
+                  }                 
+                </style>
+                <div class="center"><div class="loader"></div></div>
+              </template>
+            </{{elementName}}>
+            </script>
+
 
 
 

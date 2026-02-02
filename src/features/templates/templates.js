@@ -65,6 +65,8 @@ export function templatesOf (element) {
       return loadSelectDefaultTemplates().dropdownList
     },
     get loadingNotification () {
+      const scopedTemplate = element.querySelector(':scope > template[data-for="loading-notification"]')
+      if (scopedTemplate) return scopedTemplate
       return loadSelectDefaultTemplates().loadingNotification
     },
   }
