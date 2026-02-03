@@ -46,5 +46,5 @@ export async function parseCSVResponse (response) {
  * @returns {boolean} true if is a valid CSV response, false otherwise
  */
 export function isCSVResponse (response) {
-  return response.ok && response.headers.get('Content-Type') === 'text/csv'
+  return response instanceof Response && response.ok && response.headers.get('Content-Type') === 'text/csv'
 }
