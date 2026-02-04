@@ -336,6 +336,7 @@ async function buildDocs () {
 
   await Promise.all([
     buildDocsJS, buildDocsStyles,
+    fs.cp('docs/favicon.png', `${docsPath}/favicon.png`),
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
   ])
