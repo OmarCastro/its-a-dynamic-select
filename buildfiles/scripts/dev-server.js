@@ -86,7 +86,6 @@ export function Server () {
    * @param {ServerResponse} res - response api
    */
   async function requestHandler (req, res) {
-    console.log(`[server] ${req.method} ${req.url} - received`)
     const method = req.method.toLowerCase()
     if (method === 'get') {
       if (req.url === '/live-sse') {
