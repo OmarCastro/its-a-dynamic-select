@@ -174,7 +174,7 @@ async function execTests () {
 
   const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
   const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec,d}.{js,ts}" --exclude="src/entrypoint/node.js"'
-  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/dynamic-select.element.min.js'
+  const UI_COVERAGE_INCLUDES = '--include build/src-dist/dynamic-select.element.min.js'
 
   logStartStage('test', 'run tests')
 
@@ -253,8 +253,8 @@ async function buildTest () {
   const esmDistPath = `${buildPath}/dist/esm`
   const minDistPath = `${buildPath}/dist`
   const docsPath = `${buildPath}/docs`
-  const docsDistPath = `${docsPath}/dist`
   const docsEsmDistPath = `${docsPath}/dist/esm`
+  const minSrcDistPath = `${buildPath}/src-dist`
 
   await buildESM(esmDistPath)
   await buildESM(docsEsmDistPath)
@@ -277,10 +277,10 @@ async function buildTest () {
    * it the test code coverage will be correct when merging unit tests
    * and UI tests.
    */
-  const buildDocsDist = esbuild.build({
+  const buildSrcDist = esbuild.build({
     ...commonBuildParams,
     entryPoints: ['src/entrypoint/browser.js'],
-    outfile: `${docsDistPath}/${configuration.minfiedBundleDistName}`,
+    outfile: `${minSrcDistPath}/${configuration.minfiedBundleDistName}`,
     format: 'esm',
     sourcemap: true,
     metafile: true,
@@ -288,9 +288,10 @@ async function buildTest () {
     plugins: [await getESbuildPlugin()],
   })
 
-  await Promise.all([buildDistFromEsm, buildDocsDist])
+  await Promise.all([buildDistFromEsm, buildSrcDist])
 
-  const metafile = (await buildDocsDist).metafile
+  await cp_R(minDistPath, docsPath)
+  const metafile = (await buildSrcDist).metafile
   await mkdir_p('reports')
   logStage('generating module graph')
   await writeFile('reports/module-graph.json', JSON.stringify(metafile, null, 2))
