@@ -66,6 +66,10 @@ const tasks = {
     description: 'tests the project',
     cb: async () => { await execTests(); process.exit(0) },
   },
+  'test:unit-only': {
+    description: 'tests the project',
+    cb: async () => { await onlyRunUnitTests(); process.exit(0) },
+  },
   'test:in-docker': {
     description: 'tests the project',
     cb: async () => { await testInDocker(); process.exit(0) },
@@ -163,6 +167,12 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
     }
     updateDevServer()
   }
+}
+
+async function onlyRunUnitTests () {
+  logStartStage('test', 'only run unit tests')
+  await cmdSpawn('TZ=UTC npx playwright test --project=unit --reporter=list')
+  logEndStage()
 }
 
 async function execTests () {

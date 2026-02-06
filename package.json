@@ -9,6 +9,7 @@
     "build:github-action": "node ./buildfiles/run.js build:github-action",
     "test": "node ./buildfiles/run.js test",
     "test:in-docker": "node ./buildfiles/run.js test:in-docker",
+    "test:unit-only": "node ./buildfiles/run.js test:unit-only",
     "lint": "node ./buildfiles/run.js lint",
     "linc": "node ./buildfiles/run.js linc",
     "dev": "node ./buildfiles/run.js dev",
