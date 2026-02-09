@@ -282,8 +282,8 @@
   background-color: #88888888;
   width: var(--diameter);
   height: var(--diameter);
-  animation-fill-mode: both;
   animation: default-loader-animation 1.8s infinite ease-in-out;
+  animation-fill-mode: both;
   font-size: 7px;
   position: relative;
   animation-delay: -0.16s;

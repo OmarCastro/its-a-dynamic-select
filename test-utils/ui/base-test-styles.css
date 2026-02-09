@@ -2,7 +2,7 @@
 
 body {
   display: block;
-  font: 16px Arial;
+  font: 16px Arial, sans-serif;
 }
 
 body:has(.test-case:target) .test-case:not(:target) {
