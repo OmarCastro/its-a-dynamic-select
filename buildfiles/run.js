@@ -74,9 +74,13 @@ const tasks = {
     description: 'tests the project',
     cb: async () => { await testInDocker(); process.exit(0) },
   },
+  linc: {
+    description: 'validates the code',
+    cb: async () => { const exitCode = await execlintCodeOnChanged(); process.exit(exitCode) },
+  },
   lint: {
     description: 'validates the code',
-    cb: async () => { await execlintCode(); process.exit(0) },
+    cb: async () => { const exitCode = await execlintCode(); process.exit(exitCode) },
   },
   dev: {
     description: 'setup dev environment',
@@ -419,11 +423,11 @@ async function execlintCodeOnChanged () {
   logStage('spell check')
   const returnCheckSpelling = await checkSpelling({ onlyChanged: true, changedFiles })
   logStage('lint using stylelint')
-  const returnStyleLint = await lintStyles({ onlyChanged: true })
+  const returnStyleLint = await lintStyles({ onlyChanged: true, changedFiles })
   logStage('validating json')
-  const returnJsonLint = await validateJson({ onlyChanged: true })
+  const returnJsonLint = await validateJson({ onlyChanged: true, changedFiles })
   logStage('validating yaml')
-  const returnYamlLint = await validateYaml({ onlyChanged: true })
+  const returnYamlLint = await validateYaml({ onlyChanged: true, changedFiles })
   let returnCodeTs = 0
   logStage('typecheck with typescript')
   if ([...changedFiles].some(changedFile => changedFile.startsWith('src/'))) {
@@ -587,10 +591,9 @@ function wait (ms) {
 
 // @section 6 linters
 
-async function lintCode ({ onlyChanged }, options) {
+async function lintCode ({ onlyChanged, changedFiles }, options) {
   const esLintFilePatterns = ['**/*.js']
-
-  const finalFilePatterns = onlyChanged ? await listChangedFilesMatching(...esLintFilePatterns) : esLintFilePatterns
+  const finalFilePatterns = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, esLintFilePatterns) : await listChangedFilesMatching(...esLintFilePatterns) : esLintFilePatterns
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -654,7 +657,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
 
 async function lintStyles ({ onlyChanged, changedFiles }) {
   const styleLintFilePatterns = ['**/*.css']
-  const finalFilePatterns = onlyChanged ? await listChangedFilesMatching(...styleLintFilePatterns) : styleLintFilePatterns
+  const finalFilePatterns = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, styleLintFilePatterns) : await listChangedFilesMatching(...styleLintFilePatterns) : styleLintFilePatterns
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no stylesheets to lint. ')
     return 0
@@ -675,25 +678,27 @@ async function lintStyles ({ onlyChanged, changedFiles }) {
   return result.errored ? 1 : 0
 }
 
-async function validateJson ({ onlyChanged }) {
+async function validateJson ({ onlyChanged, changedFiles }) {
   return await validateFiles({
     patterns: ['*.json'],
     onlyChanged,
+    changedFiles,
     validation: async (file) => JSON.parse(await fs.readFile(file, 'utf8')),
   })
 }
 
-async function validateYaml ({ onlyChanged }) {
+async function validateYaml ({ onlyChanged, changedFiles }) {
   const { load } = await import('js-yaml')
   return await validateFiles({
     patterns: ['*.yml', '*.yaml'],
     onlyChanged,
+    changedFiles,
     validation: async (file) => load(await fs.readFile(file, 'utf8')),
   })
 }
 
-async function validateFiles ({ patterns, onlyChanged, validation }) {
-  const fileList = onlyChanged ? await listChangedFilesMatching(...patterns) : await listNonIgnoredFiles({ patterns })
+async function validateFiles ({ patterns, onlyChanged, changedFiles, validation }) {
+  const fileList = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, patterns) : await listChangedFilesMatching(...patterns) : await listNonIgnoredFiles({ patterns })
   if (fileList.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -935,8 +940,7 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns } = {}
 
   const fileList = listFiles('.')
   if (!patterns) { return fileList }
-  const intersection = patterns.flatMap(pattern => minimatch.match(fileList, pattern, { matchBase: true, dot: true }))
-  return [...new Set(intersection)]
+  return filterFilePathsByPatterns(fileList, patterns)
 }
 
 async function getIgnorePatternsFromFile (filePath) {
@@ -946,9 +950,13 @@ async function getIgnorePatternsFromFile (filePath) {
 }
 
 async function listChangedFilesMatching (...patterns) {
+  return filterFilePathsByPatterns(await listChangedFiles(), patterns)
+}
+
+async function filterFilePathsByPatterns (filePaths, patterns) {
   const { minimatch } = await import('minimatch')
-  const changedFiles = [...(await listChangedFiles())]
-  const intersection = patterns.flatMap(pattern => minimatch.match(changedFiles, pattern, { matchBase: true }))
+  const paths = Array.isArray(filePaths) ? filePaths : Array.from(filePaths)
+  const intersection = patterns.flatMap(pattern => minimatch.match(paths, pattern, { matchBase: true, dot: true }))
   return [...new Set(intersection)]
 }
 
@@ -1275,7 +1283,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   })
 
   const lineArrowMarker = '<marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="10" markerHeight="10" orient="auto">' +
-  '<path d="M 0 0 L 10 5 L 0 10 L 2 5 z" /></marker>'
+    '<path d="M 0 0 L 10 5 L 0 10 L 2 5 z" /></marker>'
   const marker = graph.edgeCount() > 0 ? lineArrowMarker : ''
   const defs = marker ? `<defs>${marker}</defs>` : ''
 
