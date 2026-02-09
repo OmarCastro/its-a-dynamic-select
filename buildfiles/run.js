@@ -622,7 +622,7 @@ async function lintStyles ({ onlyChanged }) {
     return 0
   }
   const { default: stylelint } = await import('stylelint')
-  const result = await stylelint.lint({ files: finalFilePatterns })
+  const result = await stylelint.lint({ files: finalFilePatterns, configFile: 'buildfiles/configs/.stylelintrc.yaml', ignorePath: '.gitignore' })
   const filesLinted = result.results.length
   process.stdout.write(`linted ${filesLinted} files. `)
   const stringFormatter = await stylelint.formatters.tap
