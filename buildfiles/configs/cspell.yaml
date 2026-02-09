@@ -2,7 +2,7 @@
 language: en
 useGitignore: true
 ignorePaths: 
-  - "node_modules/**"
+  - "**/node_modules/**"
   - "**/*.spec.js"
   - "**/buildfiles/**"
   - "**/docs/doc.js"

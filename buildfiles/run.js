@@ -412,8 +412,12 @@ async function execBuild () {
 }
 
 async function execlintCodeOnChanged () {
-  logStartStage('linc', 'lint using eslint')
-  const returnCodeLint = await lintCode({ onlyChanged: true }, { fix: true })
+  logStartStage('linc', 'fetching changed files')
+  const changedFiles = await listChangedFiles()
+  logStage('lint using eslint')
+  const returnCodeLint = await lintCode({ onlyChanged: true, changedFiles }, { fix: true })
+  logStage('spell check')
+  const returnCheckSpelling = await checkSpelling({ onlyChanged: true, changedFiles })
   logStage('lint using stylelint')
   const returnStyleLint = await lintStyles({ onlyChanged: true })
   logStage('validating json')
@@ -422,29 +426,30 @@ async function execlintCodeOnChanged () {
   const returnYamlLint = await validateYaml({ onlyChanged: true })
   let returnCodeTs = 0
   logStage('typecheck with typescript')
-  const changedFiles = await listChangedFiles()
   if ([...changedFiles].some(changedFile => changedFile.startsWith('src/'))) {
     returnCodeTs = await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
   } else {
     process.stdout.write('no files to check...')
   }
   logEndStage()
-  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint
+  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
 }
 
 async function execlintCode () {
   logStartStage('lint', 'lint using eslint')
   const returnCodeLint = await lintCode({ onlyChanged: false }, { fix: true })
+  logStage('spell check')
+  const returnCheckSpelling = await checkSpelling({ onlyChanged: false })
   logStage('lint using stylelint')
   const returnStyleLint = await lintStyles({ onlyChanged: false })
   logStage('validating json')
   const returnJsonLint = await validateJson({ onlyChanged: false })
   logStage('validating yaml')
   const returnYamlLint = await validateYaml({ onlyChanged: false })
-  logStage('typecheck with typescript')
+  logStage('typecheck')
   const returnCodeTs = await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
   logEndStage()
-  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint
+  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
 }
 
 async function execGithubBuildWorkflow () {
@@ -614,7 +619,40 @@ async function lintCode ({ onlyChanged }, options) {
   return errorCount ? 1 : 0
 }
 
-async function lintStyles ({ onlyChanged }) {
+async function checkSpelling ({ onlyChanged, changedFiles }) {
+  const patterns = ['**']
+
+  const finalFilePatterns = onlyChanged ? [...(changedFiles ?? await listChangedFiles())] : patterns
+
+  if (finalFilePatterns.length <= 0) {
+    process.stdout.write('no files to lint. ')
+    return 0
+  }
+  const { lint, getDefaultReporter } = await import('cspell')
+
+  const options = {
+    cache: false,
+    color: false,
+    showPerfSummary: true,
+    issues: true,
+  }
+
+  const reporter = getDefaultReporter(options)
+
+  const results = await lint(finalFilePatterns, { config: pathFromProject('./buildfiles/configs/cspell.yaml') }, reporter)
+
+  const filesLinted = results.files
+  process.stdout.write(`checked ${filesLinted} files. `)
+
+  const errorCount = results.errors
+
+  if (errorCount <= 0) {
+    process.stdout.write('OK...')
+  }
+  return errorCount ? 1 : 0
+}
+
+async function lintStyles ({ onlyChanged, changedFiles }) {
   const styleLintFilePatterns = ['**/*.css']
   const finalFilePatterns = onlyChanged ? await listChangedFilesMatching(...styleLintFilePatterns) : styleLintFilePatterns
   if (finalFilePatterns.length <= 0) {

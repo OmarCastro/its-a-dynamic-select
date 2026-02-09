@@ -2,7 +2,6 @@ import globals from 'globals'
 import neostandard from 'neostandard'
 import jsdoc from 'eslint-plugin-jsdoc'
 import js from '@eslint/js'
-import cspellESLintPluginRecommended from '@cspell/eslint-plugin/recommended'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 import importPlugin from 'eslint-plugin-import'
 
@@ -18,7 +17,6 @@ export default [
   ...neostandard(),
   js.configs.recommended,
   jsdoc.configs['flat/recommended-typescript-flavor'],
-  cspellESLintPluginRecommended,
   {
     plugins: {
       unicorn: eslintPluginUnicorn,
@@ -46,20 +44,12 @@ export default [
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
       'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
-      '@cspell/spellchecker': 0
     },
   },
   {
     files: ['src/**/*.js'],
     rules: {
       'import/extensions': ['error', 'always'],
-      '@cspell/spellchecker': ['warn', {
-        cspell: {
-          words: [
-            'datafetch',
-          ]
-        }
-      }]
     }
   }, {
     files: [
