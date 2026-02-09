@@ -2,7 +2,6 @@ import { okButtonEl, cancelButtonEl, isDynamicSelect } from '../../utils/dynamic
 import { getLanguageFromElement } from '../../utils/get-lang-from-element.util.js'
 /** @import {DynamicSelect} from '../../utils/dynamic-select-dom' */
 
-/* eslint-disable @cspell/spellchecker */
 export const i18nButtonLabels = Object.freeze({
   ok: {
     default: 'OK',
