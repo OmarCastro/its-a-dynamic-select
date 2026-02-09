@@ -22,7 +22,7 @@ export function teardown () {
 }
 
 /**
- * @param {MockData} mockData - mock data object binded to this function
+ * @param {MockData} mockData - mock data object bound to this function
  * @returns {MockApi} mock api
  */
 const buildApi = (mockData) => Object.freeze({
@@ -54,7 +54,7 @@ const getHrefFromFetchRequest = (fetchParam) => {
 }
 
 /**
- * @param {MockData} mockData - mock data object binded to this function
+ * @param {MockData} mockData - mock data object bound to this function
  * @param {Parameters<typeof originalFetch>} args - original `fetch()` arguments
  */
 async function customFetch (mockData, ...args) {
