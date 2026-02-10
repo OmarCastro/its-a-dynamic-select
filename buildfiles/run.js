@@ -17,7 +17,8 @@ To help navigate this file is divided by sections:
 @section 12 badge utilities
 @section 13 module graph utilities
 @section 14 docker utilities
-@section 15 build tools plugins
+@section 15 git utilities
+@section 16 build tools plugins
 */
 import process from 'node:process'
 import fs, { readFile as fsReadFile, writeFile } from 'node:fs/promises'
@@ -130,6 +131,7 @@ async function main () {
   }
 
   await checkNodeModulesFolder()
+  await checkGitHooks()
   await tasks[taskName].cb()
   return process.exit(0)
 }
@@ -864,10 +866,6 @@ async function execCmd (command, args) {
   return await execFile(command, args, options)
 }
 
-async function execGitCmd (args) {
-  return (await execCmd('git', args)).stdout.trim().toString().split('\n')
-}
-
 // @section 9 filesystem utilities
 
 async function * getFiles (dir) {
@@ -1356,7 +1354,28 @@ async function testInDocker () {
   })
 }
 
-// @section 15 build tools plugins
+// @section 15 git utilities
+
+async function execGitCmd (args) {
+  return (await execCmd('git', args)).stdout.trim().toString().split('\n')
+}
+
+async function checkGitHooks () {
+  const expectedHooksPath = 'buildfiles/git-hooks/'
+  const stdoutLines = await execGitCmd(['config', 'get', 'core.hooksPath']).catch(() => [])
+  const hooksPath = stdoutLines[0]
+  if (hooksPath !== expectedHooksPath) {
+    if (hooksPath == null || hooksPath.trim() === '') {
+      console.log('git hooks not set, setting git hooks path to ', expectedHooksPath)
+    } else {
+      console.log('updating git hooks path to ', expectedHooksPath)
+    }
+
+    await execGitCmd(['config', 'set', 'core.hooksPath', expectedHooksPath])
+  }
+}
+
+// @section 16 build tools plugins
 
 /**
  * @returns {Promise<import('esbuild').Plugin>} - esbuild plugin
