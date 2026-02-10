@@ -1,6 +1,7 @@
 import { isPlainObject } from '../../utils/object.js'
 import { parseCSVResponse, isCSVResponse } from '../parses-csv-data-response/parse-csv-response.js'
 import { parseJsonResponse, isJsonResponse } from '../parses-json-array-and-object-data-response/parse-json-response.js'
+import { isJsonLinesResponse, parseJsonLinesResponse } from '../parses-json-lines-object-array-data-response/parse-json-lines-response.js'
 
 /** @type {WeakMap<HTMLElement, DataLoader>} */
 const dataLoaderData = new WeakMap()
@@ -253,9 +254,11 @@ async function parseResponse (response) {
       return await parseCSVResponse(response)
     } else if (isJsonResponse(response)) {
       return await parseJsonResponse(response)
+    } else if (isJsonLinesResponse(response)) {
+      return await parseJsonLinesResponse(response)
     } else {
       return {
-        error: 'invalid response, expected JSON or CSV response, guarantee that Content-type header is set correctly to "text/csv" or "application/json"',
+        error: 'invalid response, expected JSON, JSON Lines or CSV response, guarantee that Content-type header is set correctly to "text/csv", "application/json" or "application/jsonl"',
         stage: 'parse fetch response'
       }
     }
