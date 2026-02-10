@@ -11,6 +11,7 @@ ignorePaths:
   - "**/package.json"
 words:
   - hrefs # hyperlinks
+  - buildfiles # buildfiles location
   - linc # lint changed files only
   - selectbox
   - datafetch
