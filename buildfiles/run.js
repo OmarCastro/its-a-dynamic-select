@@ -591,15 +591,20 @@ function wait (ms) {
 
 // @section 6 linters
 
-async function lintCode ({ onlyChanged, changedFiles }, options) {
+async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
   const esLintFilePatterns = ['**/*.js']
   const finalFilePatterns = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, esLintFilePatterns) : await listChangedFilesMatching(...esLintFilePatterns) : esLintFilePatterns
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
   }
+  const config = (await import('./configs/eslint.config.js')).default
+
   const { ESLint } = await import('eslint')
-  const eslint = new ESLint(options)
+  const eslint = new ESLint({
+    baseConfig: config,
+    ...options
+  })
   const formatter = await eslint.loadFormatter()
   const results = await eslint.lintFiles(finalFilePatterns)
 
