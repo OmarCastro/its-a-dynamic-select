@@ -130,8 +130,11 @@ async function main () {
     return process.exit(1)
   }
 
+  const isInsideDocker = await isInsideDockerContainer()
+  if (!isInsideDocker) {
+    await checkGitHooks()
+  }
   await checkNodeModulesFolder()
-  await checkGitHooks()
   await tasks[taskName].cb()
   return process.exit(0)
 }
@@ -1324,6 +1327,13 @@ async function createModuleGraphSvg (moduleGrapnJson) {
 async function isDockerRunning () {
   const exitCode = await cmdSpawn('docker info', { stdio: 'ignore' })
   return exitCode === 0
+}
+
+async function isInsideDockerContainer () {
+  isInsideDockerContainer.cachedResult ??= existsSync('/.dockerenv') ||
+     (await readFile('/proc/self/cgroup').then(text => text.includes('docker')).catch(() => false)) ||
+     (await readFile('/proc/self/mountinfo').then(text => text.includes('/docker/containers/')).catch(() => false))
+  return isInsideDockerContainer.cachedResult
 }
 
 async function runInDocker ({ command, imageName, volumes, workdir, env, user, rmOnFinish }) {
