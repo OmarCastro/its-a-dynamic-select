@@ -25,13 +25,13 @@ const fn = async () => {
   if (globalThis.Deno != null) {
     // init unit tests for deno
 
-    importStr = 'https://deno.land/x/expect/mod.ts'
+    importStr = 'jsr:@std/expect'
     const { expect } = await importModule(importStr)
 
-    importStr = './init-dom'
+    importStr = './init-dom.js'
     const { window } = await importModule(importStr)
 
-    importStr = './fetch-mock'
+    importStr = './fetch-mock.js'
     const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule(importStr)
 
     const test = (description, test) => {
@@ -57,10 +57,10 @@ const fn = async () => {
     importStr = '@playwright/test'
     const { test: base, expect } = await import(importStr)
 
-    importStr = './init-dom'
+    importStr = './init-dom.js'
     const { window, resetDom } = await importModule(importStr)
 
-    importStr = './fetch-mock'
+    importStr = './fetch-mock.js'
     const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule(importStr)
 
     /** @type {any} */
@@ -87,7 +87,7 @@ const fn = async () => {
     // init unit tests to be run in browser
 
     const { expect } = await import('expect')
-    const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule('./fetch-mock')
+    const { setup: setupFetchMock, teardown: teardownFetchMock } = await importModule('./fetch-mock.js')
 
     const test = async (description, test) => {
       console.log('-' + description)
@@ -130,7 +130,7 @@ export const { test, expect } = await fn()
  * @property {typeof import('expect').expect} expect - expect API
  * @property {TestAPICall} step - test step
  * @property {Window} dom - dom fixture
- * @property {import('./fetch-mock').MockApi} fetch - dom fixture
+ * @property {import('./fetch-mock.js').MockApi} fetch - dom fixture
  */
 
 /**
