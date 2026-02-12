@@ -22,7 +22,11 @@ let importStr
  * @returns {Promise<{test: Test, expect: Expect}>} adapted tests
  */
 const fn = async () => {
-  if (globalThis.Deno != null) {
+  const customTestRunner = globalThis['custom-unit-test-runner']
+  if (customTestRunner) {
+    const { test, expect } = customTestRunner
+    return { test, expect }
+  } else if (globalThis.Deno != null) {
     // init unit tests for deno
 
     importStr = 'jsr:@std/expect'
@@ -36,15 +40,18 @@ const fn = async () => {
 
     const test = (description, test) => {
       globalThis.Deno.test(`${description}`, async (t) => {
-        await test({
-          step: t.step,
-          expect,
-          dom: window,
-          get fetch () {
-            return setupFetchMock()
-          }
-        })
-        teardownFetchMock()
+        try {
+          await test({
+            step: t.step,
+            expect,
+            dom: window,
+            get fetch () {
+              return setupFetchMock()
+            }
+          })
+        } finally {
+          teardownFetchMock()
+        }
       })
     }
 
