@@ -598,7 +598,11 @@ function wait (ms) {
 
 async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
   const esLintFilePatterns = ['**/*.js']
-  const finalFilePatterns = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, esLintFilePatterns) : await listChangedFilesMatching(...esLintFilePatterns) : esLintFilePatterns
+  const finalFilePatterns = onlyChanged && changedFiles
+    ? await filterFilePathsByPatterns(changedFiles, esLintFilePatterns)
+    : onlyChanged
+      ? await listChangedFilesMatching(...esLintFilePatterns)
+      : esLintFilePatterns
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -608,6 +612,8 @@ async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
   const { ESLint } = await import('eslint')
   const eslint = new ESLint({
     baseConfig: config,
+    cache: true,
+    cacheLocation: pathFromProject('.tmp/eslintcache'),
     ...options
   })
   const formatter = await eslint.loadFormatter()
@@ -652,7 +658,11 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
 
   const reporter = getDefaultReporter(options)
 
-  const results = await lint(finalFilePatterns, { config: pathFromProject('./buildfiles/configs/cspell.yaml') }, reporter)
+  const results = await lint(finalFilePatterns, {
+    config: pathFromProject('./buildfiles/configs/cspell.yaml'),
+    cache: true,
+    cacheLocation: '.tmp/cspellcache',
+  }, reporter)
 
   const filesLinted = results.files
   process.stdout.write(`checked ${filesLinted} files. `)
