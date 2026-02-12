@@ -1,7 +1,7 @@
 import { test } from '../../../test-utils/unit/test.util.js'
 import { configurationOf, defaultValues } from './configuration.js'
 
-test('configurationOf - configurations have default values', ({ step, expect, dom }) => {
+test('configurationOf - configurations have default values', ({ expect, dom }) => {
   const { document } = dom
   document.body.innerHTML = `
     <dynamic-select class="target"></dynamic-select>
@@ -12,7 +12,7 @@ test('configurationOf - configurations have default values', ({ step, expect, do
   expect(configurationOf(elem).debounceQueryDuration).toBe(defaultValues.debounceQueryDuration)
 })
 
-test('configurationOf - has valid data-min-query-length defined in component', ({ step, expect, dom }) => {
+test('configurationOf - has valid data-min-query-length defined in component', ({ expect, dom }) => {
   const { document } = dom
   document.body.innerHTML = `
     <dynamic-select data-min-query-length="5" class="target"></dynamic-select>
@@ -23,7 +23,7 @@ test('configurationOf - has valid data-min-query-length defined in component', (
   expect(configurationOf(elem).debounceQueryDuration).toBe(defaultValues.debounceQueryDuration)
 })
 
-test('configurationOf - has invalid data-min-query-length defined in component', ({ step, expect, dom }) => {
+test('configurationOf - has invalid data-min-query-length defined in component', ({ expect, dom }) => {
   const { document } = dom
   document.body.innerHTML = `
     <dynamic-select data-min-query-length="-1" class="target1"></dynamic-select>
