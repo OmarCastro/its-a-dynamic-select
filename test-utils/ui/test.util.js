@@ -2,6 +2,7 @@
 import { test as base, expect as baseExpect } from '@playwright/test'
 import { mkdir, writeFile, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
+import inspect from 'object-inspect'
 export { expect } from '@playwright/test'
 /**
  * Get path stats, or null if it doesn't exist
@@ -56,3 +57,8 @@ export const test = base.extend({
     use('./build/docs/test-page.html')
   },
 })
+
+export const formatted = (strings, ...values) => String.raw(
+  { raw: strings },
+  ...values.map(value => inspect(value))
+)
