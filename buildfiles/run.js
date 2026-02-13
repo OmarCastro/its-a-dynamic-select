@@ -69,7 +69,7 @@ const tasks = {
   },
   'test:unit-only': {
     description: 'tests the project',
-    cb: async () => { await onlyRunUnitTests(); process.exit(0) },
+    cb: async () => { const exitCode = await quickRunUnitTests(); process.exit(exitCode) },
   },
   'test:in-docker': {
     description: 'tests the project',
@@ -110,6 +110,10 @@ const tasks = {
   'release:clean': {
     description: 'clean release preparation',
     cb: async () => { await cleanRelease(); process.exit(0) },
+  },
+  'precommit-check': {
+    description: 'Make precommit validation',
+    cb: async () => { const exitCode = await execPreCommitChecks(); process.exit(exitCode) },
   },
   help: helpTask,
   '--help': helpTask,
@@ -178,10 +182,12 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
   }
 }
 
-async function onlyRunUnitTests () {
-  logStartStage('test', 'only run unit tests')
-  await cmdSpawn('TZ=UTC npx playwright test --project=unit --reporter=list')
+async function quickRunUnitTests () {
+  logStartStage('test', 'quick build & run unit tests')
+  await buildUnitTests()
+  const result = await cmdSpawn('TZ=UTC node build/tests/run-unit-tests.js')
   logEndStage()
+  return result
 }
 
 async function execTests () {
@@ -320,6 +326,8 @@ async function buildTest () {
 
   await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
 
+  await buildUnitTests()
+
   logEndStage()
 }
 
@@ -415,6 +423,18 @@ async function buildESM (outputDir) {
   await Promise.all([...fileListJsJob, ...fileListCssJob, ...fileListHtmlJob])
 }
 
+async function buildUnitTests () {
+  const testSetupPath = 'test-utils/unit/setup-unit-test-systems.js'
+  const unitTestFiles = await listNonIgnoredFiles({ patterns: ['*.unit.spec.js'] })
+  const outputPath = 'build/tests/run-unit-tests.js'
+  const outputPathFolder = dirname(outputPath)
+  const code = [testSetupPath, ...unitTestFiles]
+    .map(file => relative(outputPathFolder, file))
+    .map(file => `import ${JSON.stringify(file)}\n`).join('')
+  await mkdir_p('build/tests')
+  await writeFile(outputPath, code)
+}
+
 async function execBuild () {
   await buildTest()
   await buildDocs()
@@ -433,15 +453,10 @@ async function execlintCodeOnChanged () {
   const returnJsonLint = await validateJson({ onlyChanged: true, changedFiles })
   logStage('validating yaml')
   const returnYamlLint = await validateYaml({ onlyChanged: true, changedFiles })
-  let returnCodeTs = 0
-  logStage('typecheck with typescript')
-  if ([...changedFiles].some(changedFile => changedFile.startsWith('src/'))) {
-    returnCodeTs = await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
-  } else {
-    process.stdout.write('no files to check...')
-  }
+  logStage('typecheck')
+  const returnTypecheck = await typecheckSrc({ onlyChanged: true, changedFiles })
   logEndStage()
-  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
+  return returnCodeLint + returnTypecheck + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
 }
 
 async function execlintCode () {
@@ -456,9 +471,21 @@ async function execlintCode () {
   logStage('validating yaml')
   const returnYamlLint = await validateYaml({ onlyChanged: false })
   logStage('typecheck')
-  const returnCodeTs = await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
+  const returnTypecheck = await typecheckSrc({ onlyChanged: false })
   logEndStage()
-  return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
+  return returnCodeLint + returnTypecheck + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
+}
+
+async function execPreCommitChecks () {
+  logStartStage('precommit', 'lint and test')
+
+  const testTask = quickRunUnitTests()
+  const codeLint = execlintCodeOnChanged()
+
+  const exitCodes = await Promise.all([testTask, codeLint])
+  const exitCode = exitCodes.reduce((a, b) => a + b)
+  logEndStage()
+  return exitCode
 }
 
 async function execGithubBuildWorkflow () {
@@ -715,6 +742,17 @@ async function validateYaml ({ onlyChanged, changedFiles }) {
     changedFiles,
     validation: async (file) => load(await fs.readFile(file, 'utf8')),
   })
+}
+
+async function typecheckSrc ({ onlyChanged, changedFiles }) {
+  if (onlyChanged) {
+    const changedInSrc = [...changedFiles].some(changedFile => changedFile.startsWith('src/'))
+    if (!changedInSrc) {
+      process.stdout.write('no files to check...')
+      return 0
+    }
+  }
+  return await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
 }
 
 async function validateFiles ({ patterns, onlyChanged, changedFiles, validation }) {

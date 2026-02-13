@@ -1,3 +1,2 @@
 #!/bin/sh
-npm run linc &&
-npm run test:unit-only
+exec buildfiles/run precommit-check
