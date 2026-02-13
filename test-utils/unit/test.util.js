@@ -22,9 +22,9 @@ let importStr
  * @returns {Promise<{test: Test, expect: Expect}>} adapted tests
  */
 const fn = async () => {
-  const customTestRunner = globalThis['custom-unit-test-runner']
-  if (customTestRunner) {
-    const { test, expect } = customTestRunner
+  const customTestSetup = globalThis[Symbol.for('custom-unit-test-setup')]
+  if (customTestSetup) {
+    const { test, expect } = await customTestSetup()
     return { test, expect }
   } else if (globalThis.Deno != null) {
     // init unit tests for deno
@@ -120,7 +120,12 @@ const fn = async () => {
 }
 
 export const { test, expect } = await fn()
+const inspect = (await import('object-inspect')).default
 
+export const formatted = (strings, ...values) => String.raw(
+  { raw: strings },
+  ...values.map(value => inspect(value))
+)
 /**
  * @callback Test
  * @param {string} description
