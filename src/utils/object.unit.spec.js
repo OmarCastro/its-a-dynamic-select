@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test, formatted } from '../../test-utils/unit/test.util.js'
 import { isPlainObject } from './object.js'
 
 test('isPlainObject - returns true for a simple object literal', ({ expect }) => {
@@ -22,18 +22,21 @@ test('isPlainObject - returns false for functions', ({ expect }) => {
   expect(isPlainObject(() => {})).toBe(false)
 })
 
-test('isPlainObject - returns false for null and undefined', ({ expect }) => {
-  expect(isPlainObject(null)).toBe(false)
-  expect(isPlainObject(undefined)).toBe(false)
-  expect(isPlainObject()).toBe(false)
-})
-
-test('isPlainObject - returns false for primitives', ({ expect }) => {
-  expect(isPlainObject(123)).toBe(false)
-  expect(isPlainObject('hello')).toBe(false)
-  expect(isPlainObject(true)).toBe(false)
+const primitiveExamples = [
+  'hello',
+  123,
+  1234567890n,
+  true,
+  undefined,
   // eslint-disable-next-line symbol-description
-  expect(isPlainObject(Symbol())).toBe(false)
+  Symbol(),
+  null,
+]
+
+primitiveExamples.forEach(exampleInput => {
+  test(formatted`isPlainObject - returns false for primitive of type ${typeof exampleInput}`, ({ expect }) => {
+    expect(isPlainObject(exampleInput)).toBe(false)
+  })
 })
 
 test('isPlainObject - returns false for Date objects', ({ expect }) => {
