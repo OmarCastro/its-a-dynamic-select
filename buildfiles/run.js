@@ -326,7 +326,7 @@ async function buildTest () {
 
   await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
 
-  await buildUnitTests()
+  await buildUnitTests({ includeBrowser: true })
 
   logEndStage()
 }
@@ -423,16 +423,59 @@ async function buildESM (outputDir) {
   await Promise.all([...fileListJsJob, ...fileListCssJob, ...fileListHtmlJob])
 }
 
-async function buildUnitTests () {
-  const testSetupPath = 'test-utils/unit/setup-unit-test-systems.js'
+async function buildUnitTests ({ includeBrowser = false } = {}) {
+  const toImportCode = (outputPathFolder, file) => {
+    const importPath = relative(outputPathFolder, file)
+    return `import ${JSON.stringify(importPath)}\n`
+  }
+
   const unitTestFiles = await listNonIgnoredFiles({ patterns: ['*.unit.spec.js'] })
-  const outputPath = 'build/tests/run-unit-tests.js'
-  const outputPathFolder = dirname(outputPath)
-  const code = [testSetupPath, ...unitTestFiles]
-    .map(file => relative(outputPathFolder, file))
-    .map(file => `import ${JSON.stringify(file)}\n`).join('')
-  await mkdir_p('build/tests')
-  await writeFile(outputPath, code)
+
+  const outputs = [{
+    setupPath: 'test-utils/unit/setup-unit-test-systems.js',
+    outputPath: 'build/tests/run-unit-tests.js',
+  }, {
+    setupPath: 'test-utils/unit/setup-unit-test-browser.js',
+    outputPath: 'build/tests/run-unit-tests--browser.js',
+  }, {
+    setupPath: 'test-utils/unit/setup-unit-test-browser.js',
+    outputPath: 'build/docs/tests/unit-tests.js',
+  }]
+  await Promise.all(outputs.map(async ({ setupPath, outputPath }) => {
+    const isBrowser = setupPath === 'test-utils/unit/setup-unit-test-browser.js'
+    if (isBrowser && !includeBrowser) {
+      return
+    }
+    const outputPathFolder = dirname(outputPath)
+    const outputPathNoExtension = outputPath.slice(0, outputPath.lastIndexOf('.'))
+    const outputPathMinified = outputPathNoExtension + '.min.js'
+    await mkdir_p(outputPathFolder)
+
+    const testSetupCode = toImportCode(outputPathFolder, setupPath)
+    const testFileImports = unitTestFiles.map(file => toImportCode(outputPathFolder, file)).join('')
+    const code = testSetupCode + testFileImports
+    await writeFile(outputPath, code)
+    if (!isBrowser) {
+      return
+    }
+
+    const esbuild = await import('esbuild')
+    await esbuild.build({
+      ...esBuildCommonParams(),
+      entryPoints: [outputPath],
+      outfile: outputPathMinified,
+      platform: isBrowser ? 'browser' : 'node',
+      format: 'esm',
+      minify: true,
+    })
+
+    const htmlContent = `<!doctype html><html lang="en"><head>
+  <title>unit test page</title>
+  <script type="module" src="${basename(outputPathMinified)}" defer></script>
+</head><body></body></html>`
+
+    await writeFile(outputPathNoExtension + '.html', htmlContent)
+  }))
 }
 
 async function execBuild () {
