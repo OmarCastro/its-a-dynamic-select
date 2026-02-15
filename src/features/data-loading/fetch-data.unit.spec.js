@@ -47,7 +47,7 @@ test('dataLoaderOf - for first query, use the defined url in data-src when reque
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
   expect(fetch.fetchHistory.inputHrefs).toEqual([
-    'https://example.com/test'
+    new URL('/test', dom.location.href).href,
   ])
 })
 
@@ -65,7 +65,7 @@ test('dataLoaderOf - when query has filter, add filter as query param on when re
 
   expect(data).toEqual({ data: [{ id: 'sdsd', text: 'hello world' }], hasMore: false })
   expect(fetch.fetchHistory.inputHrefs).toEqual([
-    'https://example.com/test?q=hello'
+    new URL('/test?q=hello', dom.location.href).href,
   ])
 })
 
@@ -95,6 +95,7 @@ test('dataLoaderOf - fetching next data when hasMore is false returns an empty r
 test('dataLoaderOf - uses link pagination when json array response contains a "Link" header with "next" rel', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   const { body } = dom.document
+
   body.innerHTML = '<div class="test" data-src="test"></div>'
   const response1 = Response.json([{ id: '1', text: 'hello world' }])
   response1.headers.append('Link', '<https//example.com/test?cursor=test_cursor>; rel="next"')
@@ -121,7 +122,7 @@ test('dataLoaderOf - uses link pagination when json array response contains a "L
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
-    'https://example.com/test',
+    new URL('test', dom.location.href).href,
     'https//example.com/test?cursor=test_cursor'
   ])
 })
@@ -176,7 +177,7 @@ test('dataLoaderOf - uses link pagination when csv response contains a "Link" he
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
-    'https://example.com/test',
+    new URL('test', dom.location.href).href,
     'https//example.com/test?cursor=test_cursor'
   ])
 })
@@ -219,7 +220,7 @@ test('dataLoaderOf - uses link pagination when response object contains a "links
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
-    'https://example.com/test',
+    new URL('test', dom.location.href).href,
     'https//example.com/test?cursor=test_cursor'
   ])
 })
@@ -252,8 +253,8 @@ test('dataLoaderOf - uses "after value" pagination when response contains an "Ha
   }
 
   const expectedFetchUrls = [
-    'https://example.com/test',
-    'https://example.com/test?after=1'
+    new URL('test', dom.location.href).href,
+    new URL('test?after=1', dom.location.href).href,
   ]
 
   const element = body.querySelector('.test')
