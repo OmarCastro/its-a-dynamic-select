@@ -95,7 +95,7 @@ export function Server () {
 
       // No need to ensure the route can't access other local files,
       // since this is for development only.
-      if (serveStaticPageIfExists(req, res, true)) {
+      if (await serveStaticPageIfExists(req, res, true)) {
         return
       }
     }
@@ -148,7 +148,7 @@ export function TestServer () {
  * @param {ServerResponse} res - response api
  * @param {boolean} livereload - flag to enable/disable livereload
  * @param {string} [route] - route
- * @returns {boolean} Whether or not the page exists and was served
+ * @returns {Promise<boolean>} Whether or not the page exists and was served
  */
 async function serveStaticPageIfExists (req, res, livereload, route) {
   const { url } = req
@@ -162,7 +162,7 @@ async function serveStaticPageIfExists (req, res, livereload, route) {
   if (!stat) {
     const htmlRoute = route + '.html'
     const htmlRouteStat = await statOrNull(htmlRoute)
-    const htmlFileExists = htmlRouteStat && htmlRouteStat.isFile()
+    const htmlFileExists = !!(htmlRouteStat?.isFile())
     return htmlFileExists ? await serveStaticPageIfExists(req, res, livereload, htmlRoute) : false
   }
   if (stat.isDirectory()) {
