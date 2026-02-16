@@ -41,6 +41,7 @@ export default [
       'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
       'jsdoc/reject-any-type': 0,
+      'jsdoc/require-jsdoc': ['warn', { exemptEmptyFunctions: true }],
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
       'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
