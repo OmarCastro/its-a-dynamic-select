@@ -528,13 +528,16 @@ async function execlintCode () {
 async function execPreCommitChecks () {
   logStartStage('precommit', 'lint and test')
 
-  const testTask = quickRunUnitTests()
-  const codeLint = execlintCodeOnChanged()
+  const result = await executeOnStagedOnly(async () => {
+    const testTask = quickRunUnitTests()
+    const codeLint = execlintCodeOnChanged()
 
-  const exitCodes = await Promise.all([testTask, codeLint])
-  const exitCode = exitCodes.reduce((a, b) => a + b)
+    const exitCodes = await Promise.all([testTask, codeLint])
+    const exitCode = exitCodes.reduce((a, b) => a + b)
+    return exitCode
+  }, { updateOrRevert: true })
   logEndStage()
-  return exitCode
+  return result
 }
 
 async function execGithubBuildWorkflow () {
@@ -1480,6 +1483,37 @@ async function checkGitHooks () {
 
     await execGitCmd(['config', 'set', 'core.hooksPath', expectedHooksPath])
   }
+}
+
+async function listStashedFiles () {
+  const diffExec = execGitCmd(['diff', '--name-only', '--staged'])
+  return new Set([...(await diffExec)].filter(filename => filename.trim().length > 0))
+}
+
+async function executeOnStagedOnly (callback, { updateOrRevert = false } = {}) {
+  const stagedFiles = await listStashedFiles()
+  if (stagedFiles.size > 0) {
+    logStage('Stash unstaged + untracked files')
+    await execGitCmd(['stash', 'push', '--keep-index', '-u', '-m', 'Stash unstaged + untracked files'])
+    let returnCode = 0
+    try {
+      logStage('executing tasks on staged only')
+      returnCode = await callback()
+    } catch {
+      returnCode = 1
+    } finally {
+      if (updateOrRevert) {
+        if (returnCode === 0) {
+          await execGitCmd(['add', '-u'])
+        } else {
+          await execGitCmd(['restore', '.'])
+        }
+      }
+      logStage('Pop stash')
+      await execGitCmd(['stash', 'pop'])
+    }
+  }
+  return 0
 }
 
 // @section 16 build tools plugins
