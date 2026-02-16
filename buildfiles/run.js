@@ -471,6 +471,12 @@ async function buildUnitTests ({ includeBrowser = false } = {}) {
 
     const htmlContent = `<!doctype html><html lang="en"><head>
   <title>unit test page</title>
+  <style>body {background-color: #e5e5e5;color: #303540;font-family: Arial;}
+@media (prefers-color-scheme: dark) {
+  body {background-color: #202530;color: #dddcdf;}
+  a { color: #6ad; }
+  a:visited { color: #d8d;}
+}</style>
   <script type="module" src="${basename(outputPathMinified)}" defer></script>
 </head><body></body></html>`
 
