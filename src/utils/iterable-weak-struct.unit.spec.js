@@ -228,18 +228,7 @@ test('IterableWeakSet - has entry', ({ expect }) => {
 
 const isNode = globalThis.process?.versions?.node != null
 if (isNode) {
-  /** @type {NodeJS.GCFunction} */
-  let gc = async (...args) => {
-    const { setFlagsFromString } = await import('node:v8')
-    const { runInNewContext } = await import('node:vm')
-
-    setFlagsFromString('--expose_gc')
-    const nodeGc = runInNewContext('gc')
-    gc = async (...args) => await nodeGc(...args)
-    return await nodeGc(...args)
-  }
-
-  test('IterableWeakMap - cleans up garbage collected entries', async ({ expect }) => {
+  test('IterableWeakMap - cleans up garbage collected entries', async ({ expect, gc }) => {
     const map = new IterableWeakMap()
 
     let key1 = { hello: 'world' }
@@ -270,7 +259,7 @@ if (isNode) {
     expect([...map.values()]).toEqual(['test value 2'])
   })
 
-  test('IterableWeakSet - cleans up garbage collected entries', async ({ expect }) => {
+  test('IterableWeakSet - cleans up garbage collected entries', async ({ expect, gc }) => {
     const set = new IterableWeakSet()
 
     let key1 = { hello: 'world' }
@@ -298,7 +287,7 @@ if (isNode) {
     expect([...set.values()]).toEqual([key2])
   })
 
-  test('IterableWeakMap - size property updates on garbage collection', async ({ expect }) => {
+  test('IterableWeakMap - size property updates on garbage collection', async ({ expect, gc }) => {
     const map = new IterableWeakMap()
 
     let key1 = { hello: 'world' }
@@ -319,7 +308,7 @@ if (isNode) {
     expect(map.size).toBe(1)
   })
 
-  test('IterableWeakSet - size property updates on garbage collection', async ({ expect }) => {
+  test('IterableWeakSet - size property updates on garbage collection', async ({ expect, gc }) => {
     const set = new IterableWeakSet()
 
     let key1 = { hello: 'world' }
