@@ -1,7 +1,8 @@
 globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTestsForSystems () {
-  const { expect } = await import('expect')
-  const { window } = await import('./init-dom.js')
+  const { expect } = await import('./simple-expect.js')
+  const { window, resetDom } = await import('./init-dom.js')
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
+  const { gc } = await import('./gc.js')
 
   async function runTests () {
     const testAmount = unitTests.length
@@ -52,7 +53,11 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
         await test({
           step: async (_, callback) => await callback(),
           expect,
-          dom: window,
+          gc,
+          get dom () {
+            resetDom()
+            return window
+          },
           get fetch () {
             return setupFetchMock()
           }
