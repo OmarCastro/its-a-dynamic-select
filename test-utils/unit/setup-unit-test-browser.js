@@ -34,7 +34,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     } else {
       log(`[unit-test] ${failedTestAmount} tests failed`)
     }
-    reportLogs(logs)
+    reportLogs({ logs, failed: failedTestAmount, total: testAmount, passed: testAmount - failedTestAmount })
   }
 
   function scheduleUnitTestRun () {
@@ -49,7 +49,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }, 250)
 
   const unitTests = []
-  const noopGC = async () => {}
+  const noopGC = async () => { }
   noopGC.status = {
     enabled: false,
     reason: 'Garbage collection not enabled'
@@ -82,12 +82,48 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
 }
 
 /**
- * @param {string} logs - test logs
+ * @param {object} report - test report
+ * @param {string} report.logs - test logs
+ * @param {number} report.failed - amount of failed tests
+ * @param {number} report.passed - amount of passed tests
+ * @param {number} report.total - total amount tests
  */
-function reportLogs (logs) {
-  window.document.body.replaceChildren(...logs.split('\n').map(log => {
-    const div = document.createElement('div')
-    div.textContent = log
-    return div
-  }))
+function reportLogs (report) {
+  const inIframe = window.self !== window.top
+  const { body } = window.document
+  const { reportType } = globalThis[Symbol.for('unit-test-info')]
+  if (inIframe) {
+    window.top.postMessage({ message: 'unit test report', data: report })
+  }
+  if (reportType === 'badge') {
+    createSVGResponse(report).then(svg => {
+      body.innerHTML = svg
+      body.classList.add('done')
+    })
+  } else {
+    body.replaceChildren(...report.logs.split('\n').map(log => {
+      const div = document.createElement('div')
+      div.textContent = log
+      return div
+    }))
+    body.classList.add('done')
+  }
+}
+
+const badgeColors = {
+  green: { dark: '#060', light: '#90e59a' },
+  red: { dark: '#a00', light: '#f77' },
+}
+
+let badgeFetch = null
+
+const createSVGResponse = async (report) => {
+  const label = `${report.passed} / ${report.total}`
+  const color = report.failed > 0 ? badgeColors.red : badgeColors.green
+  const { badgeUrl } = globalThis[Symbol.for('unit-test-info')]
+  badgeFetch ??= fetch(badgeUrl).then(response => response.text())
+  const badgeSvg = await badgeFetch
+  return badgeSvg
+    .replaceAll('RUNNING...', label)
+    .replaceAll('--dark-fill: #05a; --light-fill: #acf;', `--dark-fill: ${color.dark}; --light-fill: ${color.light};`)
 }
