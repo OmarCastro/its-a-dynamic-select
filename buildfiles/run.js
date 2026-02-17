@@ -1080,10 +1080,10 @@ async function filterFilePathsByPatterns (filePaths, patterns) {
 }
 
 async function listChangedFiles () {
-  const mainBranchName = (await execGitCmd(['rev-parse', '--abbrev-ref', 'HEAD']))[0]
-  const mergeBase = await execGitCmd(['merge-base', 'HEAD', mainBranchName])
-  const diffExec = execGitCmd(['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase])
-  const lsFilesExec = execGitCmd(['ls-files', '--others', '--exclude-standard'])
+  const mainBranchName = (await git('rev-parse', '--abbrev-ref', 'HEAD'))[0]
+  const mergeBase = await git('merge-base', 'HEAD', mainBranchName)
+  const diffExec = git('diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase)
+  const lsFilesExec = git('ls-files', '--others', '--exclude-standard')
   return new Set([...(await diffExec), ...(await lsFilesExec)].filter(filename => filename.trim().length > 0))
 }
 
@@ -1479,13 +1479,13 @@ async function testInDocker () {
 
 // @section 15 git utilities
 
-async function execGitCmd (args) {
-  return (await execCmd('git', args)).stdout.trim().toString().split('\n')
+async function git (/** @type {string[]} */...args) {
+  return (await execCmd('git', args.flat())).stdout.trim().toString().split('\n')
 }
 
 async function checkGitHooks () {
   const expectedHooksPath = 'buildfiles/git-hooks/'
-  const stdoutLines = await execGitCmd(['config', 'get', 'core.hooksPath']).catch(() => [])
+  const stdoutLines = await git('config', 'get', 'core.hooksPath').catch(() => [])
   const hooksPath = stdoutLines[0]
   if (hooksPath !== expectedHooksPath) {
     if (hooksPath == null || hooksPath.trim() === '') {
@@ -1494,12 +1494,12 @@ async function checkGitHooks () {
       console.log('updating git hooks path to ', expectedHooksPath)
     }
 
-    await execGitCmd(['config', 'set', 'core.hooksPath', expectedHooksPath])
+    await git('config', 'set', 'core.hooksPath', expectedHooksPath)
   }
 }
 
 async function listStashedFiles () {
-  const diffExec = execGitCmd(['diff', '--name-only', '--staged'])
+  const diffExec = git('diff', '--name-only', '--staged')
   return new Set([...(await diffExec)].filter(filename => filename.trim().length > 0))
 }
 
@@ -1507,7 +1507,7 @@ async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {
   const stagedFiles = await listStashedFiles()
   if (stagedFiles.size > 0) {
     logStage('Stash unstaged + untracked files')
-    await execGitCmd(['stash', 'push', '--keep-index', '-u', '-m', 'Stash unstaged + untracked files'])
+    await git('stash', 'push', '--keep-index', '-u', '-m', 'Stash unstaged + untracked files')
     let returnCode = 0
     try {
       logStage('executing tasks on staged only')
@@ -1516,12 +1516,14 @@ async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {
       returnCode = 1
     } finally {
       if (returnCode === 0 && stageChanges) {
-        await execGitCmd(['add', '-u'])
+        logStage('Staging new changes')
+        await git('add', '-u')
       } else {
-        await execGitCmd(['restore', '.'])
+        logStage('cleaning up changes')
+        await git('restore', '.')
       }
       logStage('Pop stash')
-      await execGitCmd(['stash', 'pop'])
+      await git('stash', 'pop')
     }
   }
   return 0
