@@ -548,7 +548,7 @@ async function execPreCommitChecks () {
     const exitCodes = await Promise.all([testTask, codeLint])
     const exitCode = exitCodes.reduce((a, b) => a + b)
     return exitCode
-  }, { updateOrRevert: true })
+  })
   logEndStage()
   return result
 }
@@ -1503,7 +1503,7 @@ async function listStashedFiles () {
   return new Set([...(await diffExec)].filter(filename => filename.trim().length > 0))
 }
 
-async function executeOnStagedOnly (callback, { updateOrRevert = false } = {}) {
+async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {
   const stagedFiles = await listStashedFiles()
   if (stagedFiles.size > 0) {
     logStage('Stash unstaged + untracked files')
@@ -1515,12 +1515,10 @@ async function executeOnStagedOnly (callback, { updateOrRevert = false } = {}) {
     } catch {
       returnCode = 1
     } finally {
-      if (updateOrRevert) {
-        if (returnCode === 0) {
-          await execGitCmd(['add', '-u'])
-        } else {
-          await execGitCmd(['restore', '.'])
-        }
+      if (returnCode === 0 && stageChanges) {
+        await execGitCmd(['add', '-u'])
+      } else {
+        await execGitCmd(['restore', '.'])
       }
       logStage('Pop stash')
       await execGitCmd(['stash', 'pop'])
