@@ -441,6 +441,12 @@ async function buildUnitTests ({ includeBrowser = false } = {}) {
     setupPath: 'test-utils/unit/setup-unit-test-browser.js',
     outputPath: 'build/docs/tests/unit-tests.js',
   }]
+
+  const unitTestRunnerAssets = {
+    html: null,
+    badge: null,
+  }
+
   await Promise.all(outputs.map(async ({ setupPath, outputPath }) => {
     const isBrowser = setupPath === 'test-utils/unit/setup-unit-test-browser.js'
     if (isBrowser && !includeBrowser) {
@@ -469,18 +475,25 @@ async function buildUnitTests ({ includeBrowser = false } = {}) {
       minify: true,
     })
 
-    const htmlContent = `<!doctype html><html lang="en"><head>
-  <title>unit test page</title>
-  <style>body {background-color: #e5e5e5;color: #303540;font-family: Arial;}
-@media (prefers-color-scheme: dark) {
-  body {background-color: #202530;color: #dddcdf;}
-  a { color: #6ad; }
-  a:visited { color: #d8d;}
-}</style>
-  <script type="module" src="${basename(outputPathMinified)}" defer></script>
-</head><body></body></html>`
+    unitTestRunnerAssets.html ??= readFile('./buildfiles/assets/unit-test-runner-page.html')
+    const htmlOutputPath = outputPathNoExtension + '.html'
+    const badgeOutputPath = outputPathNoExtension + '.badge.svg'
+    const htmlContent = (await unitTestRunnerAssets.html)
+      .replaceAll('{{test-run-script}}', relative(outputPathFolder, outputPathMinified))
+      .replaceAll('{{badge-img-href}}', relative(outputPathFolder, badgeOutputPath))
+    await writeFile(htmlOutputPath, htmlContent)
+    unitTestRunnerAssets.badge ??= await (async () => {
+      const svg = await makeBadge({
+        label: 'in browser tests',
+        message: 'Running...',
+        color: getBadgeColors().blue,
+        logo: asciiIconSvg('✔'),
+      })
 
-    await writeFile(outputPathNoExtension + '.html', htmlContent)
+      return await applyA11yTheme(svg, { replaceIconToText: '✔' })
+    })()
+
+    await writeFile(badgeOutputPath, unitTestRunnerAssets.badge)
   }))
 }
 
@@ -1431,8 +1444,8 @@ async function isDockerRunning () {
 
 async function isInsideDockerContainer () {
   isInsideDockerContainer.cachedResult ??= existsSync('/.dockerenv') ||
-     (await readFile('/proc/self/cgroup').then(text => text.includes('docker')).catch(() => false)) ||
-     (await readFile('/proc/self/mountinfo').then(text => text.includes('/docker/containers/')).catch(() => false))
+    (await readFile('/proc/self/cgroup').then(text => text.includes('docker')).catch(() => false)) ||
+    (await readFile('/proc/self/mountinfo').then(text => text.includes('/docker/containers/')).catch(() => false))
   return isInsideDockerContainer.cachedResult
 }
 
