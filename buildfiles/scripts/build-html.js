@@ -172,8 +172,7 @@ queryAll('[p-aria-label]').forEach(element => {
   }
 })
 
-queryAll('img[p-size]').forEach(element => {
-  const imageSrc = element.getAttribute('src')
+const applySizeForElement = async (element, imagePath) => {
   const getdefinedLength = (attr) => {
     if (!element.hasAttribute(attr)) { return undefined }
     const length = element.getAttribute(attr)
@@ -185,7 +184,7 @@ queryAll('img[p-size]').forEach(element => {
   if (definedWidth && definedHeight) {
     return
   }
-  const size = imageSizeFromFile(`${docsOutputPath}/${imageSrc}`)
+  const size = await imageSizeFromFile(`${docsOutputPath}/${imagePath}`)
   const { width, height } = size
   if (definedWidth) {
     element.setAttribute('width', `${definedWidth}`)
@@ -199,9 +198,19 @@ queryAll('img[p-size]').forEach(element => {
   }
   element.setAttribute('width', `${size.width}`)
   element.setAttribute('height', `${size.height}`)
+}
+
+const pSizeTasks = queryAll('img[p-size]').map(element => {
+  const imageSrc = element.getAttribute('src')
+  return applySizeForElement(element, imageSrc)
 })
 
-const ssBadgeAttributesTasks = queryAll('img[p-badge-attrs]').map(async (element) => {
+const pSizeOfTasks = queryAll('iframe[p-size-of]').map(element => {
+  const imageSrc = element.getAttribute('p-size-of')
+  return applySizeForElement(element, imageSrc)
+})
+
+const pBadgeAttributesTasks = queryAll('img[p-badge-attrs]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const svgText = await readFile(`${docsOutputPath}/${imageSrc}`, 'utf8')
   const div = document.createElement('div')
@@ -245,7 +254,9 @@ const repeatGlobLinksTask = queryAll('link[href][p-repeat-glob]').map(async (ele
 })
 
 await Promise.all([
-  ...ssBadgeAttributesTasks,
+  ...pSizeTasks,
+  ...pSizeOfTasks,
+  ...pBadgeAttributesTasks,
   ...minifyStylesTasks,
   ...inlineCSSTasks,
   ...repeatGlobLinksTask
