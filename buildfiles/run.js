@@ -29,6 +29,15 @@ import { execFile as baseExecFile, exec as baseExec, spawn } from 'node:child_pr
 const exec = promisify(baseExec)
 const execFile = promisify(baseExecFile)
 const readFile = (path) => fsReadFile(path, { encoding: 'utf8' })
+const exit = (exitCode) => {
+  if (typeof exitCode === 'number') {
+    process.exitCode = exitCode
+  }
+  setTimeout(() => {
+    console.error('Force exit after timeout')
+    process.exit()
+  }, 10_000).unref()
+}
 
 // @section 1 init
 
@@ -51,45 +60,48 @@ configuration.minfiedBundleDistName ??= (({ bundleDistName: distName }) => {
 
 const helpTask = {
   description: 'show this help',
-  cb: async () => { console.log(helpText()); process.exit(0) },
+  cb: () => { console.log(helpText()); exit(0) },
 }
-
 const tasks = {
   build: {
     description: 'builds the project',
-    cb: async () => { await execBuild(); process.exit(0) },
+    cb: () => execBuild().then(exit),
   },
   'build:github-action': {
     description: 'runs build for github action',
-    cb: async () => { await execGithubBuildWorkflow(); process.exit(0) },
+    cb: () => execGithubBuildWorkflow().then(exit),
   },
   test: {
     description: 'tests the project',
-    cb: async () => { await execTests(); process.exit(0) },
+    cb: () => execTests().then(exit),
   },
   'test:unit-only': {
-    description: 'tests the project',
-    cb: async () => { const exitCode = await quickRunUnitTests(); process.exit(exitCode) },
+    description: 'quickly run unit tests of the project, showing a simple report, mostly used for precommit check',
+    cb: () => quickRunUnitTests().then(exit),
+  },
+  'test:in-host': {
+    description: 'tests the project in current environment',
+    cb: () => execTests({ inDocker: false }).then(exit),
   },
   'test:in-docker': {
-    description: 'tests the project',
-    cb: async () => { await testInDocker(); process.exit(0) },
+    description: 'boots up a docker container and run tests there',
+    cb: () => execTests({ inDocker: true }).then(exit),
   },
   linc: {
-    description: 'validates the code',
-    cb: async () => { const exitCode = await execlintCodeOnChanged(); process.exit(exitCode) },
+    description: 'validates only changed files',
+    cb: () => execlintCodeOnChanged().then(exit),
   },
   lint: {
-    description: 'validates the code',
-    cb: async () => { const exitCode = await execlintCode(); process.exit(exitCode) },
+    description: 'validates the project',
+    cb: () => execlintCode().then(exit),
   },
   dev: {
     description: 'setup dev environment',
-    cb: async () => { await execDevEnvironment(); process.exit(0) },
+    cb: () => execDevEnvironment(),
   },
   'dev:open': {
     description: 'setup dev environment and opens dev server in browser',
-    cb: async () => { await execDevEnvironment({ openBrowser: true }); process.exit(0) },
+    cb: () => execDevEnvironment({ openBrowser: true }),
   },
   'dev-server': {
     description: 'launch dev server',
@@ -105,15 +117,15 @@ const tasks = {
   },
   'release:prepare': {
     description: 'builds the project and prepares it for release',
-    cb: async () => { await prepareRelease(); process.exit(0) },
+    cb: async () => { prepareRelease().then(exit) },
   },
   'release:clean': {
     description: 'clean release preparation',
-    cb: async () => { await cleanRelease(); process.exit(0) },
+    cb: async () => { cleanRelease().then(exit) },
   },
   'precommit-check': {
-    description: 'Make precommit validation',
-    cb: async () => { const exitCode = await execPreCommitChecks(); process.exit(exitCode) },
+    description: 'Make precommit validation, validates the project with the staged changes only',
+    cb: () => execPreCommitChecks().then(exit),
   },
   help: helpTask,
   '--help': helpTask,
@@ -124,14 +136,14 @@ async function main () {
   const args = process.argv.slice(2)
   if (args.length <= 0) {
     console.log(helpText())
-    return process.exit(0)
+    return exit(0)
   }
 
   const taskName = args[0]
 
   if (!Object.hasOwn(tasks, taskName)) {
     console.error(`unknown task ${taskName}\n\n${helpText()}`)
-    return process.exit(1)
+    return exit(1)
   }
 
   const isInsideDocker = await isInsideDockerContainer()
@@ -140,7 +152,6 @@ async function main () {
   }
   await checkNodeModulesFolder()
   await tasks[taskName].cb()
-  return process.exit(0)
 }
 
 await main()
@@ -190,7 +201,24 @@ async function quickRunUnitTests () {
   return result
 }
 
-async function execTests () {
+async function execTests ({ inDocker } = {}) {
+  const isInsideDocker = await isInsideDockerContainer()
+  if (inDocker === true && isInsideDocker) {
+    console.error('[ERROR] trying to run test in a docker container inside a docker container, aborting')
+    return 1
+  } else if (inDocker === true) {
+    await testInDocker()
+  } else if (inDocker === false) {
+    await runTestProcedure()
+  } else if (isInsideDocker || !(await isDockerRunning())) {
+    await runTestProcedure()
+  } else {
+    await testInDocker()
+  }
+  return 0
+}
+
+async function runTestProcedure () {
   const COVERAGE_DIR = 'reports/coverage'
   const REPORTS_TMP_DIR = 'reports/.tmp'
   const COVERAGE_TMP_DIR = `${REPORTS_TMP_DIR}/coverage`
@@ -251,6 +279,25 @@ async function execTests () {
   await mkdir_p('build/docs')
   await cp_R('reports', 'build/docs/reports')
   logEndStage()
+}
+
+async function testInDocker () {
+  const { userInfo } = await import('node:os')
+  const { uid, gid } = userInfo()
+  const packageJson = await readPackageJson()
+  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
+  const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
+  const workdir = '/playwright'
+  return await runInDocker({
+    command: 'npm test',
+    rmOnFinish: true,
+    imageName,
+    user: `${uid}:${gid}`,
+    workdir,
+    volumes: {
+      [pathFromProject('.')]: workdir
+    }
+  })
 }
 
 /**
@@ -1438,8 +1485,8 @@ async function createModuleGraphSvg (moduleGrapnJson) {
 // @section 14 docker utilities
 
 async function isDockerRunning () {
-  const exitCode = await cmdSpawn('docker info', { stdio: 'ignore' })
-  return exitCode === 0
+  isDockerRunning.cachedResult ??= await cmdSpawn('docker info', { stdio: 'ignore' }) === 0
+  return isDockerRunning.cachedResult
 }
 
 async function isInsideDockerContainer () {
@@ -1455,26 +1502,7 @@ async function runInDocker ({ command, imageName, volumes, workdir, env, user, r
   const workdirParam = workdir ? `-w '${workdir}' ` : ''
   const userParam = user ? `-u '${user}' ` : ''
   const rmParam = rmOnFinish ? '--rm ' : ''
-  await cmdSpawn(`docker run -t ${rmParam}${userParam}${volumeParams}${envParams}${workdirParam} ${imageName} ${command}`)
-}
-
-async function testInDocker () {
-  const { userInfo } = await import('node:os')
-  const { uid, gid } = userInfo()
-  const packageJson = await readPackageJson()
-  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
-  const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
-  const workdir = '/playwright'
-  await runInDocker({
-    command: 'npm test',
-    rmOnFinish: true,
-    imageName,
-    user: `${uid}:${gid}`,
-    workdir,
-    volumes: {
-      [pathFromProject('.')]: workdir
-    }
-  })
+  return await cmdSpawn(`docker run -t ${rmParam}${userParam}${volumeParams}${envParams}${workdirParam} ${imageName} ${command}`)
 }
 
 // @section 15 git utilities
