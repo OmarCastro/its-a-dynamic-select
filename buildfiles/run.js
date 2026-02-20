@@ -1,5 +1,5 @@
 #!/usr/bin/env -S node --input-type=module
-/* eslint-disable camelcase, max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
+/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
 /*
 This file is purposely large to easily move the code to multiple projects, its build code, not production.
 To help navigate this file is divided by sections:
@@ -650,7 +650,7 @@ function helpText () {
 
   const helpArgs = fromNPM ? 'help' : 'help, --help, -h'
   const maxTaskLength = Math.max(...[helpArgs, ...Object.keys(tasks)].map(text => text.length))
-  const tasksToShow = Object.entries(tasks).filter(([_, value]) => value !== helpTask)
+  const tasksToShow = Object.entries(tasks).filter(([, value]) => value !== helpTask)
   const usageLine = fromNPM ? 'npm run <task>' : 'run <task>'
   return `Usage: ${usageLine}
 
@@ -1106,7 +1106,7 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns } = {}
 
   const fileList = listFiles('.')
   if (!patterns) { return fileList }
-  return filterFilePathsByPatterns(fileList, patterns)
+  return await filterFilePathsByPatterns(fileList, patterns)
 }
 
 async function getIgnorePatternsFromFile (filePath) {
@@ -1437,7 +1437,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   let maxWidth = 0
   let maxHeight = 0
 
-  const inputsSvg = Object.entries(inputs).map(([file, info], index) => {
+  const inputsSvg = Object.entries(inputs).map(([file]) => {
     const { height, width } = inputsNodeMetrics[file]
     const { x, y } = graph.node(file)
     maxWidth = Math.max(maxWidth, x + width)
