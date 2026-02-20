@@ -736,12 +736,7 @@ function wait (ms) {
 // @section 6 linters
 
 async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
-  const esLintFilePatterns = ['**/*.js']
-  const finalFilePatterns = onlyChanged && changedFiles
-    ? await filterFilePathsByPatterns(changedFiles, esLintFilePatterns)
-    : onlyChanged
-      ? await listChangedFilesMatching(...esLintFilePatterns)
-      : esLintFilePatterns
+  const finalFilePatterns = await listFileByLinterParams({patterns: ['**/*.js'], onlyChanged, changedFiles})
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -815,14 +810,13 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
 }
 
 async function lintStyles ({ onlyChanged, changedFiles }) {
-  const styleLintFilePatterns = ['**/*.css']
-  const finalFilePatterns = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, styleLintFilePatterns) : await listChangedFilesMatching(...styleLintFilePatterns) : styleLintFilePatterns
-  if (finalFilePatterns.length <= 0) {
+  const fileList = await listFileByLinterParams({patterns: ['**/*.css'], onlyChanged, changedFiles})
+  if (fileList.length <= 0) {
     process.stdout.write('no stylesheets to lint. ')
     return 0
   }
   const { default: stylelint } = await import('stylelint')
-  const result = await stylelint.lint({ files: finalFilePatterns, configFile: 'buildfiles/configs/.stylelintrc.yaml', ignorePath: '.gitignore' })
+  const result = await stylelint.lint({ files: fileList, configFile: 'buildfiles/configs/.stylelintrc.yaml', ignorePath: '.gitignore' })
   const filesLinted = result.results.length
   process.stdout.write(`linted ${filesLinted} files. `)
   const stringFormatter = await stylelint.formatters.tap
@@ -868,7 +862,7 @@ async function typecheckSrc ({ onlyChanged, changedFiles }) {
 }
 
 async function validateFiles ({ patterns, onlyChanged, changedFiles, validation }) {
-  const fileList = onlyChanged ? changedFiles ? await filterFilePathsByPatterns(changedFiles, patterns) : await listChangedFilesMatching(...patterns) : await listNonIgnoredFiles({ patterns })
+  const fileList = await listFileByLinterParams({patterns, onlyChanged, changedFiles})
   if (fileList.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -1117,6 +1111,12 @@ async function getIgnorePatternsFromFile (filePath) {
 
 async function listChangedFilesMatching (...patterns) {
   return filterFilePathsByPatterns(await listChangedFiles(), patterns)
+}
+
+async function listFileByLinterParams ({patterns, onlyChanged, changedFiles}) {
+  if(onlyChanged && changedFiles) { return await filterFilePathsByPatterns(changedFiles, patterns) }
+  if(onlyChanged) { return await listChangedFilesMatching(...patterns) }
+  return await listNonIgnoredFiles({ patterns })
 }
 
 async function filterFilePathsByPatterns (filePaths, patterns) {
