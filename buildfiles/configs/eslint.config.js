@@ -1,5 +1,4 @@
 import globals from 'globals'
-import neostandard from 'neostandard'
 import jsdoc from 'eslint-plugin-jsdoc'
 import js from '@eslint/js'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
@@ -14,7 +13,6 @@ export default [
       '**/dist',
     ],
   },
-  ...neostandard(),
   js.configs.recommended,
   jsdoc.configs['flat/recommended-typescript-flavor'],
   {
@@ -32,6 +30,12 @@ export default [
       sourceType: 'module',
     },
     rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          ignoreRestSiblings: true,
+        }
+      ],
       'unicorn/prefer-code-point': ['warn'],
       'unicorn/prefer-string-slice': ['warn'],
       'unicorn/prefer-at': ['warn'],
