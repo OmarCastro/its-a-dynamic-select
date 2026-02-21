@@ -784,11 +784,10 @@ async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
 }
 
 async function checkSpelling ({ onlyChanged, changedFiles }) {
-  const patterns = ['**']
+  const fileList = await listFileByLinterParams({patterns: ['*'], onlyChanged, changedFiles})
 
-  const finalFilePatterns = onlyChanged ? [...(changedFiles ?? await listChangedFiles())] : patterns
 
-  if (finalFilePatterns.length <= 0) {
+  if (fileList.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
   }
@@ -803,7 +802,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
 
   const reporter = getDefaultReporter(options)
 
-  const results = await lint(finalFilePatterns, {
+  const results = await lint(fileList, {
     config: pathFromProject('./buildfiles/configs/cspell.yaml'),
     cache: true,
     cacheLocation: '.tmp/cspellcache',
