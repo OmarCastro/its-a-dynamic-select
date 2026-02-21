@@ -1090,7 +1090,7 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns } = {}
   const { join } = await import('node:path')
   const { statSync, readdirSync } = await import('node:fs')
   const ignorePatterns = await getIgnorePatternsFromFile(ignorePath)
-  const ignoreMatchers = ignorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true }))
+  const ignoreMatchers = ignorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
   const listFiles = (dir) => readdirSync(dir).reduce(function (list, file) {
     const name = join(dir, file)
     if (file === '.git' || ignoreMatchers.some(match => match(name))) { return list }
@@ -1105,8 +1105,46 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns } = {}
 
 async function getIgnorePatternsFromFile (filePath) {
   const content = await fs.readFile(filePath, 'utf8')
-  const lines = content.split('\n').filter(line => !line.startsWith('#') && line.trim() !== '')
+  const lines = content.split('\n')
+    .filter(line => !line.startsWith('#') && line.trim() !== '')
+    .map(gitignoreToGlob)
   return [...new Set(lines)]
+}
+
+function gitignoreToGlob (pattern) {
+  // Special case: Empty string
+  if (!pattern) { return pattern }
+
+  // strip off negation to make life easier
+  const negated = pattern.startsWith('!')
+  const patternToTest = negated ? pattern.slice(1) : pattern
+  let result = patternToTest
+  let leadingSlash = false
+
+  // strip off leading slash
+  if (patternToTest[0] === '/') {
+    leadingSlash = true
+    result = patternToTest.slice(1)
+  }
+
+  if (result.endsWith('*') || result.endsWith('?')) {
+    // no further changes if the pattern ends with a wildcard
+  }
+  else if (!/\.[a-z\d_-]+$/.test(result)) {
+    // differentiate between filenames and directory names
+    if (!result.endsWith('/')) {
+      result += '/'
+    }
+
+    result += '**'
+  }
+
+  if(!leadingSlash) {
+    result = '**/' + result
+  }
+
+
+  return negated ? '!' + result : result
 }
 
 async function listChangedFilesMatching (...patterns) {
