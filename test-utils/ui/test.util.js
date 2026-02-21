@@ -19,7 +19,7 @@ export const test = base.extend({
     await use(baseExpect)
   },
 
-  page: async ({ browserName, page }, use, testInfo) => {
+  page: async ({ browserName, page }, use) => {
     if (browserName !== 'chromium') {
       return await use(page)
     }
