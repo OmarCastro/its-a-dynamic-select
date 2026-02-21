@@ -95,6 +95,10 @@ const tasks = {
     description: 'validates the project',
     cb: () => execlintCode().then(exit),
   },
+  format: {
+    description: 'format the project code',
+    cb: () => execFormatCode().then(exit),
+  },
   dev: {
     description: 'setup dev environment',
     cb: () => execDevEnvironment(),
@@ -585,6 +589,13 @@ async function execlintCode () {
   return returnCodeLint + returnTypecheck + returnStyleLint + returnJsonLint + returnYamlLint + returnCheckSpelling
 }
 
+async function execFormatCode () {
+  logStartStage('format', 'formatting code')
+  const returnCodeLint = await formatCode({ onlyChanged: false })
+  logEndStage()
+  return returnCodeLint
+}
+
 async function execPreCommitChecks () {
   logStartStage('precommit', 'lint and test')
 
@@ -733,7 +744,7 @@ function wait (ms) {
   })
 }
 
-// @section 6 linters
+// @section 6 linters & formatters
 
 async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
   const finalFilePatterns = await listFileByLinterParams({patterns: ['**/*.js'], onlyChanged, changedFiles})
@@ -859,6 +870,25 @@ async function typecheckSrc ({ onlyChanged, changedFiles }) {
     }
   }
   return await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
+}
+
+async function formatCode ({ onlyChanged, changedFiles }) {
+  const { format } = await import('oxfmt')
+  const config = {
+    singleQuote: true,
+    semi: false,
+    printWidth: 100,
+    tabWidth: 2,
+    trailingComma: 'es5',
+    arrowParens: 'avoid'
+  }
+
+  const files = await listFileByLinterParams({patterns: ['src/**/*.js'], onlyChanged, changedFiles})
+  for(const file of files){
+    const fileContent = await readFile(file, 'utf8')
+    const result = await format(file, fileContent, config)
+    await writeFile(file, result.code)
+  }
 }
 
 async function validateFiles ({ patterns, onlyChanged, changedFiles, validation }) {
