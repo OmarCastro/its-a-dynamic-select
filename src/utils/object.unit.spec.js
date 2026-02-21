@@ -28,7 +28,6 @@ const primitiveExamples = [
   1234567890n,
   true,
   undefined,
-  // eslint-disable-next-line symbol-description
   Symbol(),
   null,
 ]
@@ -58,7 +57,6 @@ test('isPlainObject - returns false for class instances', ({ expect }) => {
 })
 
 test('isPlainObject - returns true for objects created with new Object()', ({ expect }) => {
-  // eslint-disable-next-line no-object-constructor
   expect(isPlainObject(new Object())).toBe(true)
 })
 

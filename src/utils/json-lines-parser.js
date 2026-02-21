@@ -58,10 +58,9 @@ const isAsyncIterable = object => typeof object?.[Symbol.asyncIterator] === 'fun
  * Parses CSV from a synchronous iterable of strings.
  *
  * @param {Iterable<string>} iterable - Iterable of string chunks.
- * @param {string} [delimiter] - CSV delimiter.
  * @yields {object | null | any[] | number | string} parsed CSV row
  */
-function * parseJsonLinesSync (iterable, delimiter = ',') {
+function * parseJsonLinesSync (iterable) {
   let buffer = ''
 
   for (const chunk of iterable) {
