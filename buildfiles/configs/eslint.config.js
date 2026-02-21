@@ -66,7 +66,7 @@ export default [
       'jsdoc/require-jsdoc': 0,
       'jsdoc/require-returns': 0,
       'jsdoc/require-returns-description': 0,
-      '@cspell/spellchecker': 0,
+      "no-unused-vars": 0
     }
   },
 ]
