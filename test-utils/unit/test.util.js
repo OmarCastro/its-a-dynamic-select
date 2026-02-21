@@ -33,12 +33,16 @@ export const formatted = (strings, ...values) => String.raw(
   ...values.map(value => inspect(value))
 )
 /**
+ * @typedef {(description: string, fn: TestCall, info: TestInfo) => any} Test
+ */
+
+/**
  * @typedef {{
- *  (description: string, fn: TestCall) => any,
  *  skip(skipMessage: string): void
  *  skip(invariant: boolean, skipMessage: string): void
- * }} Test
+ * }} TestInfo
  */
+
 
 /**
  * @callback TestCall

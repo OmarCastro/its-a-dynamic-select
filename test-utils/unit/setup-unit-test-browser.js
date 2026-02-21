@@ -4,16 +4,25 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { expect } = await import('./simple-expect.js')
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
 
+  /**
+   * @param {string} message - message to show on the report on skip
+   */
+  function SkipException (message) {
+    if (!(this instanceof SkipException)) { return new SkipException(message) }
+    this.message = message
+  }
+
   async function runTests () {
-    const testAmount = unitTests.length
+    const totalAmount = unitTests.length
     let failedTestAmount = 0
+    let skippedTestAmount = 0
 
     let logs = ''
     const log = (text) => {
       console.log(text)
       logs += String(text) + '\n'
     }
-    console.log(`[unit-test] ${testAmount} tests to run`)
+    console.log(`[unit-test] ${totalAmount} tests to run`)
     let result = '[unit-test] results: \n'
 
     for (const { description, test } of unitTests) {
@@ -21,9 +30,14 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
         await test()
         result += `  [PASS] ${description}\n`
       } catch (e) {
-        log(e)
-        failedTestAmount++
-        result += `**[FAIL] ${description}\n`
+        if (e instanceof SkipException) {
+          skippedTestAmount++
+          result += `  [SKIP] ${description} : ${e.message}\n`
+        } else {
+          log(e)
+          failedTestAmount++
+          result += `**[FAIL] ${description}\n`
+        }
       }
     }
 
@@ -34,7 +48,15 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     } else {
       log(`[unit-test] ${failedTestAmount} tests failed`)
     }
-    reportLogs({ logs, failed: failedTestAmount, total: testAmount, passed: testAmount - failedTestAmount })
+    const testedAmount = totalAmount - skippedTestAmount
+    reportLogs({
+      logs,
+      failed: failedTestAmount,
+      total: totalAmount,
+      tested: testedAmount,
+      skipped: skippedTestAmount,
+      passed: testedAmount - failedTestAmount
+    })
   }
 
   function scheduleUnitTestRun () {
@@ -54,28 +76,43 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     enabled: false,
     reason: 'Garbage collection not enabled'
   }
-  const test = (description, test) => {
+  const test = (description, testFunction) => {
     unitTests.push({
       description,
       test: async () => {
-        await test({
-          step: async (_, callback) => await callback(),
-          expect,
-          dom: window,
-          get fetch () {
-            return setupFetchMock()
-          },
-          gc: noopGC
-        })
-        teardownFetchMock()
+        try {
+          await testFunction({
+            step: async (_, callback) => await callback(),
+            expect,
+            dom: window,
+            get fetch () {
+              return setupFetchMock()
+            },
+            get gc () {
+              skip(noopGC.status.reason)
+              return noopGC
+            }
+          }, { skip })
+        } finally {
+          teardownFetchMock()
+        }
+
       }
     })
     clearTimeout(notTestsFoundTimeout)
     scheduleUnitTestRun()
   }
 
-  test.skip = (invariant, Message) => {
-
+  /**
+   * @param {string|boolean} invariantOrMessage - conditional or skip message to show on report
+   * @param {string} [message] - skip message to show on report
+   */
+  function skip (invariantOrMessage, message) {
+    if (typeof invariantOrMessage === 'string') {
+      throw SkipException(invariantOrMessage)
+    } else if (invariantOrMessage) {
+      throw SkipException(message)
+    }
   }
 
   return { test, expect }
@@ -118,7 +155,7 @@ const badgeColors = {
 let badgeFetch = null
 
 const createSVGResponse = async (report) => {
-  const label = `${report.passed} / ${report.total}`
+  const label = `${report.passed} / ${report.tested}`
   const color = report.failed > 0 ? badgeColors.red : badgeColors.green
   const { badgeUrl } = globalThis[Symbol.for('unit-test-info')]
   badgeFetch ??= fetch(badgeUrl).then(response => response.text())

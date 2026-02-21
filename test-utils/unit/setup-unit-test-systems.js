@@ -1,12 +1,23 @@
+/** @import { Expect } from 'expect' */
+// eslint-disable-next-line max-lines-per-function
 globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTestsForSystems () {
   const { expect } = await import('./simple-expect.js')
   const { window, resetDom } = await import('./init-dom.js')
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
   const { gc } = await import('./gc.js')
 
+    /**
+     * @param {string} message - message to show on the report on skip
+     */
+  function SkipException (message) {
+    if (!(this instanceof SkipException)) { return new SkipException(message) }
+    this.message = message
+  }
+
   async function runTests () {
     const testAmount = unitTests.length
     let failedTestAmount = 0
+    let skippedTestAmount = 0
 
     console.log(`[unit-test] ${testAmount} tests to run`)
     let result = '[unit-test] results: \n'
@@ -16,21 +27,27 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
         await test()
         result += `  [PASS] ${description}\n`
       } catch (e) {
-        console.log(e)
-        failedTestAmount++
-        result += `**[FAIL] ${description}\n`
+        if (e instanceof SkipException) {
+          skippedTestAmount++
+          result += `  [SKIP] ${description} : ${e.message}\n`
+        } else {
+          console.log(e)
+          failedTestAmount++
+          result += `**[FAIL] ${description}\n`
+        }
       }
     }
 
     console.log(result)
+    const skippedTestReport = skippedTestAmount <= 0 ? '' : `, ${skippedTestAmount} tests skipped`
 
     if (failedTestAmount <= 0) {
-      console.log('[unit-test] All tests passed')
+      console.log(`[unit-test] All tests passed${skippedTestReport}`)
     } else {
-      console.log(`[unit-test] ${failedTestAmount} tests failed`)
+      console.log(`[unit-test] ${failedTestAmount} tests failed${skippedTestReport}`)
     }
 
-    process.exit(failedTestAmount > 0 ? 1 : 0)
+    process.exitCode = failedTestAmount > 0 ? 1 : 0
   }
 
   function scheduleUnitTestRun () {
@@ -41,7 +58,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }
 
   const notTestsFoundTimeout = setTimeout(() => {
-    console.error('No tests found, closing')
+    console.error('No tests found, aborting')
     process.exit(1)
   }, 250)
 
@@ -50,19 +67,23 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     unitTests.push({
       description,
       test: async () => {
-        await test({
-          step: async (_, callback) => await callback(),
-          expect,
-          gc,
-          get dom () {
-            resetDom()
-            return window
-          },
-          get fetch () {
-            return setupFetchMock()
-          }
-        })
-        teardownFetchMock()
+        try {
+          await test({
+            step: async (_, callback) => await callback(),
+            expect,
+            gc,
+            get dom () {
+              resetDom()
+              return window
+            },
+            get fetch () {
+              return setupFetchMock()
+            }
+          })
+        } finally {
+          teardownFetchMock()
+        }
+
       }
     })
     clearTimeout(notTestsFoundTimeout)
