@@ -45,28 +45,32 @@ export default [
       'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
       'jsdoc/reject-any-type': 0,
-      'jsdoc/require-jsdoc': ['warn', { exemptEmptyFunctions: true }],
-      'jsdoc/require-returns': ['warn', { publicOnly: true }],
-      'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
-      'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
+      'jsdoc/require-jsdoc': 0,
+      'jsdoc/require-returns': 0,
+      'jsdoc/tag-lines': 0,
+      'no-empty-pattern':  ["error", { "allowObjectPatternsAsParameters": true }],
     },
   },
   {
     files: ['src/**/*.js'],
     rules: {
       'import/extensions': ['error', 'always'],
+      'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
+      'jsdoc/require-jsdoc': ['warn', { exemptEmptyFunctions: true }],
+      'jsdoc/require-returns': ['warn', { publicOnly: true }],
+      'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
     }
   }, {
     files: [
+      'test-utils/**/*.js',
+      'test-utils/**/*.ts',
       '**/*.spec.js',
       '**/*.spec.ts',
     ],
     rules: {
       'jsdoc/require-param-description': 0,
-      'jsdoc/require-jsdoc': 0,
-      'jsdoc/require-returns': 0,
       'jsdoc/require-returns-description': 0,
-      "no-unused-vars": 0
+      'no-unused-vars': 0,
     }
   },
 ]

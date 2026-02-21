@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern */
 const { test: base, expect: baseExpect } = await import('@playwright/test')
 const { window, resetDom } = await import('./init-dom.js')
 const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')

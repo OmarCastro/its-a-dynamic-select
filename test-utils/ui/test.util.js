@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern */
 import { test as base, expect as baseExpect } from '@playwright/test'
 import { mkdir, writeFile, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'

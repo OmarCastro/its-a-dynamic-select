@@ -1,5 +1,4 @@
 /** @import { Expect } from 'expect' */
-// eslint-disable-next-line max-lines-per-function
 globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTestsForSystems () {
   const { expect } = await import('./simple-expect.js')
   const { window, resetDom } = await import('./init-dom.js')

@@ -1,5 +1,4 @@
 #!/usr/bin/env -S node --input-type=module
-/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
 /*
 This file is purposely large to easily move the code to multiple projects, its build code, not production.
 To help navigate this file is divided by sections:
@@ -424,7 +423,7 @@ async function buildDocs () {
 }
 
 /**
- * @param {string} outputDir
+ * @param {string} outputDir - output dir to compile to
  */
 async function buildESM (outputDir) {
   const esbuild = await import('esbuild')
@@ -670,19 +669,20 @@ Tasks:
   ${'help, --help, -h'.padEnd(maxTaskLength, ' ')}  ${helpTask.description}`
 }
 
-/** @param {string[]} paths  */
+/** @param {string[]} paths - paths to remove recursively */
 async function rm_rf (...paths) {
   await Promise.all(paths.map(path => fs.rm(path, { recursive: true, force: true })))
 }
 
-/** @param {string[]} paths  */
+/** @param {string[]} paths - paths to recursively create directories */
 async function mkdir_p (...paths) {
   await Promise.all(paths.map(path => fs.mkdir(path, { recursive: true })))
 }
 
 /**
- * @param {string} src
-   @param {string} dest  */
+ * @param {string} src - source;
+ * @param {string} dest - destination
+ */
 async function cp_R (src, dest) {
   await cmdSpawn(`cp -r '${src}' '${dest}'`)
 
@@ -1033,8 +1033,8 @@ async function minifyDOM (domElement) {
 // @section 8 exec utilities
 
 /**
- * @param {string} command
- * @param {import('node:child_process').ExecFileOptions} options
+ * @param {string} command - shell command to execute
+ * @param {import('node:child_process').ExecFileOptions} options - execFile options
  * @returns {Promise<number>} code exit
  */
 function cmdSpawn (command, options = {}) {
