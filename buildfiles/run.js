@@ -784,15 +784,19 @@ async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
 }
 
 async function checkSpelling ({ onlyChanged, changedFiles }) {
-  const fileList = await listFileByLinterParams({patterns: ['*'], onlyChanged, changedFiles})
+  const { load } = await import('js-yaml')
 
+  const configPath = pathFromProject('./buildfiles/configs/cspell.yaml')
+  const config = load(await fs.readFile(configPath))
+  const ignorePaths = config.ignorePaths ?? []
+  const fileList = await listFileByLinterParams({patterns: ['*'], ignorePatterns: ignorePaths, onlyChanged, changedFiles})
 
   if (fileList.length <= 0) {
-    process.stdout.write('no files to lint. ')
+    process.stdout.write('no files to spell check. ')
     return 0
   }
-  const { lint, getDefaultReporter } = await import('cspell')
 
+  const { lint, getDefaultReporter } = await import('cspell')
   const options = {
     cache: false,
     color: false,
@@ -1114,12 +1118,12 @@ async function * watchDirs (...dirs) {
   }
 }
 
-async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns } = {}) {
+async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignorePatterns = []} = {}) {
   const { minimatch } = await import('minimatch')
   const { join } = await import('node:path')
   const { statSync, readdirSync } = await import('node:fs')
-  const ignorePatterns = await getIgnorePatternsFromFile(ignorePath)
-  const ignoreMatchers = ignorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
+  const allIgnorePatterns = [...(await getIgnorePatternsFromFile(ignorePath)), ...ignorePatterns]
+  const ignoreMatchers = allIgnorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
   const listFiles = (dir) => readdirSync(dir).reduce(function (list, file) {
     const name = join(dir, file)
     if (file === '.git' || ignoreMatchers.some(match => match(name))) { return list }
@@ -1176,21 +1180,28 @@ function gitignoreToGlob (pattern) {
   return negated ? '!' + result : result
 }
 
-async function listChangedFilesMatching (...patterns) {
-  return filterFilePathsByPatterns(await listChangedFiles(), patterns)
+async function listChangedFilesMatching (patterns, ignorePatterns) {
+  return filterFilePathsByPatterns(await listChangedFiles(), patterns, ignorePatterns)
 }
 
-async function listFileByLinterParams ({patterns, onlyChanged, changedFiles}) {
-  if(onlyChanged && changedFiles) { return await filterFilePathsByPatterns(changedFiles, patterns) }
-  if(onlyChanged) { return await listChangedFilesMatching(...patterns) }
-  return await listNonIgnoredFiles({ patterns })
+async function listFileByLinterParams ({patterns, onlyChanged, changedFiles, ignorePatterns }) {
+  if(onlyChanged && changedFiles) { return await filterFilePathsByPatterns(changedFiles, patterns, ignorePatterns) }
+  if(onlyChanged) { return await listChangedFilesMatching(patterns, ignorePatterns) }
+  return await listNonIgnoredFiles({ patterns, ignorePatterns })
 }
 
-async function filterFilePathsByPatterns (filePaths, patterns) {
-  const { minimatch } = await import('minimatch')
+async function filterFilePathsByPatterns (filePaths, patterns = [], ignorePatterns = []) {
   const paths = Array.isArray(filePaths) ? filePaths : Array.from(filePaths)
-  const intersection = patterns.flatMap(pattern => minimatch.match(paths, pattern, { matchBase: true, dot: true }))
-  return [...new Set(intersection)]
+  const hasPatterns = patterns.length > 0
+  const hasIgnorePatterns = ignorePatterns.length > 0
+  if(!hasPatterns && !hasIgnorePatterns){ return paths }
+  const { minimatch } = await import('minimatch')
+  const matchers = patterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
+  const matchedPaths = hasPatterns ? paths.filter(path => matchers.some(match => match(path))) : paths
+  if(!hasIgnorePatterns) { return matchedPaths }
+  const ignoreMatchers = ignorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
+  const filteredPaths = matchedPaths.filter(path => ignoreMatchers.every(match => !match(path)))
+  return filteredPaths
 }
 
 async function listChangedFiles () {
@@ -1201,15 +1212,15 @@ async function listChangedFiles () {
   return new Set([...(await diffExec), ...(await lsFilesExec)].filter(filename => filename.trim().length > 0))
 }
 
+// @section 10 npm utilities
+
 function isRunningFromNPMScript () {
   return JSON.parse(readFileSync(pathFromProject('./package.json'))).name === process.env.npm_package_name
 }
 
-// @section 10 npm utilities
-
 async function checkNodeModulesFolder () {
   if (existsSync(pathFromProject('node_modules'))) { return }
-  console.log('node_modules absent running "npm ci"...')
+  console.log('node_modules absent, running "npm ci"...')
   await cmdSpawn('npm ci')
 }
 
