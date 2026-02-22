@@ -12,6 +12,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }
 
   async function runTests () {
+    const startTestTimestamp = performance.now()
     const totalAmount = unitTests.length
     let failedTestAmount = 0
     let skippedTestAmount = 0
@@ -40,6 +41,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       }
     }
 
+    const endTestTimestamp = performance.now()
     log(result)
 
     if (failedTestAmount <= 0) {
@@ -47,6 +49,8 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     } else {
       log(`[unit-test] ${failedTestAmount} tests failed`)
     }
+    console.log({...globalThis[Symbol.for('unit-test-info')], endTestTimestamp})
+    log(`[unit-test] tests took ${endTestTimestamp - startTestTimestamp} milliseconds. ${endTestTimestamp} milliseconds since page load.`);
     const testedAmount = totalAmount - skippedTestAmount
     reportLogs({
       logs,
@@ -125,6 +129,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
  * @param {number} report.total - total amount tests
  */
 function reportLogs (report) {
+
   const inIframe = window.self !== window.top
   const { body } = window.document
   const { reportType } = globalThis[Symbol.for('unit-test-info')]
