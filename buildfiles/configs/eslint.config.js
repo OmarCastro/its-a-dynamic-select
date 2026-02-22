@@ -62,8 +62,6 @@ export default [
     }
   }, {
     files: [
-      'test-utils/**/*.js',
-      'test-utils/**/*.ts',
       '**/*.spec.js',
       '**/*.spec.ts',
     ],
