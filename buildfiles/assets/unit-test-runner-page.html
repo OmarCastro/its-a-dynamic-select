@@ -12,12 +12,16 @@
 
   body:not(.done) > * {opacity: 0.001;}
 
-  body[data-report-type="badge"]:not(.done)::before {
+  body[data-report-type="badge"] {
+    overflow: hidden;
+    &:not(.done)::before {
     content: " ";
     display: block;
     height: 28px;
     background: url({{badge-img-href}}) no-repeat
+    }
   }
+
 @media (prefers-color-scheme: dark) {
   body {background-color: #202530;color: #dddcdf;}
   a { color: #6ad; }
