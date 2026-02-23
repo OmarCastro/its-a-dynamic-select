@@ -2,6 +2,16 @@
     display: inline-block;
 }
 
+.container {
+  color-scheme: light;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  .container {
+    color-scheme: dark;
+  }
+}
+
 @scope (.container) to (:is(.option-content, .loading-notification)){
   .multi-input {
     line-height: 2em;
@@ -33,7 +43,8 @@
   }
 
   .dropdown {
-    border: none;
+    background-color: ButtonFace;
+    border: 2px solid ButtonBorder;
     box-sizing: border-box;
     &.top-direction {
       transform: translateY(-100%);
@@ -212,6 +223,14 @@
   }
 }
 
+@media screen and (prefers-color-scheme: dark) {
+@scope (.container[data-ui-mode="mobile"]) to (:is(.option-content, .loading-notification)){
+  .dropdown {
+    box-shadow: white 0px 0px 4px
+  }
+}
+}
+
 .option-content:not(.option-content *){
   display: contents
 }
@@ -226,15 +245,15 @@
 /* issue on firefox: doing inside @scope does not apply it correctly */
 .option-value:not(.option-content *) {
   &[aria-selected=true],&:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: color-mix(in srgb, currentColor 10%, transparent 90%);
   }
   &[data-focused] {
     outline: dashed currentColor;
   }
   .container[data-ui-mode="mobile"] & {
     background-color: transparent;
-    &:not(:last-child) {
-      border-bottom: solid 1px rgba(0, 0, 0, 0.2);
+    &:not(:last-of-type) {
+      border-bottom: solid 1px color-mix(in srgb, currentColor 20%, transparent 80%);
     }
   }
 }
