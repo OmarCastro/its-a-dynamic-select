@@ -21,10 +21,8 @@ test('applyTemplate - should convert a string to a path', async ({ dom, expect }
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="hello">
-    world</div>
-`)
+  expect(div.innerHTML).toBe(`<div title="hello">
+    world</div>`)
 })
 
 test('applyTemplate - should escape the result', async ({ dom, expect }) => {
@@ -47,10 +45,8 @@ test('applyTemplate - should escape the result', async ({ dom, expect }) => {
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="hello &quot;world&quot;">
-    &lt;script&gt;alert("RedAlert!!")&lt;script&gt;</div>
-`)
+  expect(div.innerHTML).toBe(`<div title="hello &quot;world&quot;">
+    &lt;script&gt;alert("RedAlert!!")&lt;script&gt;</div>`)
 })
 
 test('applyTemplate - attributes that do not start with "$." or "$?." are not applied', async ({ dom, expect }) => {
@@ -73,10 +69,8 @@ test('applyTemplate - attributes that do not start with "$." or "$?." are not ap
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="prop1">
-    lorem ipsum</div>
-`)
+  expect(div.innerHTML).toBe(`<div title="prop1">
+    lorem ipsum</div>`)
 })
 
 test('applyTemplate - slots with name that do not start with "$." or "$?." are not applied', async ({ dom, expect }) => {
@@ -99,11 +93,9 @@ test('applyTemplate - slots with name that do not start with "$." or "$?." are n
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="dig dig">
+  expect(div.innerHTML).toBe(`<div title="dig dig">
     <slot name="prop2">
-  </slot></div>
-`)
+  </slot></div>`)
 })
 
 test('applyTemplate - "$$" token is used to escape initial "$" on slot name and attributes', async ({ dom, expect }) => {
@@ -126,11 +118,9 @@ test('applyTemplate - "$$" token is used to escape initial "$" on slot name and 
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="$.prop1">
+  expect(div.innerHTML).toBe(`<div title="$.prop1">
     <slot name="$.prop2">
-  </slot></div>
-`)
+  </slot></div>`)
 })
 
 test('applyTemplate - attributes starting with "$?." that results in falsy value removes the attribute', async ({ dom, expect }) => {
@@ -154,10 +144,8 @@ test('applyTemplate - attributes starting with "$?." that results in falsy value
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="prop1">
-    lorem ipsum</div>
-`)
+  expect(div.innerHTML).toBe(`<div title="prop1">
+    lorem ipsum</div>`)
 })
 
 test('applyTemplate - attributes starting with "$?." that results in truthy value makes attribute present but empty', async ({ dom, expect }) => {
@@ -181,10 +169,8 @@ test('applyTemplate - attributes starting with "$?." that results in truthy valu
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="prop1" data-flagged="">
-    lorem ipsum</div>
-`)
+  expect(div.innerHTML).toBe(`<div title="prop1" data-flagged="">
+    lorem ipsum</div>`)
 })
 
 test('applyTemplate - template loop with string', async ({ dom, expect }) => {
@@ -209,13 +195,7 @@ test('applyTemplate - template loop with string', async ({ dom, expect }) => {
   const result = applyTemplate(template, data)
   const div = document.createElement('div')
   div.append(result)
-  expect(div.innerHTML).toBe(`
-  <div title="lorem ipsum">
-
-      <div title="aa">aa</div>
-
-      <div title="bb">bb</div>
-
-  </div>
-`)
+  expect(div.innerHTML).toBe(`<div title="lorem ipsum">
+    <div title="aa">aa</div><div title="bb">bb</div>
+  </div>`)
 })

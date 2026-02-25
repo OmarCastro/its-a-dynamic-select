@@ -9,10 +9,10 @@ function normalizeValue (value) {
 }
 
 /**
- * Converts `string` to a property path array.
+ * Auxiliary method of `applyTemplate`, applies the template on the current element
  *
- * @param {Element} currentElement The string to convert.
- * @param {Record<string, unknown>} currentData The string to convert.
+ * @param {Element} currentElement - target element
+ * @param {Record<string, unknown>} currentData - data to apply
  */
 function applyTemplateAux (currentElement, currentData) {
   switch (currentElement.tagName) {
@@ -61,17 +61,43 @@ function applyTemplateAux (currentElement, currentData) {
 }
 
 /**
- * Converts `string` to a property path array.
+ * Trims document fragment of whitespace characters of text nodes
+ * from the beginning and end of the document fragment
+ * @param {DocumentFragment} documentFragment - target document fragment
+ */
+function trimDocumentFragment(documentFragment){
+  const {lastChild, firstChild} = documentFragment
+  if(lastChild?.nodeType === document.TEXT_NODE){
+    const trimmedText = lastChild.nodeValue?.trimEnd() ?? ''
+    if(trimmedText){
+      lastChild.textContent = trimmedText
+    } else {
+      lastChild.remove()
+    }
+  }
+  if(firstChild?.nodeType === document.TEXT_NODE){
+    const trimmedText = firstChild.nodeValue?.trimStart() ?? ''
+    if(trimmedText){
+      firstChild.textContent = trimmedText
+    } else {
+      firstChild.remove()
+    }
+  }
+}
+
+/**
+ * Create a DOM tree based on the structure in <template>
+ * and the data sent to generate it
  *
- * @param {HTMLTemplateElement} template The string to convert.
- * @param {Record<string, unknown>} data The string to convert.
- * @returns {DocumentFragment} Returns the property path array.
+ * @param {HTMLTemplateElement} template - template source
+ * @param {Record<string, unknown>} data - data to apply
+ * @returns {DocumentFragment} Create document fragment
  */
 export function applyTemplate (template, data) {
   const clone = /** @type {DocumentFragment} */(template.content.cloneNode(true))
   for (const child of [...clone.children]) {
     applyTemplateAux(child, data)
   }
-
+  trimDocumentFragment(clone)
   return clone
 }
