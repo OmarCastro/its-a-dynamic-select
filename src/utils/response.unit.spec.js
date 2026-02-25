@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { linkHeaderOf, toTextStream, parseHasMoreHeader } from './response.js'
 
 test('linkHeaderOf - returns parsed header from string', ({ expect }) => {

@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { dataObjectOfOption, optionElementOfData } from './option-data.js'
 
 test('dataObjectOfOption - get base option data', async ({ expect, dom }) => {

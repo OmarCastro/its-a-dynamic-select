@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { computeOnce } from './memoization.js'
 
 test('computeOnce - computes only once', async ({ expect }) => {

@@ -1,4 +1,4 @@
-import { test, formatted } from '../../test-utils/unit/test.util.js'
+import { test, formatted } from '#unit-test'
 import { isPlainObject } from './object.js'
 
 test('isPlainObject - returns true for a simple object literal', ({ expect }) => {

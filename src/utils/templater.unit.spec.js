@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { applyTemplate } from './templater.js'
 
 test('applyTemplate - should convert a string to a path', async ({ dom, expect }) => {
@@ -211,11 +211,11 @@ test('applyTemplate - template loop with string', async ({ dom, expect }) => {
   div.append(result)
   expect(div.innerHTML).toBe(`
   <div title="lorem ipsum">
-    
+
       <div title="aa">aa</div>
-    
+
       <div title="bb">bb</div>
-    
+
   </div>
 `)
 })

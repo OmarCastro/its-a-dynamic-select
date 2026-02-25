@@ -1,4 +1,4 @@
-import { test } from '../../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { dataLoaderOf } from './fetch-data.js'
 
 test('dataLoaderOf - calling on the same element returns the same object', async ({ expect, dom }) => {

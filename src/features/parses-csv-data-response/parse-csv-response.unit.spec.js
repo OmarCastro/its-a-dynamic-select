@@ -1,4 +1,4 @@
-import { test, expect } from '../../../test-utils/unit/test.util.js'
+import { test, expect } from '#unit-test'
 import { parseCSVResponse } from './parse-csv-response.js'
 
 test('parseCSVResponse - throws Error if input is not an CSV response', async () => {

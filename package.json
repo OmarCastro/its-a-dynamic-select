@@ -20,6 +20,9 @@
     "release:clean": "node ./buildfiles/run.js release:clean",
     "help": "node ./buildfiles/run.js help"
   },
+  "imports": {
+    "#unit-test": "./test-utils/unit/test.util.js"
+  },
   "author": "Omar Castro",
   "license": "MIT",
   "devDependencies": {

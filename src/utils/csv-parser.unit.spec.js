@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { parseCSV } from './csv-parser.js'
 
 test('parseCSV - parses strings', ({ expect }) => {

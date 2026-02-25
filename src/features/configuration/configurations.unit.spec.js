@@ -1,4 +1,4 @@
-import { test } from '../../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { configurationOf, defaultValues } from './configuration.js'
 
 test('configurationOf - configurations have default values', ({ expect, dom }) => {

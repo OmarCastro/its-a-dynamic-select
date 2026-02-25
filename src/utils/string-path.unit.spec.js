@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { stringToPath, getFromStringPath } from './string-path.js'
 
 test('stringToPath - should convert a string to a path', async ({ expect }) => {

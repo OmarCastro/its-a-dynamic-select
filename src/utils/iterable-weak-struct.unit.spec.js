@@ -1,4 +1,4 @@
-import { test } from '../../test-utils/unit/test.util.js'
+import { test } from '#unit-test'
 import { IterableWeakMap, IterableWeakSet } from './iterable-weak-struct.js'
 
 test('IterableWeakMap - iterates over entries', ({ expect }) => {

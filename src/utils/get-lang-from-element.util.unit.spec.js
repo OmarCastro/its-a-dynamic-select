@@ -1,4 +1,4 @@
-import { test, expect } from '../../test-utils/unit/test.util.js'
+import { test, expect } from '#unit-test'
 import { getLanguageFromElement } from './get-lang-from-element.util.js'
 
 const html = String.raw
