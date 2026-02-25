@@ -1,4 +1,4 @@
-import { test, expect } from '../../../../test-utils/ui/test.util.js'
+import { test, expect } from '#ui-test'
 import { devices } from '@playwright/test'
 /** @import { Page } from '@playwright/test' */
 

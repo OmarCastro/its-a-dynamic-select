@@ -21,7 +21,8 @@
     "help": "node ./buildfiles/run.js help"
   },
   "imports": {
-    "#unit-test": "./test-utils/unit/test.util.js"
+    "#unit-test": "./test-utils/unit/test.util.js",
+    "#ui-test": "./test-utils/ui/test.util.js"
   },
   "author": "Omar Castro",
   "license": "MIT",
