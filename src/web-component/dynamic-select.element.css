@@ -43,9 +43,11 @@
   }
 
   .dropdown {
-    background-color: ButtonFace;
-    border: 2px solid ButtonBorder;
+    background-color: Field;
+    border: 1px solid color-mix(in srgb, FieldText 70%, transparent 30%);
+    border-radius: 3px;
     box-sizing: border-box;
+   
     &.top-direction {
       transform: translateY(-100%);
     }
@@ -196,6 +198,7 @@
   .dropdown {
     padding: 0;
     margin: 0;
+    border: none;
     border-radius: 0.5em;
     font-size: large;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -226,6 +229,7 @@
 @media screen and (prefers-color-scheme: dark) {
 @scope (.container[data-ui-mode="mobile"]) to (:is(.option-content, .loading-notification)){
   .dropdown {
+    border: 1px solid ButtonBorder;
     box-shadow: white 0px 0px 4px
   }
 }
