@@ -1,5 +1,4 @@
-import { test, expect } from '#ui-test'
-import { devices } from '@playwright/test'
+import { test, expect, devices } from '#ui-test'
 /** @import { Page } from '@playwright/test' */
 
 test.use({

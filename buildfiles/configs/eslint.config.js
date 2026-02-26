@@ -59,6 +59,7 @@ export default [
       'jsdoc/require-jsdoc': ['warn', { exemptEmptyFunctions: true }],
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
+      "import/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}]
     }
   }, {
     files: [
@@ -69,6 +70,28 @@ export default [
       'jsdoc/require-param-description': 0,
       'jsdoc/require-returns-description': 0,
       'no-unused-vars': 0,
+      'import/no-restricted-paths': ['error',{
+        "zones": [
+          {
+            "target": [
+              "**/*.unit.spec.js",
+              "**/*.unit.spec.ts"
+            ],
+            "from": [
+              "./test-utils/ui/**/*",
+            ]
+          },
+           {
+            "target": [
+              "**/*.ui.spec.js",
+              "**/*.ui.spec.ts"
+            ],
+            "from": [
+              "./test-utils/unit/**/*",
+            ]
+          }
+        ]
+      }]
     }
   },
 ]

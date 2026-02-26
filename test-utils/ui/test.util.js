@@ -2,7 +2,7 @@ import { test as base, expect as baseExpect } from '@playwright/test'
 import { mkdir, writeFile, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import inspect from 'object-inspect'
-export { expect } from '@playwright/test'
+export { expect, devices } from '@playwright/test'
 /**
  * Get path stats, or null if it doesn't exist
  * @param {import('node:fs').PathLike} path - path
