@@ -705,7 +705,7 @@ async function mkdir_p (...paths) {
 async function cp_R (src, dest) {
   await cmdSpawn(`cp -r '${src}' '${dest}'`)
 
-  // this command is a 1000 times slower that running the command, for that reason it is not used (30 000ms vs 30ms)
+  // the next command is 1000 times slower that running the command, for that reason it is not used (30 000ms vs 30ms)
   // await fs.cp(src, dest, { recursive: true })
 }
 
@@ -1255,7 +1255,26 @@ async function getLatestPublishedVersion () {
 }
 
 async function readPackageJson () {
-  return await readFile(pathFromProject('package.json')).then(str => JSON.parse(str))
+  readPackageJson.memo ??= await (async () => {
+    const path = pathFromProject('package.json')
+    const firstResult = await readFile(path).then(str => JSON.parse(str))
+    let currentResult = firstResult
+    let blocked = false
+    const { watch } = await import('node:fs')
+
+    watch(path, {persistent: false, recursive: false}, (eventType) => {
+      if(blocked || eventType != "change"){ return }
+      blocked = true
+      console.log("project package.json with type %s", eventType)
+      readFile(path)
+        .then(str => JSON.parse(str))
+        .then(result => currentResult = result)
+        .finally(() => blocked = false)
+    })
+
+    return () => currentResult
+  })()
+  return readPackageJson.memo()
 }
 
 // @section 11 versioning utilities
