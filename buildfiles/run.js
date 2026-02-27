@@ -287,8 +287,7 @@ async function runTestProcedure () {
 async function testInDocker () {
   const { userInfo } = await import('node:os')
   const { uid, gid } = userInfo()
-  const packageJson = await readPackageJson()
-  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
+  const playwrightVersion = await getPlayWrightVersion()
   const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
   const workdir = '/playwright'
   return await runInDocker({
@@ -601,8 +600,8 @@ async function execPreCommitChecks () {
   const result = await executeOnStagedOnly(async () => {
     const testTask = quickRunUnitTests()
     const codeLint = execlintCodeOnChanged()
-
-    const exitCodes = await Promise.all([testTask, codeLint])
+    const testVersionAlign = alignTestFrameworkVersion()
+    const exitCodes = await Promise.all([testTask, codeLint, testVersionAlign])
     const exitCode = exitCodes.reduce((a, b) => a + b)
     return exitCode
   })
@@ -651,6 +650,26 @@ async function cleanRelease () {
   await rm_rf('dist')
   await rm_rf('package')
   logEndStage()
+}
+
+async function alignTestFrameworkVersion () {
+  const playwrightVersion = await getPlayWrightVersion()
+  const files = await listNonIgnoredFiles({patterns: ['.github/workflows/*.yaml']})
+  const regexp = /(?<=mcr\.microsoft\.com\/playwright:v)(?<version>[.0-9]+)/g
+  const result = await Array.fromAsync(files.map(async file => {
+    const data = await readFile(file)
+    const updatedData = data.replaceAll(regexp, playwrightVersion)
+    if(updatedData !== data){
+      await writeFile(file, updatedData)
+      return file
+    }
+    return ''
+  }))
+  const updatedFiles = result.filter(Boolean)
+  if(updatedFiles.length){
+    console.log("updated playwright version on files: %s",updatedFiles)
+  }
+  return 0
 }
 
 // @section 4 utils
@@ -1252,6 +1271,12 @@ async function getLatestReleasedVersion () {
       return { version: match[1], releaseDate: match[2] }
     }).filter(version => !!version)
   return versions.find(({ releaseDate }) => releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/))
+}
+
+async function getPlayWrightVersion () {
+  const packageJson = await readPackageJson()
+  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
+  return playwrightVersion
 }
 
 // @section 12 badge utilities
