@@ -449,7 +449,7 @@ async function buildESM (outputDir) {
 
   const fileListCSS = await listNonIgnoredFiles({ patterns: ['src/**/*.element.css', 'src/**/*.inline.css'] })
   const fileListCssJob = fileListCSS.map(async (path) => {
-    const minCss = await minifyCss(await fs.readFile(path, 'utf8'))
+    const minCss = await minifyCss(await readFile(path))
     const minCssJs = await esbuild.transform(minCss, { loader: 'text', format: 'esm' })
     const noSrcPath = path.split('/').slice(1).join('/')
     const outfile = pathFromProject(`${outputDir}/${noSrcPath}.generated.js`)
@@ -460,7 +460,7 @@ async function buildESM (outputDir) {
 
   const fileListHtml = await listNonIgnoredFiles({ patterns: ['src/**/*.element.html', 'src/**/*.inline.html'] })
   const fileListHtmlJob = fileListHtml.map(async (path) => {
-    const minHtml = await minifyHtml(await fs.readFile(path, 'utf8'))
+    const minHtml = await minifyHtml(await readFile(path))
     const minHtmlJs = await esbuild.transform(minHtml, { loader: 'text', format: 'esm' })
     const noSrcPath = path.split('/').slice(1).join('/')
     const outfile = pathFromProject(`${outputDir}/${noSrcPath}.generated.js`)
@@ -806,7 +806,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
   const { load } = await import('js-yaml')
 
   const configPath = pathFromProject('./buildfiles/configs/cspell.yaml')
-  const config = load(await fs.readFile(configPath))
+  const config = load(await readFile(configPath))
   const ignorePaths = config.ignorePaths ?? []
   const fileList = await listFileByLinterParams({patterns: ['*'], ignorePatterns: ignorePaths, onlyChanged, changedFiles})
 
@@ -869,7 +869,7 @@ async function validateJson ({ onlyChanged, changedFiles }) {
     patterns: ['*.json'],
     onlyChanged,
     changedFiles,
-    validation: async (file) => JSON.parse(await fs.readFile(file, 'utf8')),
+    validation: async (file) => JSON.parse(await readFile(file)),
   })
 }
 
@@ -879,7 +879,7 @@ async function validateYaml ({ onlyChanged, changedFiles }) {
     patterns: ['*.yml', '*.yaml'],
     onlyChanged,
     changedFiles,
-    validation: async (file) => load(await fs.readFile(file, 'utf8')),
+    validation: async (file) => load(await readFile(file)),
   })
 }
 
@@ -1156,28 +1156,21 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignor
 }
 
 async function getIgnorePatternsFromFile (filePath) {
-  const content = await fs.readFile(filePath, 'utf8')
-  const lines = content.split('\n')
-    .filter(line => !line.startsWith('#') && line.trim() !== '')
-    .map(gitignoreToGlob)
-  return [...new Set(lines)]
+  return await readFile(filePath)
+    .then(content => content.split('\n'))
+    .then(lines => lines.filter(line => !line.startsWith('#') && line.trim() !== ''))
+    .then(lines => lines.map(gitignoreToGlob))
+    .then(lines => [...new Set(lines)])
 }
 
 function gitignoreToGlob (pattern) {
-  // Special case: Empty string
   if (!pattern) { return pattern }
 
-  // strip off negation to make life easier
   const negated = pattern.startsWith('!')
   const patternToTest = negated ? pattern.slice(1) : pattern
-  let result = patternToTest
-  let leadingSlash = false
+  const leadingSlash = patternToTest.startsWith('/')
+  let result = leadingSlash ? patternToTest.slice(1) : patternToTest
 
-  // strip off leading slash
-  if (patternToTest[0] === '/') {
-    leadingSlash = true
-    result = patternToTest.slice(1)
-  }
 
   if (result.endsWith('*') || result.endsWith('?')) {
     // no further changes if the pattern ends with a wildcard
@@ -1690,14 +1683,14 @@ async function getESbuildPlugin () {
     async setup (build) {
       build.onLoad({ filter: /\.(element|inline).css$/ }, async (args) => {
         return {
-          contents: await minifyCss(await fs.readFile(args.path, 'utf8')),
+          contents: await minifyCss(await readFile(args.path)),
           loader: 'text',
         }
       })
 
       build.onLoad({ filter: /\.(element|inline).html$/ }, async (args) => {
         return {
-          contents: await minifyHtml(await fs.readFile(args.path, 'utf8')),
+          contents: await minifyHtml(await readFile(args.path)),
           loader: 'text',
         }
       })
