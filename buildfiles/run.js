@@ -620,7 +620,7 @@ async function prepareRelease () {
   await cleanRelease()
   logStartStage('release:prepare', 'check version')
   const publishedVersion = await getLatestPublishedVersion()
-  const packageJson = await readPackageJson()
+  const packageJson = getPackageJson()
   const currentVersion = packageJson.version
 
   const { gt } = await import('semver')
@@ -1227,7 +1227,7 @@ async function listChangedFiles () {
 // @section 10 npm utilities
 
 function isRunningFromNPMScript () {
-  return JSON.parse(readFileSync(pathFromProject('./package.json'))).name === process.env.npm_package_name
+  return getPackageJson().name === process.env.npm_package_name
 }
 
 async function checkNodeModulesFolder () {
@@ -1237,9 +1237,8 @@ async function checkNodeModulesFolder () {
 }
 
 async function getLatestPublishedVersion () {
-  const pkg = await readPackageJson()
   try {
-    const version = await exec(`npm view ${pkg.name} version`)
+    const version = await exec(`npm view ${getPackageJson().name} version`)
     return version.stdout.trim()
   } catch {
     const latestReleasedVersion = await getLatestReleasedVersion()
@@ -1247,27 +1246,12 @@ async function getLatestPublishedVersion () {
   }
 }
 
-async function readPackageJson () {
-  readPackageJson.memo ??= await (async () => {
-    const path = pathFromProject('package.json')
-    const firstResult = await readFile(path).then(str => JSON.parse(str))
-    let currentResult = firstResult
-    let blocked = false
-    const { watch } = await import('node:fs')
-
-    watch(path, {persistent: false, recursive: false}, (eventType) => {
-      if(blocked || eventType != "change"){ return }
-      blocked = true
-      console.log("project package.json with type %s", eventType)
-      readFile(path)
-        .then(str => JSON.parse(str))
-        .then(result => currentResult = result)
-        .finally(() => blocked = false)
-    })
-
-    return () => currentResult
-  })()
-  return readPackageJson.memo()
+function getPackageJson () {
+  const {cache} = getPackageJson
+  if(cache){ return cache }
+  getPackageJson.cache = JSON.parse(readFileSync(pathFromProject('package.json')))
+  setTimeout(() => getPackageJson.cache = undefined, 1000).unref()
+  return getPackageJson.cache
 }
 
 // @section 11 versioning utilities
@@ -1285,10 +1269,8 @@ async function getLatestReleasedVersion () {
   return versions.find(({ releaseDate }) => releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/))
 }
 
-async function getPlayWrightVersion () {
-  const packageJson = await readPackageJson()
-  const playwrightVersion = packageJson.devDependencies['@playwright/test'].replaceAll('^', '')
-  return playwrightVersion
+function getPlayWrightVersion () {
+  return getPackageJson().devDependencies['@playwright/test'].replaceAll('^', '')
 }
 
 // @section 12 badge utilities
@@ -1442,11 +1424,9 @@ async function makeBadgeForTestResult (path) {
 }
 
 async function makeBadgeForLicense (path) {
-  const pkg = await readPackageJson()
-
   const svg = await makeBadge({
     label: ' license',
-    message: pkg.license,
+    message: getPackageJson().license,
     color: getBadgeColors().green,
     logo: asciiIconSvg('🏛'),
   })
