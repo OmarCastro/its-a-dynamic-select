@@ -2,6 +2,7 @@
 
   --gear-loader-height: 2em;
   --gear-anim-duration: 3s;
+  --gear-anim-name: gear-spin;
 
   /* colors */
   --color-bg-gear: #bbb;
@@ -73,7 +74,9 @@
 }
 
 .loading .gear {
-  animation: gear-spin var(--gear-anim-duration) linear infinite;
+  animation: 
+    calc(var(--gear-anim-duration) * 1.5) var(--gear-anim-name) 1 ease-in,
+    var(--gear-anim-duration) var(--gear-anim-name) calc(var(--gear-anim-duration) * 1.5) infinite linear;
 }
 
 @media screen and (prefers-reduced-motion: reduce) {
@@ -85,6 +88,11 @@
 @keyframes gear-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes gear-spin-reverse {
+  from { transform: rotate(390deg); }
+  to { transform: rotate(30deg); }
 }
 
 
@@ -136,12 +144,8 @@
   
 
 }
-
-.gear:nth-of-type(2n+1) {
-   animation-delay: calc(var(--gear-anim-duration) * -0.09);
-}
 .gear:nth-of-type(2n) {
-  animation-direction: reverse;
+  --gear-anim-name: gear-spin-reverse;
   transform: rotate(30deg);
 }
 
