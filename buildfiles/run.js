@@ -128,11 +128,11 @@ const tasks = {
   },
   'pre-commit-check': {
     description: 'executes pre-commit validation, validates the project with the staged changes only',
-    cb: () => execPreCommitChecks().then(exit),
+    cb: () => preCommitCheck().then(exit),
   },
   'commit-msg-check': {
     description: 'executes commit message validation',
-    cb: () => execCommitMsgChecks().then(exit),
+    cb: () => commitMsgCheck().then(exit),
   },
   help: helpTask,
   '--help': helpTask,
@@ -598,7 +598,7 @@ async function execFormatCode () {
   return returnCodeLint
 }
 
-async function execPreCommitChecks () {
+async function preCommitCheck () {
   logStartStage('precommit', 'lint and test')
 
   const result = await executeOnStagedOnly(async () => {
@@ -613,7 +613,7 @@ async function execPreCommitChecks () {
   return result
 }
 
-async function execCommitMsgChecks () {
+async function commitMsgCheck () {
   console.log("[commitmsg] validating commit message")
   const args = process.argv.slice(3)
   const commitFile = args[0]
@@ -659,7 +659,8 @@ async function prepareRelease () {
   await cp_R('LICENSE', 'package/content/LICENSE')
   const files = (await getFilesAsArray('src')).map(path => relative(pathFromProject('.'), path))
   await Promise.all(files.filter(path => !path.includes('.spec.')).map(path => fs.cp(path, `package/content/${path}`)))
-  await writeFile('package/content/package.json', JSON.stringify({ ...packageJson, devDependencies: undefined, scripts: undefined, directories: undefined }, null, 2))
+  const releasePackageJson = { ...packageJson, devDependencies: undefined, scripts: undefined, directories: undefined, imports: undefined }
+  await writeFile('package/content/package.json', JSON.stringify(releasePackageJson, null, 2))
   await cmdSpawn('npm pack --pack-destination "' + pathFromProject('package') + '"', { cwd: pathFromProject('package/content') })
   logEndStage()
 }
@@ -1157,21 +1158,24 @@ async function * watchDirs (...dirs) {
 }
 
 async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignorePatterns = []} = {}) {
-  const { minimatch } = await import('minimatch')
-  const { join } = await import('node:path')
-  const { statSync, readdirSync } = await import('node:fs')
-  const allIgnorePatterns = [...(await getIgnorePatternsFromFile(ignorePath)), ...ignorePatterns]
-  const ignoreMatchers = allIgnorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
-  const listFiles = (dir) => readdirSync(dir).reduce(function (list, file) {
-    const name = join(dir, file)
-    if (file === '.git' || ignoreMatchers.some(match => match(name))) { return list }
-    const isDir = statSync(name).isDirectory()
-    return list.concat(isDir ? listFiles(name) : [name])
-  }, [])
+  if(!listNonIgnoredFiles.cache){
+    const { minimatch } = await import('minimatch')
+    const { join } = await import('node:path')
+    const { statSync, readdirSync } = await import('node:fs')
+    const allIgnorePatterns = await getIgnorePatternsFromFile(ignorePath)
+    const ignoreMatchers = allIgnorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
+    /** @type {(dir: string) => string[]} */
+    const listFiles = (dir) => readdirSync(dir).flatMap(function (file) {
+      const name = join(dir, file)
+      if (file === '.git' || ignoreMatchers.some(match => match(name))) { return [] }
+      const isDirectory = statSync(name).isDirectory()
+      return isDirectory ? listFiles(name) : [name]
+    })
+    listNonIgnoredFiles.cache = listFiles('.')
+    setTimeout(() => listNonIgnoredFiles.cache = undefined, 1000).unref()
 
-  const fileList = listFiles('.')
-  if (!patterns) { return fileList }
-  return await filterFilePathsByPatterns(fileList, patterns)
+  }
+  return await filterFilePathsByPatterns(listNonIgnoredFiles.cache, patterns, ignorePatterns)
 }
 
 async function getIgnorePatternsFromFile (filePath) {
@@ -1236,8 +1240,8 @@ async function filterFilePathsByPatterns (filePaths, patterns = [], ignorePatter
 }
 
 async function listChangedFiles () {
-  const mainBranchName = (await git('rev-parse', '--abbrev-ref', 'HEAD'))[0]
-  const mergeBase = await git('merge-base', 'HEAD', mainBranchName)
+  const currentBranchName = (await git('rev-parse', '--abbrev-ref', 'HEAD'))[0]
+  const mergeBase = await git('merge-base', 'HEAD', currentBranchName)
   const diffExec = git('diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase)
   const lsFilesExec = git('ls-files', '--others', '--exclude-standard')
   return new Set([...(await diffExec), ...(await lsFilesExec)].filter(filename => filename.trim().length > 0))
@@ -1350,7 +1354,7 @@ function badgeColor (pct) {
   return 'red'
 }
 
-async function svgStyle () {
+async function badgeA11ySvgStyle () {
   const { document } = await loadDom()
   const style = document.createElement('style')
   style.innerHTML = `
@@ -1401,7 +1405,7 @@ async function applyA11yTheme (svgContent, options = {}) {
     el.style.setProperty('--dark-fill', color)
     el.style.setProperty('--light-fill', getLightVersionOfBadgeColor(color))
   })
-  svg.prepend(await svgStyle())
+  svg.prepend(await badgeA11ySvgStyle())
 
   return svg.outerHTML
 }
