@@ -1,2 +1,2 @@
 #!/bin/sh
-exec buildfiles/run precommit-check
+exec buildfiles/run pre-commit-check

@@ -126,9 +126,13 @@ const tasks = {
     description: 'clean release preparation',
     cb: async () => { cleanRelease().then(exit) },
   },
-  'precommit-check': {
-    description: 'Make precommit validation, validates the project with the staged changes only',
+  'pre-commit-check': {
+    description: 'executes pre-commit validation, validates the project with the staged changes only',
     cb: () => execPreCommitChecks().then(exit),
+  },
+  'commit-msg-check': {
+    description: 'executes commit message validation',
+    cb: () => execCommitMsgChecks().then(exit),
   },
   help: helpTask,
   '--help': helpTask,
@@ -606,6 +610,21 @@ async function execPreCommitChecks () {
     return exitCode
   })
   logEndStage()
+  return result
+}
+
+async function execCommitMsgChecks () {
+  console.log("[commitmsg] validating commit message")
+  const args = process.argv.slice(3)
+  const commitFile = args[0]
+  const commitMessage = readFileSync(commitFile)
+  const regex = /(((build|chore|ci|docs|feat|fix|perf|ops|refactor|revert|style|test|review|rebase|release)(\(.*\))?!?:)) (.|\s|\r|\n)+/
+  let result = 0
+  if(!regex.test(commitMessage)){
+    console.error("[commitmsg] ERROR: Commit message is not following the Conventional Commit standard. expected one of the follwing prefixes: " +
+      "build, chore, ci,docs, feat, fix, perf, ops, refactor, revert, style, test, review, rebase, release")
+    result = 1
+  }
   return result
 }
 
