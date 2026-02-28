@@ -1665,7 +1665,7 @@ async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {
         await git('restore', '.')
       }
       logStage('Pop stash')
-      await git('stash', 'pop')
+      await git('stash', 'pop', '--index')
     }
   }
   return 0
