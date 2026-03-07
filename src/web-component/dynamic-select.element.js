@@ -209,18 +209,17 @@ export class DynamicSelect extends HTMLElement {
     switch (name) {
       case 'open':
         if (this.open) {
-          const isOnMobile = isMobile()
-          if (isOnMobile) {
-            dropdownEl(this).showModal()
-          } else {
-            dropdownEl(this).showPopover()
-          }
           const loadData = dynamicOptionsOf(this).loadData()
           dropdownPositionUpdaterOf(this).startAnchoringToSelect()
           updateDropdownContent(this)
+          const isOnMobile = isMobile()
           if (isOnMobile) {
+            dropdownEl(this).showModal()
             // no need to open on-screen keyboard
             searchInputEl(this).blur()
+
+          } else {
+            dropdownEl(this).showPopover()
           }
           loadData.then(() => {
             updateDropdownContent(this)

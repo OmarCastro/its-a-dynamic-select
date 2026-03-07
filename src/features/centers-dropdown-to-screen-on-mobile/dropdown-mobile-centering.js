@@ -36,15 +36,13 @@ const positionFixer = (() => {
     const offsetLeft = viewport.offsetLeft
     const offsetTop = viewport.offsetTop
 
-    const boundingRect = element.getBoundingClientRect()
-
-    const left = offsetLeft + (viewport.width - boundingRect.width) / 2
-    const top = offsetTop + (viewport.height - boundingRect.height) / 2
+    const left = offsetLeft + viewport.width / 2
+    const top = offsetTop + viewport.height / 2
 
     // You could also do this by setting style.left and style.top if you
     // use width: 100% instead.
-    element.style.transform = `translate(${left}px, ${top}px) scale(${1 / viewport.scale})`
-    element.style.transformOrigin = 'top left'
+    element.style.transform = `translate(calc(${left}px - 50%), calc(${top}px - 50%)) scale(${1 / viewport.scale})`
+    element.style.transformOrigin = 'center'
   }
 
   const handler = () => {
