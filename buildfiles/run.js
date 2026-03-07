@@ -78,6 +78,10 @@ const tasks = {
     description: 'quickly run unit tests of the project, showing a simple report, mostly used for precommit check',
     cb: () => quickRunUnitTests().then(exit),
   },
+  'test:update-snapshots': {
+    description: 'quickly run unit tests of the project, showing a simple report, mostly used for precommit check',
+    cb: () => execTests({ updateSnapshots: true }).then(exit),
+  },
   'test:in-host': {
     description: 'tests the project in current environment',
     cb: () => execTests({ inDocker: false }).then(exit),
@@ -208,24 +212,24 @@ async function quickRunUnitTests () {
   return result
 }
 
-async function execTests ({ inDocker } = {}) {
+async function execTests ({ inDocker, updateSnapshots = false } = {}) {
   const isInsideDocker = await isInsideDockerContainer()
   if (inDocker === true && isInsideDocker) {
     console.error('[ERROR] trying to run test in a docker container inside a docker container, aborting')
     return 1
   } else if (inDocker === true) {
-    await testInDocker()
+    await testInDocker({ updateSnapshots })
   } else if (inDocker === false) {
-    await runTestProcedure()
+    await runTestProcedure({ updateSnapshots })
   } else if (isInsideDocker || !(await isDockerRunning())) {
-    await runTestProcedure()
+    await runTestProcedure({ updateSnapshots })
   } else {
-    await testInDocker()
+    await testInDocker({ updateSnapshots })
   }
   return 0
 }
 
-async function runTestProcedure () {
+async function runTestProcedure ({ updateSnapshots = false}) {
   const COVERAGE_DIR = 'reports/coverage'
   const REPORTS_TMP_DIR = 'reports/.tmp'
   const COVERAGE_TMP_DIR = `${REPORTS_TMP_DIR}/coverage`
@@ -238,7 +242,7 @@ async function runTestProcedure () {
 
   logStartStage('test', 'run tests')
 
-  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit ${COVERAGE_REPORTERS} playwright test`)
+  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit ${COVERAGE_REPORTERS} playwright test${updateSnapshots ? ' -u' : ''}`)
 
   await rm_rf(FINAL_COVERAGE_TMP_DIR)
   await mkdir_p(FINAL_COVERAGE_TMP_DIR)
@@ -288,14 +292,14 @@ async function runTestProcedure () {
   logEndStage()
 }
 
-async function testInDocker () {
+async function testInDocker ({ updateSnapshots = false }) {
   const { userInfo } = await import('node:os')
   const { uid, gid } = userInfo()
   const playwrightVersion = await getPlayWrightVersion()
   const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
   const workdir = '/playwright'
   return await runInDocker({
-    command: 'npm test',
+    command: updateSnapshots ? 'node buildfiles/run.js test:update-snapshots' : 'node buildfiles/run.js test',
     rmOnFinish: true,
     imageName,
     user: `${uid}:${gid}`,
@@ -614,15 +618,15 @@ async function preCommitCheck () {
 }
 
 async function commitMsgCheck () {
-  console.log("[commitmsg] validating commit message")
+  console.log('[commitmsg] validating commit message')
   const args = process.argv.slice(3)
   const commitFile = args[0]
   const commitMessage = readFileSync(commitFile)
   const regex = /(((build|chore|ci|docs|feat|fix|perf|ops|refactor|revert|style|test|review|rebase|release)(\(.*\))?!?:)) (.|\s|\r|\n)+/
   let result = 0
-  if(!regex.test(commitMessage)){
-    console.error("[commitmsg] ERROR: Commit message is not following the Conventional Commit standard. expected one of the follwing prefixes: " +
-      "build, chore, ci,docs, feat, fix, perf, ops, refactor, revert, style, test, review, rebase, release")
+  if (!regex.test(commitMessage)) {
+    console.error('[commitmsg] ERROR: Commit message is not following the Conventional Commit standard. expected one of the follwing prefixes: ' +
+      'build, chore, ci,docs, feat, fix, perf, ops, refactor, revert, style, test, review, rebase, release')
     result = 1
   }
   return result
@@ -1270,10 +1274,10 @@ async function getLatestPublishedVersion () {
 }
 
 function getPackageJson () {
-  const {cache} = getPackageJson
-  if(cache){ return cache }
+  const { cache } = getPackageJson
+  if (cache) { return cache }
   getPackageJson.cache = JSON.parse(readFileSync(pathFromProject('package.json')))
-  setTimeout(() => getPackageJson.cache = undefined, 1000).unref()
+  setTimeout(() => { getPackageJson.cache = undefined }, 1000).unref()
   return getPackageJson.cache
 }
 
