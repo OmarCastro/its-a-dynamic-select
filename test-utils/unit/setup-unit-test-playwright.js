@@ -1,7 +1,8 @@
 const { test: base, expect: baseExpect } = await import('@playwright/test')
-const { window, resetDom } = await import('./init-dom.js')
-const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
-const { gc } = await import('./gc.js')
+const { window, resetDom } = await import('./fixtures/dom.unit.fixture.js')
+const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
+const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
+const { gc } = await import('./fixtures/garbage-collector.unit.fixture.js')
 
 export const expect = baseExpect
 
@@ -21,6 +22,11 @@ export const test = base.extend({
     const api = setupFetchMock()
     await use(api)
     teardownFetchMock()
+  },
+  timezone: async ({}, use) => {
+    const api = setupTimezoneMock()
+    await use(api)
+    teardownTimezoneMock()
   },
   gc: async ({}, use) => {
     await use(gc)

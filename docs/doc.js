@@ -1,4 +1,23 @@
 // docs/doc.js
+
+const testFrame = document.querySelector('iframe.test-frame')
+if(testFrame){
+  const childWindow = testFrame.contentWindow;
+  window.addEventListener('message', message => {
+      if (message.source !== childWindow) {
+          return;
+      }
+      if(message.data.message === "unit test report" && message.data.badgeSvg){
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(message.data.badgeSvg, "image/svg+xml");
+        const svg = doc.querySelector("svg")
+        testFrame.previousElementSibling.replaceWith(svg)
+      }
+  });
+}
+
+console.log(globalThis.Components)
+
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('pre code').forEach((el) => {
     const html = el.innerHTML

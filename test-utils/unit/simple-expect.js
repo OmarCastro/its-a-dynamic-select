@@ -12,7 +12,7 @@ const invariant = (check, errorMessageThunk) => {
 }
 
 export const isEqual = (a, b) => {
-  if (a === b) {
+  if (Object.is(a, b)) {
     return true
   }
 
@@ -87,6 +87,6 @@ export const expect = (target) => ({
  * @typedef {{
  *  (target: Promise) => PromiseExpectMatchers & BaseExpectMatchers
  *  (target: Function) => FunctionExpectMatchers & PromiseExpectMatchers & BaseExpectMatchers
- *  (target: any) => BaseExpectMatchers
+ *  (target: unknown) => BaseExpectMatchers
  * }} ExpectApi
  */

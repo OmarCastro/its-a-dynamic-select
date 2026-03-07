@@ -1,7 +1,8 @@
 /** @import { Expect } from 'expect' */
 globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTestsForSystems () {
   const { expect } = await import('./simple-expect.js')
-  const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
+  const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
+  const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
 
   /**
    * @param {string} message - message to show on the report on skip
@@ -83,13 +84,22 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     unitTests.push({
       description,
       test: async () => {
+        const postTestCallbacks = new Set()
+        const fixtureCache = {}
         try {
           await testFunction({
             step: async (_, callback) => await callback(),
             expect,
             dom: window,
             get fetch () {
-              return setupFetchMock()
+              fixtureCache.fetch ??= setupFetchMock()
+              postTestCallbacks.add(teardownFetchMock)
+              return fixtureCache.fetch
+            },
+            get timezone() {
+              fixtureCache.timezone ??= setupTimezoneMock()
+              postTestCallbacks.add(teardownTimezoneMock)
+              return fixtureCache.timezone
             },
             get gc () {
               skip(noopGC.status.reason)
@@ -97,7 +107,8 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
             }
           }, { skip })
         } finally {
-          teardownFetchMock()
+          postTestCallbacks.forEach(callback => callback())
+          postTestCallbacks.clear()
         }
 
       }
@@ -128,26 +139,24 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
  * @param {number} report.passed - amount of passed tests
  * @param {number} report.total - total amount tests
  */
-function reportLogs (report) {
-
-  const inIframe = window.self !== window.top
+async function reportLogs (report) {
   const { body } = window.document
   const { reportType } = globalThis[Symbol.for('unit-test-info')]
-  if (inIframe) {
-    window.top.postMessage({ message: 'unit test report', data: report })
-  }
+  const svgPromise = createSVGResponse(report)
   if (reportType === 'badge') {
-    createSVGResponse(report).then(svg => {
-      body.innerHTML = svg
-      body.classList.add('done')
-    })
+    const svg = await svgPromise
+    body.innerHTML = svg
   } else {
     body.replaceChildren(...report.logs.split('\n').map(log => {
       const div = document.createElement('div')
       div.textContent = log
       return div
     }))
-    body.classList.add('done')
+  }
+  const inIframe = window.self !== window.top
+  if (inIframe) {
+    const svg = await svgPromise
+    window.top.postMessage({ message: 'unit test report', data: report, badgeSvg: svg })
   }
 }
 

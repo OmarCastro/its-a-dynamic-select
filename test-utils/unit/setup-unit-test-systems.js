@@ -1,9 +1,10 @@
 /** @import { Expect } from 'expect' */
 globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTestsForSystems () {
   const { expect } = await import('./simple-expect.js')
-  const { window, resetDom } = await import('./init-dom.js')
-  const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fetch-mock.js')
-  const { gc } = await import('./gc.js')
+  const { window, resetDom } = await import('./fixtures/dom.unit.fixture.js')
+  const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
+  const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
+  const { gc } = await import('./fixtures/garbage-collector.unit.fixture.js')
 
     /**
      * @param {string} message - message to show on the report on skip
@@ -14,6 +15,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }
 
   async function runTests () {
+    const startTestTimestamp = performance.now()
     const testAmount = unitTests.length
     let failedTestAmount = 0
     let skippedTestAmount = 0
@@ -36,7 +38,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
         }
       }
     }
-
+    const endTestTimestamp = performance.now()
     console.log(result)
     const skippedTestReport = skippedTestAmount <= 0 ? '' : `, ${skippedTestAmount} tests skipped`
 
@@ -46,6 +48,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       console.log(`[unit-test] ${failedTestAmount} tests failed${skippedTestReport}`)
     }
 
+    console.log(`[unit-test] tests took ${(endTestTimestamp - startTestTimestamp).toFixed(3)} milliseconds. ${endTestTimestamp.toFixed(3)} milliseconds since startup.`);
     process.exitCode = failedTestAmount > 0 ? 1 : 0
   }
 
@@ -62,12 +65,14 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }, 250)
 
   const unitTests = []
-  const test = (description, test) => {
+  const test = (description, testFunction) => {
     unitTests.push({
       description,
       test: async () => {
+        const postTestCallbacks = new Set()
+        const fixtureCache = {}
         try {
-          await test({
+          await testFunction({
             step: async (_, callback) => await callback(),
             expect,
             gc,
@@ -75,12 +80,19 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               resetDom()
               return window
             },
+            get timezone() {
+              fixtureCache.timezone ??= setupTimezoneMock()
+              postTestCallbacks.add(teardownTimezoneMock)
+              return fixtureCache.timezone
+            },
             get fetch () {
-              return setupFetchMock()
+              fixtureCache.fetch ??= setupFetchMock()
+              postTestCallbacks.add(teardownFetchMock)
+              return fixtureCache.fetch
             }
           })
         } finally {
-          teardownFetchMock()
+          postTestCallbacks.forEach(callback => callback())
         }
 
       }
