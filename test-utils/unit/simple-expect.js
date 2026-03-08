@@ -11,19 +11,47 @@ const invariant = (check, errorMessageThunk) => {
   }
 }
 
-export const isEqual = (a, b) => {
+/**
+ * Checks if `a` and `b` has the same structure and the same values
+ * @param {*} a - target object
+ * @param {*} b - object to compare to
+ * @param {*[]} stack - stack to detect circular references
+ * @returns {boolean} true if they're equal, false otherwise
+ */
+function checkDeepEquals(a, b, stack) {
   if (Object.is(a, b)) {
     return true
   }
 
-  const bothAreObjects = a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)
+  const bothAreObjects = a && b && typeof a === 'object' && typeof b === 'object'
 
-  return Boolean(
-    bothAreObjects &&
-      Object.keys(a).length === Object.keys(b).length &&
-      Object.entries(a).every(([k, v]) => isEqual(v, b[k]))
-  )
+  if(!bothAreObjects){
+    return false
+  }
+
+  const circularReference = stack.find(record => record[0] === a)
+  if(circularReference){
+    // only check if the reference is the same, if it isn't, fail even it is equal.
+    return circularReference[1] === b
+  }
+  stack.push([a, b])
+
+
+  if(Array.isArray(a)){
+    if(!Array.isArray(b) || a.length !== b.length || a.some((v, i) => !checkDeepEquals(v, b[i], stack))) return false
+  } else if(Array.isArray(b)){ return false }
+
+  if(Object.keys(a).length !== Object.keys(b).length ||
+    Object.entries(a).some(([k, v]) => !checkDeepEquals(v, b[k], stack))
+  ){
+    return false
+  }
+  stack.pop()
+  return true
 }
+
+export const isEqual = (a, b) => checkDeepEquals(a, b, [])
+
 
 const validateThrows = (method, expectedError) => {
   let errorCaught
