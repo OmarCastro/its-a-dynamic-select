@@ -102,6 +102,10 @@ const tasks = {
     description: 'format the project code',
     cb: () => execFormatCode().then(exit),
   },
+   formac: {
+    description: 'formats only changed files code',
+    cb: () => execFormatCodeOnChanged().then(exit),
+  },
   dev: {
     description: 'setup dev environment',
     cb: () => execDevEnvironment(),
@@ -602,6 +606,13 @@ async function execFormatCode () {
   return returnCodeLint
 }
 
+async function execFormatCodeOnChanged () {
+  logStartStage('formac', 'formatting changed code')
+  const returnCodeLint = await formatCode({ onlyChanged: true })
+  logEndStage()
+  return returnCodeLint
+}
+
 async function preCommitCheck () {
   logStartStage('precommit', 'lint and test')
 
@@ -925,7 +936,7 @@ async function formatCode ({ onlyChanged, changedFiles }) {
     semi: false,
     printWidth: 100,
     tabWidth: 2,
-    trailingComma: 'es5',
+    trailingComma: 'all',
     arrowParens: 'avoid'
   }
 
