@@ -25,11 +25,34 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const { searchInputEl, inputEl, dropdownEl, valueListEl, dropdownOptionList, getHostDynamicSelect, containerEl } = dom
-const { isSearchInputEl, isDeselectButton, isClearButton, isDynamicSelect } = dom
+const {
+  searchInputEl, inputEl, dropdownEl, valueListEl,dropdownOptionList,
+  getHostDynamicSelect,containerEl,
+  isSearchInputEl, isDeselectButton, isClearButton, isDynamicSelect
+} = dom
 
 const optionsObserver = new MutationObserver(mutations => {
-
+  /** @type {Set<DynamicSelect>} */
+  const selectsToUpdate = new Set()
+  for (const mutation of mutations) {
+    const { target } = mutation
+    let option
+    if (target instanceof Element) {
+      option = target.closest('option')
+    } else {
+      option = target.parentElement?.closest('option')
+    }
+    if (!option) {
+      continue
+    }
+    const parent = option.parentElement
+    if (parent instanceof DynamicSelect) {
+      selectsToUpdate.add(parent)
+    }
+  }
+  selectsToUpdate.forEach(select => {
+    updateButtonContent(select)
+  })
 })
 
 /** @type {MutationObserverInit} */
@@ -37,7 +60,8 @@ const optionsObserverOptions = {
   childList: true,
   subtree: true,
   attributes: true,
-  attributeFilter: ['data-of-option']
+  characterData: true,
+  attributeFilter: ['data-of-option'],
 }
 
 const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
@@ -324,8 +348,18 @@ function getDropdownTemplateData (dynamicSelect) {
   const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
   let focusIndex = dropdownOptions.findIndex(el => el.hasAttribute('data-focused'))
   return {
-    ungroupedOptions: ungroupedOptions.map(option => ({ ...option, checkedIndicatorType, focused: focusIndex-- === 0 })),
-    optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({ groupName, options: options.map(option => ({ ...option, checkedIndicatorType, focused: focusIndex-- === 0 })) }))
+    ungroupedOptions: ungroupedOptions.map(option => ({
+      ...option,
+      checkedIndicatorType,
+      focused: focusIndex-- === 0
+    })),
+    optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({
+      groupName,
+      options: options.map(option => ({
+        ...option, checkedIndicatorType,
+        focused: focusIndex-- === 0
+      }))
+    }))
   }
 }
 
