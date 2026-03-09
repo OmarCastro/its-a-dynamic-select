@@ -31,20 +31,20 @@ function parseJsonArrayResponse (json, response) {
       hasMore: true,
       navigationMode: 'link',
       href: linkHeader.byRel.next[0].url,
-      data
+      data,
     }
   }
   if (hasMoreHeader) {
     return {
       hasMore: true,
       navigationMode: 'after_value',
-      data
+      data,
     }
   }
 
   return {
     hasMore: false,
-    data
+    data,
   }
 }
 
@@ -65,20 +65,20 @@ function parseJsonObjectResponse (json, response) {
       hasMore: true,
       navigationMode: 'link',
       href: nextLink,
-      data
+      data,
     }
   }
   if (useHasMore) {
     return {
       hasMore: true,
       navigationMode: 'after_value',
-      data
+      data,
     }
   }
 
   return {
     hasMore: false,
-    data
+    data,
   }
 }
 

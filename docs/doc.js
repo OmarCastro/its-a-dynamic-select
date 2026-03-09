@@ -1,19 +1,19 @@
 // docs/doc.js
 
 const testFrame = document.querySelector('iframe.test-frame')
-if(testFrame){
-  const childWindow = testFrame.contentWindow;
-  window.addEventListener('message', message => {
-      if (message.source !== childWindow) {
-          return;
-      }
-      if(message.data.message === "unit test report" && message.data.badgeSvg){
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(message.data.badgeSvg, "image/svg+xml");
-        const svg = doc.querySelector("svg")
-        testFrame.previousElementSibling.replaceWith(svg)
-      }
-  });
+if (testFrame) {
+  const childWindow = testFrame.contentWindow
+  window.addEventListener('message', (message) => {
+    if (message.source !== childWindow) {
+      return
+    }
+    if (message.data.message === 'unit test report' && message.data.badgeSvg) {
+      var parser = new DOMParser()
+      var doc = parser.parseFromString(message.data.badgeSvg, 'image/svg+xml')
+      const svg = doc.querySelector('svg')
+      testFrame.previousElementSibling.replaceWith(svg)
+    }
+  })
 }
 
 console.log(globalThis.Components)
@@ -27,12 +27,12 @@ document.addEventListener('DOMContentLoaded', function () {
   })
 })
 
-document.querySelectorAll('.example').forEach(element => {
+document.querySelectorAll('.example').forEach((element) => {
   const exampleObj = {}
 
   console.log('.example %o', element)
 
-  element.querySelectorAll('.example__json .editor').forEach(element => {
+  element.querySelectorAll('.example__json .editor').forEach((element) => {
     const lang = element.getAttribute('data-lang')
     if (!lang) { return }
     exampleObj[lang] = JSON.parse(element.textContent || '')
@@ -96,8 +96,8 @@ function reactElementNameChange (event) {
   const componentName = event.target.closest('.component-name-edit')
   if (componentName == null) { return }
   const newText = componentName.textContent
-  document.body.querySelectorAll('.component-name-edit').forEach(ref => { if (componentName !== ref) ref.textContent = newText })
-  document.body.querySelectorAll('.component-name-ref').forEach(ref => { ref.textContent = newText })
+  document.body.querySelectorAll('.component-name-edit').forEach((ref) => { if (componentName !== ref) { ref.textContent = newText } })
+  document.body.querySelectorAll('.component-name-ref').forEach((ref) => { ref.textContent = newText })
 }
 
 document.body.addEventListener('input', (event) => { reactElementNameChange(event) })
@@ -106,10 +106,10 @@ document.body.addEventListener('datafetch', (event) => {
   if (event.target?.matches('[data-src="example-src-1"]')) {
     event.detail.respondWith([{
       value: '1',
-      text: 'option 1'
+      text: 'option 1',
     }, {
       value: '2',
-      text: 'option 2'
+      text: 'option 2',
     }])
     return
   }
@@ -130,7 +130,7 @@ document.body.addEventListener('datafetch', (event) => {
       { value: '1', text: 'json option 1' },
       { value: '2', text: 'json option 2' },
       { value: '3', text: 'json option 3' },
-      { value: '4', text: 'json option 4' }
+      { value: '4', text: 'json option 4' },
     ])
     event.detail.respondWith(response)
     return
@@ -150,7 +150,7 @@ document.body.addEventListener('datafetch', (event) => {
   }
 
   if (event.target?.matches('[data-src="example-src-1-second-delay"]')) {
-    event.detail.respondWith(new Promise(resolve => {
+    event.detail.respondWith(new Promise((resolve) => {
       setTimeout(() => {
         const response = new Response(countriesCSVGroupedByContinent)
         response.headers.set('content-type', 'text/csv')

@@ -6,9 +6,9 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
   const { gc } = await import('./fixtures/garbage-collector.unit.fixture.js')
 
-    /**
-     * @param {string} message - message to show on the report on skip
-     */
+  /**
+   * @param {string} message - message to show on the report on skip
+   */
   function SkipException (message) {
     if (!(this instanceof SkipException)) { return new SkipException(message) }
     this.message = message
@@ -48,7 +48,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       console.log(`[unit-test] ${failedTestAmount} tests failed${skippedTestReport}`)
     }
 
-    console.log(`[unit-test] tests took ${(endTestTimestamp - startTestTimestamp).toFixed(3)} milliseconds. ${endTestTimestamp.toFixed(3)} milliseconds since startup.`);
+    console.log(`[unit-test] tests took ${(endTestTimestamp - startTestTimestamp).toFixed(3)} milliseconds. ${endTestTimestamp.toFixed(3)} milliseconds since startup.`)
     process.exitCode = failedTestAmount > 0 ? 1 : 0
   }
 
@@ -80,7 +80,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               resetDom()
               return window
             },
-            get timezone() {
+            get timezone () {
               fixtureCache.timezone ??= setupTimezoneMock()
               postTestCallbacks.add(teardownTimezoneMock)
               return fixtureCache.timezone
@@ -89,13 +89,13 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               fixtureCache.fetch ??= setupFetchMock()
               postTestCallbacks.add(teardownFetchMock)
               return fixtureCache.fetch
-            }
+            },
           })
         } finally {
-          postTestCallbacks.forEach(callback => callback())
+          postTestCallbacks.forEach((callback) => callback())
         }
 
-      }
+      },
     })
     clearTimeout(notTestsFoundTimeout)
     scheduleUnitTestRun()

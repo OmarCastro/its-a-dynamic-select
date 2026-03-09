@@ -15,7 +15,7 @@ export async function * toTextStream (response) {
     // wait for next encoded chunk
     const { done, value } = await reader.read()
     // check if stream is done
-    if (done) break
+    if (done) { break }
     // Decodes data chunk and yields it
     yield (decoder.decode(value))
   }
@@ -69,7 +69,7 @@ function parseLinkHttpHeader (header) {
 
   const entries = Iterator.from(splitLinkEntries(header))
     .map(parseLinkHeaderEntry)
-    .filter(result => result != null)
+    .filter((result) => result != null)
     .toArray()
 
   const byRel = ({})
@@ -147,21 +147,21 @@ function splitLinkEntries (header) {
 function parseLinkHeaderEntry (headerEntry) {
   const [uri, ...params] = headerEntry
   const match = uri.match(/<([^>]+)>/)
-  if (!match) return null
+  if (!match) { return null }
 
   const url = match[1]
 
   const parsedParams = Object.fromEntries(
     Iterator.from(params)
-      .map(p => p.trim())
+      .map((p) => p.trim())
       .filter(Boolean)
-      .map(param => param.match(/^([^=]+)="?([^"]+)"?$/))
-      .filter(match => match != null)
-      .map(match => {
+      .map((param) => param.match(/^([^=]+)="?([^"]+)"?$/))
+      .filter((match) => match != null)
+      .map((match) => {
         const [,key, value] = match
         return [key, value]
       })
-      .toArray()
+      .toArray(),
   )
   return { url, params: parsedParams }
 }

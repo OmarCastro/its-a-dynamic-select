@@ -26,7 +26,7 @@ const loadSelectDefaultTemplates = computeOnce(() => {
    */
   const query = (name) => {
     const result = templatesRootElement.content.querySelector('template#' + name)
-    if (!(result instanceof HTMLTemplateElement)) throw Error(`Error: default template "${JSON.stringify(name)}" not defined`)
+    if (!(result instanceof HTMLTemplateElement)) { throw Error(`Error: default template "${JSON.stringify(name)}" not defined`) }
     return result
   }
 
@@ -49,7 +49,7 @@ export function templatesOf (element) {
   return {
     get option () {
       const scopedTemplate = element.querySelector(':scope > template[data-for="option"]')
-      if (scopedTemplate) return scopedTemplate
+      if (scopedTemplate) { return scopedTemplate }
       return loadSelectDefaultTemplates().option
     },
     get singleSelectInput () {
@@ -66,7 +66,7 @@ export function templatesOf (element) {
     },
     get loadingNotification () {
       const scopedTemplate = element.querySelector(':scope > template[data-for="loading-notification"]')
-      if (scopedTemplate) return scopedTemplate
+      if (scopedTemplate) { return scopedTemplate }
       return loadSelectDefaultTemplates().loadingNotification
     },
   }

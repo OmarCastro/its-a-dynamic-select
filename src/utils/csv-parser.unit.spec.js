@@ -5,10 +5,10 @@ test('parseCSV - parses strings', ({ expect }) => {
   const result = parseCSV('name,age\nJohn,30\nJane,25')
   expect([...result]).toEqual([{
     name: 'John',
-    age: '30'
+    age: '30',
   }, {
     name: 'Jane',
-    age: '25'
+    age: '25',
   }])
 })
 
@@ -17,10 +17,10 @@ test('parseCSV - parses array of lines', ({ expect }) => {
   const result = parseCSV(lines)
   expect([...result]).toEqual([{
     name: 'Josh',
-    age: '31'
+    age: '31',
   }, {
     name: 'Jeanne',
-    age: '28'
+    age: '28',
   }])
 })
 
@@ -38,7 +38,7 @@ test('parseCSV - parses CSV from async string iterables', async ({ expect }) => 
   }, {
     name: 'Maria',
     age: '39',
-    job: 'nurse'
+    job: 'nurse',
   }])
 })
 
@@ -50,10 +50,10 @@ test('parseCSV - trims lines', async ({ expect }) => {
   const result = parseCSV('name,age\n\n\nJohn,30\n  \nJane,25')
   expect([...result]).toEqual([{
     name: 'John',
-    age: '30'
+    age: '30',
   }, {
     name: 'Jane',
-    age: '25'
+    age: '25',
   }])
 })
 
@@ -67,10 +67,10 @@ test('parseCSV - trims lines, async version', async ({ expect }) => {
   const result = parseCSV(chunks())
   expect(await Array.fromAsync(result)).toEqual([{
     name: 'John',
-    age: '30'
+    age: '30',
   }, {
     name: 'Jane',
-    age: '25'
+    age: '25',
   }])
 })
 

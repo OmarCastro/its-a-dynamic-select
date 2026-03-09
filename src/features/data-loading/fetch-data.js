@@ -44,7 +44,7 @@ function createDataLoaderFor (elementRef) {
           if (!('error' in result)) { return result }
         }
       }
-    }
+    },
 
   }
   return api
@@ -67,8 +67,8 @@ function dispatchFetchDataEvent (element, dataToFetch) {
       respondWith (data) {
         customResponse = data
         respondWithCalls++
-      }
-    }
+      },
+    },
   })
 
   element.dispatchEvent(event)
@@ -83,7 +83,7 @@ function dispatchFetchDataEvent (element, dataToFetch) {
 async function fetchData (element) {
   const dataToFetch = {
     query: getQueryValue(element),
-    url: getUrlToFetch(element)
+    url: getUrlToFetch(element),
   }
 
   return fetchFromDataToFetch(element, dataToFetch)
@@ -107,7 +107,7 @@ async function fetchNextData (element) {
     if (currentData.navigationMode === 'link') {
       return {
         query: getQueryValue(element),
-        url: currentData.href
+        url: currentData.href,
       }
     }
     if (currentData.navigationMode === 'after_value') {
@@ -115,7 +115,7 @@ async function fetchNextData (element) {
       const additionalQueryParams = latestValue ? Object.freeze({ after: String(latestValue) }) : {}
       return {
         query: getQueryValue(element),
-        url: getUrlToFetch(element, additionalQueryParams)
+        url: getUrlToFetch(element, additionalQueryParams),
       }
     }
   })()
@@ -139,7 +139,7 @@ async function fetchFromDataToFetch (element, dataToFetch) {
     loadingMode: 'sync',
     status: 'dispatching event',
     result: null,
-    completed: false
+    completed: false,
   })
 
   const { event, customResponse, respondWithCalls } = dispatchFetchDataEvent(element, dataToFetch)
@@ -187,7 +187,7 @@ async function fetchFromDataToFetch (element, dataToFetch) {
   fetchRecord.completed = true
   fetchRecord.result = {
     error: 'no data loaded',
-    stage: 'loading data'
+    stage: 'loading data',
   }
 
   throw Error('no data to load')
@@ -211,7 +211,7 @@ async function parseRespondWithCall (paramOfRespondWith) {
   if (Array.isArray(result)) {
     return {
       data: result,
-      hasMore: false
+      hasMore: false,
     }
   }
   if (isPlainObject(result)) {
@@ -219,7 +219,7 @@ async function parseRespondWithCall (paramOfRespondWith) {
     if (!Array.isArray(records)) {
       return {
         error: `records property must be an array, instead it is ${records}`,
-        stage: 'parse event .respondWith(Object)'
+        stage: 'parse event .respondWith(Object)',
       }
     }
     if (typeof links?.next === 'string') {
@@ -227,20 +227,20 @@ async function parseRespondWithCall (paramOfRespondWith) {
         data: records,
         hasMore: true,
         navigationMode: 'link',
-        href: links.next
+        href: links.next,
       }
     }
     if (hasMore) {
       return {
         data: records,
         hasMore: true,
-        navigationMode: 'after_value'
+        navigationMode: 'after_value',
       }
     }
   }
   return {
     error: 'invalid data on RespondsWith, param must be an array, plain object or Response',
-    stage: 'parse event .respondWith(...)'
+    stage: 'parse event .respondWith(...)',
   }
 }
 
@@ -259,13 +259,13 @@ async function parseResponse (response) {
     } else {
       return {
         error: 'invalid response, expected JSON, JSON Lines or CSV response, guarantee that Content-type header is set correctly to "text/csv", "application/json" or "application/jsonl"',
-        stage: 'parse fetch response'
+        stage: 'parse fetch response',
       }
     }
   }
   return {
     error: `${response.status} HTTP status code`,
-    stage: 'parse fetch response'
+    stage: 'parse fetch response',
   }
 }
 
@@ -287,12 +287,12 @@ function addToFetchHistory (element, record) {
 /**
  * @param {HTMLElement} element - target element
  */
-const getQueryValue = element => element.getAttribute('data-filter') ?? ''
+const getQueryValue = (element) => element.getAttribute('data-filter') ?? ''
 
 /**
  * @param {HTMLElement} element - target element
  */
-const getDataSource = element => element.getAttribute('data-src') ?? ''
+const getDataSource = (element) => element.getAttribute('data-src') ?? ''
 
 /**
  * @param {HTMLElement} element - target element

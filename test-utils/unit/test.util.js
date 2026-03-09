@@ -30,14 +30,14 @@ const inspect = (await import('object-inspect')).default
 
 export const formatted = (strings, ...values) => String.raw(
   { raw: strings },
-  ...values.map(value => inspect(value))
+  ...values.map((value) => inspect(value)),
 )
 
 
 /** @type {(target: unknown) => asserts target} */
 export const assert = (target) => {
-  if(!target){
-    throw Error("assertion failed")
+  if (!target) {
+    throw Error('assertion failed')
   }
 }
 

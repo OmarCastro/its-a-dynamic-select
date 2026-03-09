@@ -8,13 +8,13 @@ test('linkHeaderOf - returns parsed header from string', ({ expect }) => {
     { params: { param1: 'val1' }, url: 'https://api.example.com/issues?page=2' },
     { params: { }, url: 'https://api.example.com/issues?page=4' },
     { params: { param2: 'val2' }, url: 'https://api.example.com/issues?page=10' },
-    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' }
+    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' },
   ]
   expect(linkHeaderOf(linkHeaderContent)).toEqual({
     byRel: {
       first: [entries[3]],
     },
-    entries
+    entries,
   })
 })
 
@@ -25,7 +25,7 @@ test('linkHeaderOf - adds to byRel if contains "rel" param', ({ expect }) => {
     { params: { rel: 'prev', param1: 'val1' }, url: 'https://api.example.com/issues?page=2' },
     { params: { rel: 'next' }, url: 'https://api.example.com/issues?page=4' },
     { params: { rel: 'last', param2: 'val2' }, url: 'https://api.example.com/issues?page=10' },
-    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' }
+    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' },
   ]
   expect(linkHeaderOf(linkHeaderContent)).toEqual({
     byRel: {
@@ -34,7 +34,7 @@ test('linkHeaderOf - adds to byRel if contains "rel" param', ({ expect }) => {
       first: [entries[3]],
       last: [entries[2]],
     },
-    entries
+    entries,
   })
 })
 
@@ -49,7 +49,7 @@ test('linkHeaderOf - returns parsed header from Response', ({ expect }) => {
     { params: { rel: 'prev', param1: 'val1' }, url: 'https://api.example.com/issues?page=2' },
     { params: { rel: 'next' }, url: 'https://api.example.com/issues?page=4' },
     { params: { rel: 'last', param2: 'val2' }, url: 'https://api.example.com/issues?page=10' },
-    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' }
+    { params: { rel: 'first' }, url: 'https://api.example.com/issues?page=1' },
   ]
   expect(linkHeaderOf(response)).toEqual({
     byRel: {
@@ -58,14 +58,14 @@ test('linkHeaderOf - returns parsed header from Response', ({ expect }) => {
       first: [entries[3]],
       last: [entries[2]],
     },
-    entries
+    entries,
   })
 })
 
 test('linkHeaderOf - returns empty header if invalid', ({ expect }) => {
   const emptyHeader = {
     byRel: {},
-    entries: []
+    entries: [],
   }
   expect(linkHeaderOf('  ')).toEqual(emptyHeader)
   expect(linkHeaderOf(null)).toEqual(emptyHeader)

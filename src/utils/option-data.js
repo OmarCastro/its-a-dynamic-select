@@ -40,7 +40,7 @@ export function dataObjectOfOption (option) {
         data: {
           ...jsonData,
           ...baseData,
-        }
+        },
       }
     } catch {
       // ignore

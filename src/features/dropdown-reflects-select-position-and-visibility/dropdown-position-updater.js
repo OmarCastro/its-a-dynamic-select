@@ -5,12 +5,12 @@ import { centerDropdownPosition, shouldCenterDropdown } from '../centers-dropdow
 /** @type {WeakMap<DynamicSelect, DropdownPositionUpdater>} */
 const dataLoaderData = new WeakMap()
 
-const intersectionObserver = new IntersectionObserver(records => {
+const intersectionObserver = new IntersectionObserver((records) => {
   const selects = new Set(Iterator.from(records)
-    .filter(record => !record.isIntersecting)
-    .map(record => record.target)
+    .filter((record) => !record.isIntersecting)
+    .map((record) => record.target)
     .filter(isDynamicSelect))
-  selects.forEach(select => {
+  selects.forEach((select) => {
     select.open = false
     dropdownPositionUpdaterOf(select).stopAnchoringToSelect()
   })
@@ -79,7 +79,7 @@ function createDropdownPositionUpdaterFor (elementRef) {
       const element = getElement()
       intersectionObserver.unobserve(element)
       removeListenersForPotentialPositionChange()
-    }
+    },
   }
   return api
 }

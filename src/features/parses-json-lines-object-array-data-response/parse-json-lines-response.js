@@ -23,20 +23,20 @@ export async function parseJsonLinesResponse (response) {
       hasMore: true,
       navigationMode: 'link',
       href: linkHeader.byRel.next[0].url,
-      data
+      data,
     }
   }
   if (hasNextHeader) {
     return {
       hasMore: true,
       navigationMode: 'after_value',
-      data
+      data,
     }
   }
 
   return {
     hasMore: false,
-    data
+    data,
   }
 }
 

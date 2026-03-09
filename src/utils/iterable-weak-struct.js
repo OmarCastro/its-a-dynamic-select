@@ -236,7 +236,7 @@ function * iterateKeys (struct) {
 function deleteKey (key, struct) {
   const { keySet, refWeakMap } = dataOf(struct)
   const entry = refWeakMap.get(key)
-  if (!entry) return false
+  if (!entry) { return false }
   keySet.delete(entry.ref)
   refWeakMap.delete(key)
   return true
@@ -264,7 +264,7 @@ function clear (struct) {
  */
 function getSize (struct) {
   const { keySet } = dataOf(struct)
-  keySet.forEach(ref => { if (!ref.deref()) { keySet.delete(ref) } })
+  keySet.forEach((ref) => { if (!ref.deref()) { keySet.delete(ref) } })
   return keySet.size
 }
 

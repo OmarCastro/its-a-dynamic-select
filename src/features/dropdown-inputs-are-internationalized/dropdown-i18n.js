@@ -32,10 +32,10 @@ export const i18nButtonLabels = Object.freeze({
     it: 'Annulla',
     pl: 'Anuluj',
     uk: 'Скасувати',
-  }
+  },
 })
 
-const mutationObserver = new MutationObserver(records => {
+const mutationObserver = new MutationObserver((records) => {
   for (const record of records) {
     const { target } = record
     if (!isDynamicSelect(target) || !target.open) {

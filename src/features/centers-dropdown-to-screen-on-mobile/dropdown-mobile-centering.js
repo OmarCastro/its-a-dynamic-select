@@ -74,7 +74,7 @@ const positionFixer = (() => {
   }
 
   return {
-    applyOnSelect
+    applyOnSelect,
   }
 })()
 

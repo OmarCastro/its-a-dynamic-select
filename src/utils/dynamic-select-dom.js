@@ -26,11 +26,11 @@ export const isDynamicSelectSymbol = Symbol('its-a-dynamic-select')
  * @returns {DynamicSelect} host element
  */
 export function getHostDynamicSelect (target) {
-  if (!(target instanceof Element)) throw Error('target is not an element')
+  if (!(target instanceof Element)) { throw Error('target is not an element') }
   const rootNode = target.getRootNode()
-  if (!(rootNode instanceof ShadowRoot)) throw Error('target is not inside a shadow dom')
+  if (!(rootNode instanceof ShadowRoot)) { throw Error('target is not inside a shadow dom') }
   const host = rootNode.host
-  if (!isDynamicSelect(host)) throw Error('target is not inside a Dynamic Select shadow dom')
+  if (!isDynamicSelect(host)) { throw Error('target is not inside a Dynamic Select shadow dom') }
   return host
 }
 
@@ -42,7 +42,7 @@ export function getHostDynamicSelect (target) {
 function shadowQuery (selector) {
   return (dynamicSelect) => {
     const result = dynamicSelect.shadowRoot?.querySelector(selector)
-    if (!result) throw Error(`Error: no ${JSON.stringify(selector)} found in dynamic select shadow DOM`)
+    if (!result) { throw Error(`Error: no ${JSON.stringify(selector)} found in dynamic select shadow DOM`) }
     return result
   }
 }
@@ -55,7 +55,7 @@ function shadowQuery (selector) {
 function shadowQueryAll (selector) {
   return (dynamicSelect) => {
     const result = dynamicSelect.shadowRoot?.querySelectorAll(selector)
-    if (result == null) throw Error('shadow is not yet defined')
+    if (result == null) { throw Error('shadow is not yet defined') }
     return result
   }
 }

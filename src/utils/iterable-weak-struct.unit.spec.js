@@ -24,7 +24,7 @@ test('IterableWeakMap - iterates over keys', ({ expect }) => {
   const key2 = { lorem: 'ipsum' }
   const map = new IterableWeakMap([
     [key1, 'test value'],
-    [key2, 'test value 2']
+    [key2, 'test value 2'],
   ])
   expect([...map.keys()]).toEqual([key1, key2])
 })
@@ -90,7 +90,7 @@ test('IterableWeakMap - iterates with forEach', ({ expect }) => {
   map.forEach((...args) => result.push(args))
   expect(result).toEqual([
     ['test value', key1, map],
-    ['test value 2', key2, map]
+    ['test value 2', key2, map],
   ])
 })
 
@@ -104,7 +104,7 @@ test('IterableWeakSet - iterates with forEach', ({ expect }) => {
   set.forEach((...args) => result.push(args))
   expect(result).toEqual([
     [entry1, entry1, set],
-    [entry2, entry2, set]
+    [entry2, entry2, set],
   ])
 })
 
@@ -117,7 +117,7 @@ test('IterableWeakMap - can set the value again', ({ expect }) => {
   map.set(key1, 'test value 4')
   expect([...map.entries()]).toEqual([
     [key1, 'test value 4'],
-    [key2, 'test value 2']
+    [key2, 'test value 2'],
   ])
 })
 
@@ -139,7 +139,7 @@ test('IterableWeakMap - can delete entries', ({ expect }) => {
   map.set(key2, 'test value 2')
   map.delete(key1)
   expect([...map.entries()]).toEqual([
-    [key2, 'test value 2']
+    [key2, 'test value 2'],
   ])
 })
 
@@ -162,7 +162,7 @@ test('IterableWeakMap - deleting entries that does not exist does nothing', ({ e
   map.delete(null)
   expect([...map.entries()]).toEqual([
     [key1, 'test value'],
-    [key2, 'test value 2']
+    [key2, 'test value 2'],
   ])
 })
 

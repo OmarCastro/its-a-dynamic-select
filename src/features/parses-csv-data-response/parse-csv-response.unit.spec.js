@@ -15,7 +15,7 @@ test('parseCSVResponse - return a parsed response with no navigation', async () 
   const response = new Response(csvText, {
     headers: new Headers({
       'Content-Type': 'text/csv',
-    })
+    }),
   })
 
   await expect(parseCSVResponse(response)).resolves.toEqual({
@@ -34,8 +34,8 @@ test('parseCSVResponse - return a parsed response with link navigation', async (
   const response = new Response(csvText, {
     headers: new Headers({
       'Content-Type': 'text/csv',
-      Link: '<https//example.com/test?cursor=test_cursor>; rel="next"',
-    })
+      'Link': '<https//example.com/test?cursor=test_cursor>; rel="next"',
+    }),
   })
 
   await expect(parseCSVResponse(response)).resolves.toEqual({
@@ -56,8 +56,8 @@ test('parseCSVResponse - return a parsed response with "after value" navigation'
   const response = new Response(csvText, {
     headers: new Headers({
       'Content-Type': 'text/csv',
-      'Has-More': true
-    })
+      'Has-More': true,
+    }),
   })
 
   await expect(parseCSVResponse(response)).resolves.toEqual({

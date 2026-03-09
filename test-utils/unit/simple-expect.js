@@ -2,7 +2,7 @@ import inspect from 'object-inspect'
 
 const formatted = (strings, ...values) => () => String.raw(
   { raw: strings },
-  ...values.map(value => inspect(value))
+  ...values.map((value) => inspect(value)),
 )
 
 const invariant = (check, errorMessageThunk) => {
@@ -18,32 +18,32 @@ const invariant = (check, errorMessageThunk) => {
  * @param {*[]} stack - stack to detect circular references
  * @returns {boolean} true if they're equal, false otherwise
  */
-function checkDeepEquals(a, b, stack) {
+function checkDeepEquals (a, b, stack) {
   if (Object.is(a, b)) {
     return true
   }
 
   const bothAreObjects = a && b && typeof a === 'object' && typeof b === 'object'
 
-  if(!bothAreObjects){
+  if (!bothAreObjects) {
     return false
   }
 
-  const circularReference = stack.find(record => record[0] === a)
-  if(circularReference){
+  const circularReference = stack.find((record) => record[0] === a)
+  if (circularReference) {
     // only check if the reference is the same, if it isn't, fail even it is equal.
     return circularReference[1] === b
   }
   stack.push([a, b])
 
 
-  if(Array.isArray(a)){
-    if(!Array.isArray(b) || a.length !== b.length || a.some((v, i) => !checkDeepEquals(v, b[i], stack))) return false
-  } else if(Array.isArray(b)){ return false }
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length || a.some((v, i) => !checkDeepEquals(v, b[i], stack))) { return false }
+  } else if (Array.isArray(b)) { return false }
 
-  if(Object.keys(a).length !== Object.keys(b).length ||
+  if (Object.keys(a).length !== Object.keys(b).length ||
     Object.entries(a).some(([k, v]) => !checkDeepEquals(v, b[k], stack))
-  ){
+  ) {
     return false
   }
   stack.pop()
@@ -92,7 +92,7 @@ export const expect = (target) => ({
   },
   rejects: {
     toThrow: async (expected) => await validateRejects(target, expected),
-  }
+  },
 })
 
 /**

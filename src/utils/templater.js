@@ -32,7 +32,7 @@ function applyTemplateAux (currentElement, currentData) {
       if (loopPath.startsWith('$.')) {
         const data = getFromStringPath(currentData, loopPath.slice(2))
         if (Array.isArray(data)) {
-          const newContent = data.map(newData => applyTemplate(/** @type {HTMLTemplateElement} */ (currentElement), newData))
+          const newContent = data.map((newData) => applyTemplate(/** @type {HTMLTemplateElement} */ (currentElement), newData))
           currentElement.replaceWith(...newContent)
           return
         }
@@ -65,19 +65,19 @@ function applyTemplateAux (currentElement, currentData) {
  * from the beginning and end of the document fragment
  * @param {DocumentFragment} documentFragment - target document fragment
  */
-function trimDocumentFragment(documentFragment){
-  const {lastChild, firstChild} = documentFragment
-  if(lastChild?.nodeType === document.TEXT_NODE){
+function trimDocumentFragment (documentFragment) {
+  const { lastChild, firstChild } = documentFragment
+  if (lastChild?.nodeType === document.TEXT_NODE) {
     const trimmedText = lastChild.nodeValue?.trimEnd() ?? ''
-    if(trimmedText){
+    if (trimmedText) {
       lastChild.textContent = trimmedText
     } else {
       lastChild.remove()
     }
   }
-  if(firstChild?.nodeType === document.TEXT_NODE){
+  if (firstChild?.nodeType === document.TEXT_NODE) {
     const trimmedText = firstChild.nodeValue?.trimStart() ?? ''
-    if(trimmedText){
+    if (trimmedText) {
       firstChild.textContent = trimmedText
     } else {
       firstChild.remove()

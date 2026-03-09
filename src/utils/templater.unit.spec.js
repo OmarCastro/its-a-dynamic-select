@@ -13,7 +13,7 @@ test('applyTemplate - should convert a string to a path', async ({ dom, expect }
 
   const data = {
     prop1: 'hello',
-    prop2: 'world'
+    prop2: 'world',
   }
 
   const template = document.body.querySelector('#test1')
@@ -37,7 +37,7 @@ test('applyTemplate - should escape the result', async ({ dom, expect }) => {
 
   const data = {
     prop1: 'hello "world"',
-    prop2: '<script>alert("RedAlert!!")<script>'
+    prop2: '<script>alert("RedAlert!!")<script>',
   }
 
   const template = document.body.querySelector('#test1')
@@ -61,7 +61,7 @@ test('applyTemplate - attributes that do not start with "$." or "$?." are not ap
 
   const data = {
     prop1: 'hello world',
-    prop2: 'lorem ipsum'
+    prop2: 'lorem ipsum',
   }
 
   const template = document.body.querySelector('#test1')
@@ -85,7 +85,7 @@ test('applyTemplate - slots with name that do not start with "$." or "$?." are n
 
   const data = {
     prop1: 'dig dig',
-    prop2: 'lorem ipsum'
+    prop2: 'lorem ipsum',
   }
 
   const template = document.body.querySelector('#test1')
@@ -110,7 +110,7 @@ test('applyTemplate - "$$" token is used to escape initial "$" on slot name and 
 
   const data = {
     prop1: 'dig dig',
-    prop2: 'lorem ipsum'
+    prop2: 'lorem ipsum',
   }
 
   const template = document.body.querySelector('#test1')
@@ -136,7 +136,7 @@ test('applyTemplate - attributes starting with "$?." that results in falsy value
   const data = {
     prop1: 'hello world',
     prop2: 'lorem ipsum',
-    prop3: false
+    prop3: false,
   }
 
   const template = document.body.querySelector('#test1')
@@ -161,7 +161,7 @@ test('applyTemplate - attributes starting with "$?." that results in truthy valu
   const data = {
     prop1: 'hello world',
     prop2: 'lorem ipsum',
-    prop3: true
+    prop3: true,
   }
 
   const template = document.body.querySelector('#test1')
@@ -187,7 +187,7 @@ test('applyTemplate - template loop with string', async ({ dom, expect }) => {
 
   const data = {
     prop1: ['aa', 'bb'],
-    prop2: 'lorem ipsum'
+    prop2: 'lorem ipsum',
   }
 
   const template = document.body.querySelector('#test1')

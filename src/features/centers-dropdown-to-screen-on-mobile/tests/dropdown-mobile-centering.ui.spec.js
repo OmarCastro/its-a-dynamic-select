@@ -2,7 +2,7 @@ import { test, expect, devices } from '#ui-test'
 /** @import { Page } from '@playwright/test' */
 
 test.use({
-  ...devices['Galaxy S8']
+  ...devices['Galaxy S8'],
 })
 
 test('dynamic-select dropdown centers on mobile', async ({ page, testPageLocation }) => {

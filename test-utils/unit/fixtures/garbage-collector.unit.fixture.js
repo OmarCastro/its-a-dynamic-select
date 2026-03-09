@@ -5,7 +5,7 @@
 const noopGC = async () => {}
 noopGC.status = {
   enabled: false,
-  reason: 'Garbage collection not enabled'
+  reason: 'Garbage collection not enabled',
 }
 /** @type {GCFunction} */
 let gcMethod = noopGC
@@ -23,7 +23,7 @@ if (isNode) {
     const gcEnabled = typeof nodeGc === 'function'
     gcMethod.status = {
       enabled: gcEnabled,
-      reason: gcMethod.enabled ? 'Garbage collection not exposed on nodeJs' : ''
+      reason: gcMethod.enabled ? 'Garbage collection not exposed on nodeJs' : '',
     }
     return await nodeGc(...args)
   }
@@ -32,5 +32,5 @@ if (isNode) {
 /** @type {GCFunction} */
 export const gc = async (...args) => await gcMethod(...args)
 Object.defineProperty(gc, 'hasGC', {
-  get: function () { return gcMethod.hasGC }
+  get: function () { return gcMethod.hasGC },
 })

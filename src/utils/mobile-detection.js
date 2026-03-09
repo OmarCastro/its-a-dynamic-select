@@ -25,9 +25,9 @@ function updateData () {
     const { currentIsMobile, observingNodes, callback } = data
     if (currentIsMobile === isNowMobile) { continue }
     data.currentIsMobile = isNowMobile
-    const events = Iterator.from(observingNodes).map(element => ({
+    const events = Iterator.from(observingNodes).map((element) => ({
       target: element,
-      isMobile: isNowMobile
+      isMobile: isNowMobile,
     })).toArray()
     callback(events)
   }
@@ -49,7 +49,7 @@ export class MobileDetectionObserver {
     this.#data = {
       callback,
       observingNodes: new IterableWeakSet(),
-      currentIsMobile: undefined
+      currentIsMobile: undefined,
     }
     observerData.set(this, this.#data)
   }
@@ -67,7 +67,7 @@ export class MobileDetectionObserver {
     observingNodes.add(node)
     callback([{
       target: node,
-      isMobile: currentIsMobile
+      isMobile: currentIsMobile,
     }])
   }
 }

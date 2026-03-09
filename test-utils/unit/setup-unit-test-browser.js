@@ -50,8 +50,8 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     } else {
       log(`[unit-test] ${failedTestAmount} tests failed`)
     }
-    console.log({...globalThis[Symbol.for('unit-test-info')], endTestTimestamp})
-    log(`[unit-test] tests took ${endTestTimestamp - startTestTimestamp} milliseconds. ${endTestTimestamp} milliseconds since page load.`);
+    console.log({ ...globalThis[Symbol.for('unit-test-info')], endTestTimestamp })
+    log(`[unit-test] tests took ${endTestTimestamp - startTestTimestamp} milliseconds. ${endTestTimestamp} milliseconds since page load.`)
     const testedAmount = totalAmount - skippedTestAmount
     reportLogs({
       logs,
@@ -59,7 +59,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       total: totalAmount,
       tested: testedAmount,
       skipped: skippedTestAmount,
-      passed: testedAmount - failedTestAmount
+      passed: testedAmount - failedTestAmount,
     })
   }
 
@@ -78,7 +78,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const noopGC = async () => { }
   noopGC.status = {
     enabled: false,
-    reason: 'Garbage collection not enabled'
+    reason: 'Garbage collection not enabled',
   }
   const test = (description, testFunction) => {
     unitTests.push({
@@ -96,7 +96,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               postTestCallbacks.add(teardownFetchMock)
               return fixtureCache.fetch
             },
-            get timezone() {
+            get timezone () {
               fixtureCache.timezone ??= setupTimezoneMock()
               postTestCallbacks.add(teardownTimezoneMock)
               return fixtureCache.timezone
@@ -104,14 +104,14 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
             get gc () {
               skip(noopGC.status.reason)
               return noopGC
-            }
+            },
           }, { skip })
         } finally {
-          postTestCallbacks.forEach(callback => callback())
+          postTestCallbacks.forEach((callback) => callback())
           postTestCallbacks.clear()
         }
 
-      }
+      },
     })
     clearTimeout(notTestsFoundTimeout)
     scheduleUnitTestRun()
@@ -147,7 +147,7 @@ async function reportLogs (report) {
     const svg = await svgPromise
     body.innerHTML = svg
   } else {
-    body.replaceChildren(...report.logs.split('\n').map(log => {
+    body.replaceChildren(...report.logs.split('\n').map((log) => {
       const div = document.createElement('div')
       div.textContent = log
       return div
@@ -171,7 +171,7 @@ const createSVGResponse = async (report) => {
   const label = `${report.passed} / ${report.tested}`
   const color = report.failed > 0 ? badgeColors.red : badgeColors.green
   const { badgeUrl } = globalThis[Symbol.for('unit-test-info')]
-  badgeFetch ??= fetch(badgeUrl).then(response => response.text())
+  badgeFetch ??= fetch(badgeUrl).then((response) => response.text())
   const badgeSvg = await badgeFetch
   return badgeSvg
     .replaceAll('RUNNING...', label)

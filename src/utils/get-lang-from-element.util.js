@@ -38,7 +38,7 @@ export function getLanguageFromElement (element) {
   }
   for (const node of traverseUpDom(element)) {
     const langValue = node.getAttribute('lang')
-    if (!langValue) continue
+    if (!langValue) { continue }
     try {
       const locale = new Intl.Locale(langValue)
       const { language, region } = locale

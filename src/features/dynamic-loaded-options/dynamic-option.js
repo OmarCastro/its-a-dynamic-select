@@ -39,23 +39,23 @@ function createDynamicOptionsDataFor (elementRef) {
       return [...getDynamicOptions(getElement()).querySelectorAll(':scope > option')]
     },
     get optionsData () {
-      return api.options.map(option => Object.freeze({ ...dataObjectOfOption(option), origin: 'fetch' }))
+      return api.options.map((option) => Object.freeze({ ...dataObjectOfOption(option), origin: 'fetch' }))
     },
     get optionsMap () {
-      return Object.fromEntries(api.options.map(option => [option.value, option]))
+      return Object.fromEntries(api.options.map((option) => [option.value, option]))
     },
     status: 'empty',
     loadData: () => loadData(getElement()),
     loadNextData: () => loadNextData(getElement()),
     get values () {
       return Iterator.from(api.options)
-        .filter(option => option.selected)
-        .map(option => option.value)
+        .filter((option) => option.selected)
+        .map((option) => option.value)
         .toArray()
     },
     set values (values) {
       api.selectedValues = new Set(...values)
-      api.options.forEach(option => { option.selected = values.includes(option.value) })
+      api.options.forEach((option) => { option.selected = values.includes(option.value) })
     },
 
     toggleValue (value, force) {
@@ -66,14 +66,14 @@ function createDynamicOptionsDataFor (elementRef) {
         api.selectedValues.add(value)
       }
       Iterator.from(api.options)
-        .filter(option => option.value === value)
-        .forEach(option => { option.selected = selected })
+        .filter((option) => option.value === value)
+        .forEach((option) => { option.selected = selected })
     },
     get selectedOptions () {
       return Iterator.from(api.options)
-        .filter(option => option.selected)
+        .filter((option) => option.selected)
         .toArray()
-    }
+    },
   }
   return api
 }

@@ -47,13 +47,13 @@ export function parseCSV (input, delimiter = ',') {
  * @param {unknown} object - target object
  * @returns {object is Iterable} - true if iterable, false otherwise
  */
-const isIterable = object => typeof object?.[Symbol.iterator] === 'function'
+const isIterable = (object) => typeof object?.[Symbol.iterator] === 'function'
 
 /**
  * @param {unknown} object - target object
  * @returns {object is AsyncIterable} - true if iterable, false otherwise
  */
-const isAsyncIterable = object => typeof object?.[Symbol.asyncIterator] === 'function'
+const isAsyncIterable = (object) => typeof object?.[Symbol.asyncIterator] === 'function'
 
 /**
  * Parses CSV from a synchronous iterable of strings.
@@ -73,7 +73,7 @@ function * parseCSVSync (iterable, delimiter = ',') {
     buffer = lines.pop() ?? ''// keep last partial line
 
     for (const line of lines) {
-      if (!line.trim()) continue
+      if (!line.trim()) { continue }
 
       const fields = parseCSVLine(line, delimiter)
 
@@ -109,7 +109,7 @@ async function * parseCSVAsync (asyncIterable, delimiter = ',') {
     buffer = lines.pop() ?? ''// keep last partial line
 
     for (const line of lines) {
-      if (!line.trim()) continue
+      if (!line.trim()) { continue }
 
       const fields = parseCSVLine(line, delimiter)
 

@@ -54,7 +54,7 @@ test('stringToPath - should make the result immutable', async ({ expect }) => {
 test('getFromStringPath - should pass on shallow path', async ({ expect }) => {
   const data = {
     prop1: ['aa', 'bb'],
-    prop2: 'lorem ipsum'
+    prop2: 'lorem ipsum',
   }
   const actual = getFromStringPath(data, 'prop1')
   expect(actual).toBe(data.prop1)
@@ -65,9 +65,9 @@ test('getFromStringPath - should pass on deep path', async ({ expect }) => {
     prop1: ['aa', 'bb'],
     prop2: {
       propA: {
-        banana: 2
-      }
-    }
+        banana: 2,
+      },
+    },
   }
   const actual = getFromStringPath(data, 'prop2.propA.banana')
   expect(actual).toBe(2)
@@ -78,9 +78,9 @@ test('getFromStringPath - should return undefined if not found', async ({ expect
     prop1: ['aa', 'bb'],
     prop2: {
       propA: {
-        banana: 2
-      }
-    }
+        banana: 2,
+      },
+    },
   }
   const actual = getFromStringPath(data, 'propFail.props.tomato')
   expect(actual).toBe(undefined)

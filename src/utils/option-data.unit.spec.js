@@ -10,7 +10,7 @@ test('dataObjectOfOption - get base option data', async ({ expect, dom }) => {
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map(option => dataObjectOfOption(option))
+  const result = [...options].map((option) => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,
@@ -19,7 +19,7 @@ test('dataObjectOfOption - get base option data', async ({ expect, dom }) => {
     data: {
       text: 'hello',
       value: 'value1',
-    }
+    },
   }, {
     origin: 'option',
     selected: false,
@@ -28,7 +28,7 @@ test('dataObjectOfOption - get base option data', async ({ expect, dom }) => {
     data: {
       text: 'world',
       value: 'value2',
-    }
+    },
   }])
 })
 
@@ -41,7 +41,7 @@ test('dataObjectOfOption - custom option data', async ({ expect, dom }) => {
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map(option => dataObjectOfOption(option))
+  const result = [...options].map((option) => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,
@@ -54,9 +54,9 @@ test('dataObjectOfOption - custom option data', async ({ expect, dom }) => {
         number: 1,
         array: [1, 2, 3],
         object: { hello: 'world' },
-        null: null
-      }
-    }
+        null: null,
+      },
+    },
   }, {
     origin: 'option',
     selected: false,
@@ -65,7 +65,7 @@ test('dataObjectOfOption - custom option data', async ({ expect, dom }) => {
     data: {
       text: '',
       value: 'value2',
-    }
+    },
   }])
 })
 
@@ -78,7 +78,7 @@ test('dataObjectOfOption - invalid custom option data will act as if it doesnt e
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map(option => dataObjectOfOption(option))
+  const result = [...options].map((option) => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,
@@ -87,7 +87,7 @@ test('dataObjectOfOption - invalid custom option data will act as if it doesnt e
     data: {
       text: 'hello',
       value: 'value1',
-    }
+    },
   }, {
     origin: 'option',
     selected: false,
@@ -96,7 +96,7 @@ test('dataObjectOfOption - invalid custom option data will act as if it doesnt e
     data: {
       text: 'world',
       value: 'value2',
-    }
+    },
   }])
 })
 
@@ -109,7 +109,7 @@ test('optionElementOfData - creates option from option data', async ({ expect, d
     data: {
       text: 'hello',
       value: 'value1',
-    }
+    },
   }
   const option = optionElementOfData(optionData)
   expect(JSON.parse(option.getAttribute('data-of-option'))).toEqual(optionData.data)
@@ -127,7 +127,7 @@ test('dataObjectOfOption & optionElementOfData - calling both should return simi
     data: {
       text: 'hello',
       value: 'value1',
-    }
+    },
   }
   expect(dataObjectOfOption(optionElementOfData(optionData))).toEqual(optionData)
 })
