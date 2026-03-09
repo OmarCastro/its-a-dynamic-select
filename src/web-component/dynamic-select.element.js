@@ -7,10 +7,15 @@ import { templatesOf } from '../features/templates/templates.js'
 import { configurationOf } from '../features/configuration/configuration.js'
 import { dynamicOptionsOf } from '../features/dynamic-loaded-options/dynamic-option.js'
 import { computeOnce } from '../utils/memoization.js'
-import * as dom from '../utils/dynamic-select-dom.js'
 import { dropdownPositionUpdaterOf, updateDropdownPosition } from '../features/dropdown-reflects-select-position-and-visibility/dropdown-position-updater.js'
 import { isMobile, MobileDetectionObserver } from '../utils/mobile-detection.js'
 import { applyI18nOnSelectInputs } from '../features/dropdown-inputs-are-internationalized/dropdown-i18n.js'
+import {
+  searchInputEl, inputEl, dropdownEl, valueListEl, dropdownOptionList, getHostDynamicSelect, containerEl,
+  okButtonEl, cancelButtonEl,
+  isSearchInputEl, isDeselectButton, isClearButton, isDynamicSelect, isDynamicSelectSymbol,
+} from '../utils/dynamic-select-dom.js'
+
 /** @import { OptionData } from '../utils/option-data' */
 
 const loadTemplate = computeOnce(() => {
@@ -25,13 +30,7 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const {
-  searchInputEl, inputEl, dropdownEl, valueListEl,dropdownOptionList,
-  getHostDynamicSelect,containerEl,
-  isSearchInputEl, isDeselectButton, isClearButton, isDynamicSelect
-} = dom
-
-const optionsObserver = new MutationObserver(mutations => {
+const optionsObserver = new MutationObserver((mutations) => {
   /** @type {Set<DynamicSelect>} */
   const selectsToUpdate = new Set()
   for (const mutation of mutations) {
@@ -50,7 +49,7 @@ const optionsObserver = new MutationObserver(mutations => {
       selectsToUpdate.add(parent)
     }
   }
-  selectsToUpdate.forEach(select => {
+  selectsToUpdate.forEach((select) => {
     updateButtonContent(select)
   })
 })
@@ -64,7 +63,7 @@ const optionsObserverOptions = {
   attributeFilter: ['data-of-option'],
 }
 
-const mobileDetectionObserver = new MobileDetectionObserver(mutations => {
+const mobileDetectionObserver = new MobileDetectionObserver((mutations) => {
   for (const mutation of mutations) {
     const { target, isMobile } = mutation
     if (!isDynamicSelect(target)) { continue }
@@ -91,11 +90,12 @@ export class DynamicSelect extends HTMLElement {
     searchInputEl(this).addEventListener('input', handleSearchInputChange)
     inputEl(this).addEventListener('click', handleSelectValueButtonClick)
     searchInputEl(this).addEventListener('keydown', handleSearchInputKeyDown)
-    dropdownEl(this).addEventListener('toggle', handleDropdownToggle)
-    dropdownEl(this).addEventListener('pointerdown', handleDropdownPointerDown)
-    dropdownEl(this).addEventListener('click', handleDropdownOptionClick)
-    dom.okButtonEl(this).addEventListener('click', handleOkButtonClick)
-    dom.cancelButtonEl(this).addEventListener('click', handleCancelButtonClick)
+    const dropdown = dropdownEl(this)
+    dropdown.addEventListener('toggle', handleDropdownToggle)
+    dropdown.addEventListener('pointerdown', handleDropdownPointerDown)
+    dropdown.addEventListener('click', handleDropdownOptionClick)
+    okButtonEl(this).addEventListener('click', handleOkButtonClick)
+    cancelButtonEl(this).addEventListener('click', handleCancelButtonClick)
     optionsObserver.observe(this, optionsObserverOptions)
     mobileDetectionObserver.observe(this)
     applyI18nOnSelectInputs(this)
@@ -122,12 +122,12 @@ export class DynamicSelect extends HTMLElement {
   }
 
   set value (value) {
-    if (typeof value !== 'string') return
+    if (typeof value !== 'string') { return }
     this.valueAsArray = [value]
   }
 
   get valueAsArray () {
-    let iterator = Iterator.from(this.selectedOptions).map(option => option.value)
+    let iterator = Iterator.from(this.selectedOptions).map((option) => option.value)
     if (!this.multiple) {
       iterator = iterator.take(1)
     }
@@ -136,7 +136,7 @@ export class DynamicSelect extends HTMLElement {
 
   set valueAsArray (valueAsArray) {
     if (!Array.isArray(valueAsArray)) { return }
-    Iterator.from(this.options).forEach(option => {
+    Iterator.from(this.options).forEach((option) => {
       option.selected = valueAsArray.includes(option.value)
     })
     dynamicOptionsOf(this).values = valueAsArray
@@ -145,7 +145,7 @@ export class DynamicSelect extends HTMLElement {
   get valueAsObjects () {
     let iterator = Iterator.from(this.selectedOptions)
       .map(dataObjectOfOption)
-      .map(info => info.data)
+      .map((info) => info.data)
     if (!this.multiple) {
       iterator = iterator.take(1)
     }
@@ -157,10 +157,10 @@ export class DynamicSelect extends HTMLElement {
     const isValidValue = (value) => typeof value === 'string' || !isNaN(value)
     const validValueEntries = Iterator.from(valueAsObjects)
       .filter(isPlainObject)
-      .filter(obj => isValidValue(obj.value))
-      .map(obj => [obj.value, obj])
+      .filter((obj) => isValidValue(obj.value))
+      .map((obj) => [obj.value, obj])
     const map = Object.fromEntries(validValueEntries)
-    Iterator.from(this.options).forEach(option => {
+    Iterator.from(this.options).forEach((option) => {
       const data = map[option.value]
       if (data) {
         option.selected = false
@@ -186,7 +186,7 @@ export class DynamicSelect extends HTMLElement {
     }
   }
 
-  get [dom.isDynamicSelectSymbol] () { return true }
+  get [isDynamicSelectSymbol] () { return true }
 
   get multiple () {
     return this.hasAttribute('multiple')
@@ -208,7 +208,7 @@ export class DynamicSelect extends HTMLElement {
 
   get selectedOptions () {
     const { options } = this
-    const result = Iterator.from(options).filter(option => option.selected).toArray()
+    const result = Iterator.from(options).filter((option) => option.selected).toArray()
     if (result.length || this.multiple) {
       return result
     }
@@ -326,7 +326,7 @@ function getDropdownListData (dynamicSelect) {
     }
     return {
       ungroupedOptions: filteredUngrouped,
-      optionGroups: filteredOptionGroups
+      optionGroups: filteredOptionGroups,
     }
   }
 
@@ -346,20 +346,20 @@ function getDropdownTemplateData (dynamicSelect) {
 
   const checkedIndicatorType = dynamicSelect.multiple ? 'checkbox' : 'radio'
   const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
-  let focusIndex = dropdownOptions.findIndex(el => el.hasAttribute('data-focused'))
+  let focusIndex = dropdownOptions.findIndex((el) => el.hasAttribute('data-focused'))
   return {
-    ungroupedOptions: ungroupedOptions.map(option => ({
+    ungroupedOptions: ungroupedOptions.map((option) => ({
       ...option,
       checkedIndicatorType,
-      focused: focusIndex-- === 0
+      focused: focusIndex-- === 0,
     })),
     optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({
       groupName,
-      options: options.map(option => ({
+      options: options.map((option) => ({
         ...option, checkedIndicatorType,
-        focused: focusIndex-- === 0
-      }))
-    }))
+        focused: focusIndex-- === 0,
+      })),
+    })),
   }
 }
 
@@ -368,7 +368,7 @@ function getDropdownTemplateData (dynamicSelect) {
  * @param {string} filter - filter value, generally the filter input on the dropdown
  * @returns {(text: string) => boolean} filter predicate
  */
-const filterMatcher = (filter) => {
+function filterMatcher (filter) {
   const caseInsensitiveFilter = filter.trim().toLocaleLowerCase()
   return (text) => text.toLowerCase().includes(caseInsensitiveFilter)
 }
@@ -381,11 +381,11 @@ function updateDropdownContent (dynamicSelect) {
   const dropdownData = getDropdownTemplateData(dynamicSelect)
   const { dropdownList, option: optionTemplate, loadingNotification } = templatesOf(dynamicSelect)
   const listFragment = applyTemplate(dropdownList, dropdownData)
-  listFragment.querySelectorAll('slot[name="option"]').forEach(slot => {
+  listFragment.querySelectorAll('slot[name="option"]').forEach((slot) => {
     const data = JSON.parse(slot.dataset.value || '{}')
     slot.replaceWith(applyTemplate(optionTemplate, data))
   })
-  listFragment.querySelectorAll('slot[name="loading-notification"]').forEach(slot => {
+  listFragment.querySelectorAll('slot[name="loading-notification"]').forEach((slot) => {
     slot.replaceWith(applyTemplate(loadingNotification, dropdownData))
   })
 
@@ -398,7 +398,9 @@ function updateDropdownContent (dynamicSelect) {
  * @param {DynamicSelect} dynamicSelect - web component element reference
  */
 function updateButtonContent (dynamicSelect) {
-  const { option: optionTemplate, multiSelectInput, mobileMultiSelectInput, singleSelectInput } = templatesOf(dynamicSelect)
+  const {
+    option: optionTemplate, multiSelectInput, mobileMultiSelectInput, singleSelectInput,
+  } = templatesOf(dynamicSelect)
   const isMultiple = dynamicSelect.multiple
   const buttonTemplate = isMultiple ? isMobile() ? mobileMultiSelectInput : multiSelectInput : singleSelectInput
   const selectedOptionsVal = dynamicSelect.selectedOptions.map(dataObjectOfOption)
@@ -409,7 +411,7 @@ function updateButtonContent (dynamicSelect) {
     selectedOption: selectedOptionsVal[0],
   }
   const button = applyTemplate(buttonTemplate, data)
-  button.querySelectorAll('slot[name="selected-option"]').forEach(slot => {
+  button.querySelectorAll('slot[name="selected-option"]').forEach((slot) => {
     const data = JSON.parse(slot.dataset.value || '{}')
     slot.replaceWith(applyTemplate(optionTemplate, data))
   })
@@ -421,7 +423,7 @@ function updateButtonContent (dynamicSelect) {
  */
 function handleSearchInputChange (event) {
   const { target } = event
-  if (!isSearchInputEl(target)) return
+  if (!isSearchInputEl(target)) { return }
   const dynamicSelect = getHostDynamicSelect(target)
   dynamicSelect.searchFilter = target.value
 }
@@ -437,7 +439,7 @@ function handleSearchInputKeyDown (event) {
     const dynamicSelect = getHostDynamicSelect(target)
     const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
     if (dropdownOptions.length <= 0) { return }
-    const focusIndex = dropdownOptions.findIndex(el => el.hasAttribute(focusAttr))
+    const focusIndex = dropdownOptions.findIndex((el) => el.hasAttribute(focusAttr))
     if (focusIndex >= 0) {
       dropdownOptions[focusIndex].removeAttribute(focusAttr)
     }
@@ -451,10 +453,10 @@ function handleSearchInputKeyDown (event) {
   } else if (code === 'Enter') {
     const dynamicSelect = getHostDynamicSelect(target)
     const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
-    const focusedElement = dropdownOptions.find(el => el.hasAttribute('data-focused'))
+    const focusedElement = dropdownOptions.find((el) => el.hasAttribute('data-focused'))
     if (focusedElement instanceof HTMLLIElement) {
       const value = focusedElement.dataset.value
-      if (typeof value !== 'string') return
+      if (typeof value !== 'string') { return }
       handleDropdownSelect(value, dynamicSelect)
     }
   }
@@ -470,7 +472,7 @@ function handleSelectValueButtonClick (event) {
     if (!(option instanceof HTMLElement)) { return }
     const value = option.dataset.value
     const dynamicSelect = getHostDynamicSelect(option)
-    const selectOption = dynamicSelect.selectedOptions.find(option => option.value === value)
+    const selectOption = dynamicSelect.selectedOptions.find((option) => option.value === value)
     if (selectOption == null) { return }
     selectOption.selected = false
     dynamicOptionsOf(dynamicSelect).toggleValue(selectOption.value, false)
@@ -516,7 +518,7 @@ function handleDropdownOptionClick (event) {
   const liTarget = target.closest('li.option-value:not(.option *)')
   if (!(liTarget instanceof HTMLLIElement)) { return }
   const value = liTarget.dataset.value
-  if (typeof value !== 'string') return
+  if (typeof value !== 'string') { return }
   handleDropdownSelect(value, getHostDynamicSelect(liTarget))
 }
 
