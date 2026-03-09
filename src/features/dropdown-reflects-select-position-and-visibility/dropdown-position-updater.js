@@ -40,7 +40,7 @@ function createDropdownPositionUpdaterFor (elementRef) {
     const element = elementRef.deref()
     if (!element) {
       removeListenersForPotentialPositionChange()
-      throw new Error('element no longer exists')
+      throw Error('element no longer exists')
     }
     return element
   }

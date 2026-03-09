@@ -21,7 +21,7 @@ globalThis.window = dom.window
 globalThis.document = document
 
 if (document == null) {
-  throw new Error('error parsing document')
+  throw Error('error parsing document')
 }
 await import('prismjs/plugins/keep-markup/prism-keep-markup.js')
 await import('prismjs/components/prism-json.js')

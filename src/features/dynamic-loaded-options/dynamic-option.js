@@ -29,7 +29,7 @@ export function dynamicOptionsOf (element) {
 function createDynamicOptionsDataFor (elementRef) {
   const getElement = () => {
     const element = elementRef.deref()
-    if (!element) { throw new Error('element no longer exists') }
+    if (!element) { throw Error('element no longer exists') }
     return element
   }
   /** @type {DynamicOptionsData} */
