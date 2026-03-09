@@ -22,7 +22,7 @@ test('dataLoaderOf - fetching data without any defined endpoint returns an empty
 test('dataLoaderOf - fetching data with a valid endpoint return an valid result', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   fetch.mock(/.*test/, Response.json([
-    { id: 'sdsd', text: 'hello world' }
+    { id: 'sdsd', text: 'hello world' },
   ]))
   const { body } = dom.document
   body.innerHTML = '<div class="test" data-src="/test"></div>'
@@ -36,7 +36,7 @@ test('dataLoaderOf - fetching data with a valid endpoint return an valid result'
 test('dataLoaderOf - for first query, use the defined url in data-src when requesting data', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   const response = Response.json([
-    { id: 'sdsd', text: 'hello world' }
+    { id: 'sdsd', text: 'hello world' },
   ])
   fetch.mock(/.*test/, response)
   const { body } = dom.document
@@ -54,7 +54,7 @@ test('dataLoaderOf - for first query, use the defined url in data-src when reque
 test('dataLoaderOf - when query has filter, add filter as query param on when requesting data', async ({ expect, dom, fetch }) => {
   fetch.throwErrorOnNonMockedRequests()
   const response = Response.json([
-    { id: 'sdsd', text: 'hello world' }
+    { id: 'sdsd', text: 'hello world' },
   ])
   fetch.mock(/.*test/, response)
   const { body } = dom.document
@@ -117,13 +117,13 @@ test('dataLoaderOf - uses link pagination when json array response contains a "L
   })
   expect(data2).toEqual({
     data: [{ id: '2', text: 'hello werl' }],
-    hasMore: false
+    hasMore: false,
   })
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
     new URL('test', dom.location.href).href,
-    'https//example.com/test?cursor=test_cursor'
+    'https//example.com/test?cursor=test_cursor',
   ])
 })
 
@@ -131,26 +131,24 @@ test('dataLoaderOf - uses link pagination when csv response contains a "Link" he
   fetch.throwErrorOnNonMockedRequests()
   const { body } = dom.document
   body.innerHTML = '<div class="test" data-src="test"></div>'
-  const response1 = new Response(
-`value,text
+  const response1 = new Response(`value,text
 1,hello world
 2,test 1`, {
-  headers: new Headers({
-    'Content-Type': 'text/csv',
-    Link: '<https//example.com/test?cursor=test_cursor>; rel="next"',
-  })
-}
+    headers: new Headers({
+      'Content-Type': 'text/csv',
+      'Link': '<https//example.com/test?cursor=test_cursor>; rel="next"',
+    }),
+  },
   )
   fetch.mock(/.*test/, response1)
 
-  const response2 = new Response(
-`value,text
+  const response2 = new Response(`value,text
 3,lorem ipsum
 4,test 2`, {
-  headers: new Headers({
-    'Content-Type': 'text/csv',
+    headers: new Headers({
+      'Content-Type': 'text/csv',
+    }),
   })
-})
   fetch.mock(/.*cursor=test_cursor/, response2)
 
   const element = body.querySelector('.test')
@@ -172,13 +170,13 @@ test('dataLoaderOf - uses link pagination when csv response contains a "Link" he
       { value: '3', text: 'lorem ipsum' },
       { value: '4', text: 'test 2' },
     ],
-    hasMore: false
+    hasMore: false,
   })
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
     new URL('test', dom.location.href).href,
-    'https//example.com/test?cursor=test_cursor'
+    'https//example.com/test?cursor=test_cursor',
   ])
 })
 
@@ -188,16 +186,16 @@ test('dataLoaderOf - uses link pagination when response object contains a "links
   body.innerHTML = '<div class="test" data-src="test"></div>'
   const response1 = Response.json({
     links: {
-      next: 'https//example.com/test?cursor=test_cursor'
+      next: 'https//example.com/test?cursor=test_cursor',
     },
-    records: [{ id: '1', text: 'hello world' }]
+    records: [{ id: '1', text: 'hello world' }],
   })
   fetch.mock(/.*test/, response1)
   const response2 = Response.json({
     links: {
-      next: null
+      next: null,
     },
-    records: [{ id: '2', text: 'hello werl' }]
+    records: [{ id: '2', text: 'hello werl' }],
   })
 
   fetch.mock(/.*cursor=test_cursor/, response2)
@@ -215,13 +213,13 @@ test('dataLoaderOf - uses link pagination when response object contains a "links
   })
   expect(data2).toEqual({
     data: [{ id: '2', text: 'hello werl' }],
-    hasMore: false
+    hasMore: false,
   })
   expect(data3).toEqual({ data: [], hasMore: false })
 
   expect(fetch.fetchHistory.inputHrefs).toEqual([
     new URL('test', dom.location.href).href,
-    'https//example.com/test?cursor=test_cursor'
+    'https//example.com/test?cursor=test_cursor',
   ])
 })
 
@@ -244,12 +242,12 @@ test('dataLoaderOf - uses "after value" pagination when response contains an "Ha
 
   const expectedData2 = {
     data: [{ value: '2', text: 'hello werl' }],
-    hasMore: false
+    hasMore: false,
   }
 
   const expectedData3 = {
     data: [],
-    hasMore: false
+    hasMore: false,
   }
 
   const expectedFetchUrls = [
@@ -266,6 +264,6 @@ test('dataLoaderOf - uses "after value" pagination when response contains an "Ha
     data1: expectedData1,
     data2: expectedData2,
     data3: expectedData3,
-    fetchUrls: expectedFetchUrls
+    fetchUrls: expectedFetchUrls,
   })
 })
