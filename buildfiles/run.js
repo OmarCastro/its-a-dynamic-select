@@ -62,7 +62,7 @@ const helpTask = {
   cb: () => { console.log(helpText()); exit(0) },
 }
 const tasks = {
-  build: {
+  'build': {
     description: 'builds the project',
     cb: () => execBuild().then(exit),
   },
@@ -70,7 +70,7 @@ const tasks = {
     description: 'runs build for github action',
     cb: () => execGithubBuildWorkflow().then(exit),
   },
-  test: {
+  'test': {
     description: 'tests the project',
     cb: () => execTests().then(exit),
   },
@@ -90,23 +90,23 @@ const tasks = {
     description: 'boots up a docker container and run tests there',
     cb: () => execTests({ inDocker: true }).then(exit),
   },
-  linc: {
+  'linc': {
     description: 'validates only changed files',
     cb: () => execlintCodeOnChanged().then(exit),
   },
-  lint: {
+  'lint': {
     description: 'validates the project',
     cb: () => execlintCode().then(exit),
   },
-  format: {
+  'format': {
     description: 'format the project code',
     cb: () => execFormatCode().then(exit),
   },
-   formac: {
+  'formac': {
     description: 'formats only changed files code',
     cb: () => execFormatCodeOnChanged().then(exit),
   },
-  dev: {
+  'dev': {
     description: 'setup dev environment',
     cb: () => execDevEnvironment(),
   },
@@ -142,7 +142,7 @@ const tasks = {
     description: 'executes commit message validation',
     cb: () => commitMsgCheck().then(exit),
   },
-  help: helpTask,
+  'help': helpTask,
   '--help': helpTask,
   '-h': helpTask,
 }
@@ -190,7 +190,7 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
     const { filenames } = change
     console.log(`\n[watcher] files changed: ${JSON.stringify(filenames, null, 2)}\n\n`)
     let tasks = []
-    if (Object.keys(filenames).some(name => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
+    if (Object.keys(filenames).some((name) => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
       tasks = [execlintCodeOnChanged, buildTest, testTask, buildDocs]
     } else {
       tasks = [execlintCodeOnChanged, buildTest, buildDocs]
@@ -233,7 +233,7 @@ async function execTests ({ inDocker, updateSnapshots = false } = {}) {
   return 0
 }
 
-async function runTestProcedure ({ updateSnapshots = false}) {
+async function runTestProcedure ({ updateSnapshots = false }) {
   const COVERAGE_DIR = 'reports/coverage'
   const REPORTS_TMP_DIR = 'reports/.tmp'
   const COVERAGE_TMP_DIR = `${REPORTS_TMP_DIR}/coverage`
@@ -285,8 +285,8 @@ async function runTestProcedure ({ updateSnapshots = false}) {
 
   logStage('fix report styles')
   const files = await getFilesAsArray('reports/coverage/final')
-  const cpBase = files.filter(path => basename(path) === 'base.css').map(path => fs.cp('buildfiles/assets/coverage-report-base.css', path))
-  const cpPrettify = files.filter(path => basename(path) === 'prettify.css').map(path => fs.cp('buildfiles/assets/coverage-report-prettify.css', path))
+  const cpBase = files.filter((path) => basename(path) === 'base.css').map((path) => fs.cp('buildfiles/assets/coverage-report-base.css', path))
+  const cpPrettify = files.filter((path) => basename(path) === 'prettify.css').map((path) => fs.cp('buildfiles/assets/coverage-report-prettify.css', path))
   await Promise.allSettled([...cpBase, ...cpPrettify])
 
   logStage('copy reports to documentation')
@@ -309,8 +309,8 @@ async function testInDocker ({ updateSnapshots = false }) {
     user: `${uid}:${gid}`,
     workdir,
     volumes: {
-      [pathFromProject('.')]: workdir
-    }
+      [pathFromProject('.')]: workdir,
+    },
   })
 }
 
@@ -519,7 +519,7 @@ async function buildUnitTests ({ includeBrowser = false } = {}) {
     await mkdir_p(outputPathFolder)
 
     const testSetupCode = toImportCode(outputPathFolder, setupPath)
-    const testFileImports = unitTestFiles.map(file => toImportCode(outputPathFolder, file)).join('')
+    const testFileImports = unitTestFiles.map((file) => toImportCode(outputPathFolder, file)).join('')
     const code = testSetupCode + testFileImports
     await writeFile(outputPath, code)
     if (!isBrowser) {
@@ -672,8 +672,8 @@ async function prepareRelease () {
   await cp_R('dist', 'package/content/dist')
   await cp_R('README.md', 'package/content/README.md')
   await cp_R('LICENSE', 'package/content/LICENSE')
-  const files = (await getFilesAsArray('src')).map(path => relative(pathFromProject('.'), path))
-  await Promise.all(files.filter(path => !path.includes('.spec.')).map(path => fs.cp(path, `package/content/${path}`)))
+  const files = (await getFilesAsArray('src')).map((path) => relative(pathFromProject('.'), path))
+  await Promise.all(files.filter((path) => !path.includes('.spec.')).map((path) => fs.cp(path, `package/content/${path}`)))
   const releasePackageJson = { ...packageJson, devDependencies: undefined, scripts: undefined, directories: undefined, imports: undefined }
   await writeFile('package/content/package.json', JSON.stringify(releasePackageJson, null, 2))
   await cmdSpawn('npm pack --pack-destination "' + pathFromProject('package') + '"', { cwd: pathFromProject('package/content') })
@@ -689,20 +689,20 @@ async function cleanRelease () {
 
 async function alignTestFrameworkVersion () {
   const playwrightVersion = await getPlayWrightVersion()
-  const files = await listNonIgnoredFiles({patterns: ['.github/workflows/*.yaml']})
+  const files = await listNonIgnoredFiles({ patterns: ['.github/workflows/*.yaml'] })
   const regexp = /(?<=mcr\.microsoft\.com\/playwright:v)(?<version>[.0-9]+)/g
-  const result = await Array.fromAsync(files.map(async file => {
+  const result = await Array.fromAsync(files.map(async (file) => {
     const data = await readFile(file)
     const updatedData = data.replaceAll(regexp, playwrightVersion)
-    if(updatedData !== data){
+    if (updatedData !== data) {
       await writeFile(file, updatedData)
       return file
     }
     return ''
   }))
   const updatedFiles = result.filter(Boolean)
-  if(updatedFiles.length){
-    console.log("updated playwright version on files: %s",updatedFiles)
+  if (updatedFiles.length) {
+    console.log('updated playwright version on files: %s', updatedFiles)
   }
   return 0
 }
@@ -713,7 +713,7 @@ function helpText () {
   const fromNPM = isRunningFromNPMScript()
 
   const helpArgs = fromNPM ? 'help' : 'help, --help, -h'
-  const maxTaskLength = Math.max(...[helpArgs, ...Object.keys(tasks)].map(text => text.length))
+  const maxTaskLength = Math.max(...[helpArgs, ...Object.keys(tasks)].map((text) => text.length))
   const tasksToShow = Object.entries(tasks).filter(([, value]) => value !== helpTask)
   const usageLine = fromNPM ? 'npm run <task>' : 'run <task>'
   return `Usage: ${usageLine}
@@ -725,12 +725,12 @@ Tasks:
 
 /** @param {string[]} paths - paths to remove recursively */
 async function rm_rf (...paths) {
-  await Promise.all(paths.map(path => fs.rm(path, { recursive: true, force: true })))
+  await Promise.all(paths.map((path) => fs.rm(path, { recursive: true, force: true })))
 }
 
 /** @param {string[]} paths - paths to recursively create directories */
 async function mkdir_p (...paths) {
-  await Promise.all(paths.map(path => fs.mkdir(path, { recursive: true })))
+  await Promise.all(paths.map((path) => fs.mkdir(path, { recursive: true })))
 }
 
 /**
@@ -801,7 +801,7 @@ function wait (ms) {
 // @section 6 linters & formatters
 
 async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
-  const finalFilePatterns = await listFileByLinterParams({patterns: ['**/*.js'], onlyChanged, changedFiles})
+  const finalFilePatterns = await listFileByLinterParams({ patterns: ['**/*.js'], onlyChanged, changedFiles })
   if (finalFilePatterns.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -813,7 +813,7 @@ async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
     baseConfig: config,
     cache: true,
     cacheLocation: pathFromProject('.tmp/eslintcache'),
-    ...options
+    ...options,
   })
   const formatter = await eslint.loadFormatter()
   const results = await eslint.lintFiles(finalFilePatterns)
@@ -843,7 +843,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
   const configPath = pathFromProject('./buildfiles/configs/cspell.yaml')
   const config = load(await readFile(configPath))
   const ignorePaths = config.ignorePaths ?? []
-  const fileList = await listFileByLinterParams({patterns: ['*'], ignorePatterns: ignorePaths, onlyChanged, changedFiles})
+  const fileList = await listFileByLinterParams({ patterns: ['*'], ignorePatterns: ignorePaths, onlyChanged, changedFiles })
 
   if (fileList.length <= 0) {
     process.stdout.write('no files to spell check. ')
@@ -878,7 +878,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
 }
 
 async function lintStyles ({ onlyChanged, changedFiles }) {
-  const fileList = await listFileByLinterParams({patterns: ['**/*.css'], onlyChanged, changedFiles})
+  const fileList = await listFileByLinterParams({ patterns: ['**/*.css'], onlyChanged, changedFiles })
   if (fileList.length <= 0) {
     process.stdout.write('no stylesheets to lint. ')
     return 0
@@ -920,7 +920,7 @@ async function validateYaml ({ onlyChanged, changedFiles }) {
 
 async function typecheckSrc ({ onlyChanged, changedFiles }) {
   if (onlyChanged) {
-    const changedInSrc = [...changedFiles].some(changedFile => changedFile.startsWith('src/'))
+    const changedInSrc = [...changedFiles].some((changedFile) => changedFile.startsWith('src/'))
     if (!changedInSrc) {
       process.stdout.write('no files to check...')
       return 0
@@ -930,26 +930,41 @@ async function typecheckSrc ({ onlyChanged, changedFiles }) {
 }
 
 async function formatCode ({ onlyChanged, changedFiles }) {
-  const { format } = await import('oxfmt')
-  const config = {
-    singleQuote: true,
-    semi: false,
-    printWidth: 100,
-    tabWidth: 2,
-    trailingComma: 'all',
-    arrowParens: 'avoid'
+  const finalFilePatterns = await listFileByLinterParams({ patterns: ['**/*.js'], onlyChanged, changedFiles })
+  if (finalFilePatterns.length <= 0) {
+    process.stdout.write('no files to lint. ')
+    return 0
   }
 
-  const files = await listFileByLinterParams({patterns: ['src/**/*.js'], onlyChanged, changedFiles})
-  for(const file of files){
-    const fileContent = await readFile(file, 'utf8')
-    const result = await format(file, fileContent, config)
-    await writeFile(file, result.code)
+  const config = (await import('./configs/eslint.stylistic.config.js')).default
+
+  const { ESLint } = await import('eslint')
+  const eslint = new ESLint({
+    baseConfig: config,
+    fix: true,
+  })
+
+  const formatter = await eslint.loadFormatter()
+  const results = await eslint.lintFiles(finalFilePatterns)
+  await ESLint.outputFixes(results)
+
+  const filesLinted = results.length
+  process.stdout.write(`formatted ${filesLinted} files. `)
+
+  const errorCount = results.reduce((acc, result) => acc + result.errorCount, 0)
+
+  const resultLog = formatter.format(results)
+  if (resultLog) {
+    console.log('')
+    console.log(resultLog)
+  } else {
+    process.stdout.write('OK...')
   }
+  return errorCount ? 1 : 0
 }
 
 async function validateFiles ({ patterns, onlyChanged, changedFiles, validation }) {
-  const fileList = await listFileByLinterParams({patterns, onlyChanged, changedFiles})
+  const fileList = await listFileByLinterParams({ patterns, onlyChanged, changedFiles })
   if (fileList.length <= 0) {
     process.stdout.write('no files to lint. ')
     return 0
@@ -1126,9 +1141,10 @@ async function * getFiles (dir) {
 
 async function getFilesAsArray (dir) {
   const arr = []
-  for await (const i of getFiles(dir)) arr.push(i)
+  for await (const i of getFiles(dir)) { arr.push(i) }
   return arr
 }
+
 /**
  *
  * @param  {...string} dirs - list of dir paths to watch, they must be full paths
@@ -1161,7 +1177,7 @@ async function * watchDirs (...dirs) {
   }
 
   while (true) {
-    yield new Promise(resolve => {
+    yield new Promise((resolve) => {
       if (batch.length > 0) {
         resolve({ filenames: batch })
         batch = {}
@@ -1172,17 +1188,17 @@ async function * watchDirs (...dirs) {
   }
 }
 
-async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignorePatterns = []} = {}) {
-  if(!listNonIgnoredFiles.cache){
+async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignorePatterns = [] } = {}) {
+  if (!listNonIgnoredFiles.cache) {
     const { minimatch } = await import('minimatch')
     const { join } = await import('node:path')
     const { statSync, readdirSync } = await import('node:fs')
     const allIgnorePatterns = await getIgnorePatternsFromFile(ignorePath)
-    const ignoreMatchers = allIgnorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
+    const ignoreMatchers = allIgnorePatterns.map((pattern) => minimatch.filter(pattern, { matchBase: true, dot: true }))
     /** @type {(dir: string) => string[]} */
     const listFiles = (dir) => readdirSync(dir).flatMap(function (file) {
       const name = join(dir, file)
-      if (file === '.git' || ignoreMatchers.some(match => match(name))) { return [] }
+      if (file === '.git' || ignoreMatchers.some((match) => match(name))) { return [] }
       const isDirectory = statSync(name).isDirectory()
       return isDirectory ? listFiles(name) : [name]
     })
@@ -1195,10 +1211,10 @@ async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignor
 
 async function getIgnorePatternsFromFile (filePath) {
   return await readFile(filePath)
-    .then(content => content.split('\n'))
-    .then(lines => lines.filter(line => !line.startsWith('#') && line.trim() !== ''))
-    .then(lines => lines.map(gitignoreToGlob))
-    .then(lines => [...new Set(lines)])
+    .then((content) => content.split('\n'))
+    .then((lines) => lines.filter((line) => !line.startsWith('#') && line.trim() !== ''))
+    .then((lines) => lines.map(gitignoreToGlob))
+    .then((lines) => [...new Set(lines)])
 }
 
 function gitignoreToGlob (pattern) {
@@ -1212,8 +1228,7 @@ function gitignoreToGlob (pattern) {
 
   if (result.endsWith('*') || result.endsWith('?')) {
     // no further changes if the pattern ends with a wildcard
-  }
-  else if (!/\.[a-z\d_-]+$/.test(result)) {
+  } else if (!/\.[a-z\d_-]+$/.test(result)) {
     // differentiate between filenames and directory names
     if (!result.endsWith('/')) {
       result += '/'
@@ -1222,7 +1237,7 @@ function gitignoreToGlob (pattern) {
     result += '**'
   }
 
-  if(!leadingSlash) {
+  if (!leadingSlash) {
     result = '**/' + result
   }
 
@@ -1234,9 +1249,9 @@ async function listChangedFilesMatching (patterns, ignorePatterns) {
   return filterFilePathsByPatterns(await listChangedFiles(), patterns, ignorePatterns)
 }
 
-async function listFileByLinterParams ({patterns, onlyChanged, changedFiles, ignorePatterns }) {
-  if(onlyChanged && changedFiles) { return await filterFilePathsByPatterns(changedFiles, patterns, ignorePatterns) }
-  if(onlyChanged) { return await listChangedFilesMatching(patterns, ignorePatterns) }
+async function listFileByLinterParams ({ patterns, onlyChanged, changedFiles, ignorePatterns }) {
+  if (onlyChanged && changedFiles) { return await filterFilePathsByPatterns(changedFiles, patterns, ignorePatterns) }
+  if (onlyChanged) { return await listChangedFilesMatching(patterns, ignorePatterns) }
   return await listNonIgnoredFiles({ patterns, ignorePatterns })
 }
 
@@ -1244,13 +1259,13 @@ async function filterFilePathsByPatterns (filePaths, patterns = [], ignorePatter
   const paths = Array.isArray(filePaths) ? filePaths : Array.from(filePaths)
   const hasPatterns = patterns.length > 0
   const hasIgnorePatterns = ignorePatterns.length > 0
-  if(!hasPatterns && !hasIgnorePatterns){ return paths }
+  if (!hasPatterns && !hasIgnorePatterns) { return paths }
   const { minimatch } = await import('minimatch')
-  const matchers = patterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
-  const matchedPaths = hasPatterns ? paths.filter(path => matchers.some(match => match(path))) : paths
-  if(!hasIgnorePatterns) { return matchedPaths }
-  const ignoreMatchers = ignorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
-  const filteredPaths = matchedPaths.filter(path => ignoreMatchers.every(match => !match(path)))
+  const matchers = patterns.map((pattern) => minimatch.filter(pattern, { matchBase: true, dot: true }))
+  const matchedPaths = hasPatterns ? paths.filter((path) => matchers.some((match) => match(path))) : paths
+  if (!hasIgnorePatterns) { return matchedPaths }
+  const ignoreMatchers = ignorePatterns.map((pattern) => minimatch.filter(pattern, { matchBase: true, dot: true }))
+  const filteredPaths = matchedPaths.filter((path) => ignoreMatchers.every((match) => !match(path)))
   return filteredPaths
 }
 
@@ -1259,7 +1274,7 @@ async function listChangedFiles () {
   const mergeBase = await git('merge-base', 'HEAD', currentBranchName)
   const diffExec = git('diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase)
   const lsFilesExec = git('ls-files', '--others', '--exclude-standard')
-  return new Set([...(await diffExec), ...(await lsFilesExec)].filter(filename => filename.trim().length > 0))
+  return new Set([...(await diffExec), ...(await lsFilesExec)].filter((filename) => filename.trim().length > 0))
 }
 
 // @section 10 npm utilities
@@ -1297,13 +1312,13 @@ function getPackageJson () {
 async function getLatestReleasedVersion () {
   const changelogContent = await readFile(pathFromProject('CHANGELOG'))
   const versions = changelogContent.split('\n')
-    .map(line => {
+    .map((line) => {
       const match = line.match(/^## \[([0-9]+\.[[0-9]+\.[[0-9]+)]\s+-\s+([^\s]+)/)
       if (!match) {
         return null
       }
       return { version: match[1], releaseDate: match[2] }
-    }).filter(version => !!version)
+    }).filter((version) => !!version)
   return versions.find(({ releaseDate }) => releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/))
 }
 
@@ -1393,7 +1408,7 @@ async function applyA11yTheme (svgContent, options = {}) {
   body.innerHTML = svgContent
   const svg = body.querySelector('svg')
   if (!svg) { return svgContent }
-  svg.querySelectorAll('text').forEach(el => el.removeAttribute('fill'))
+  svg.querySelectorAll('text').forEach((el) => el.removeAttribute('fill'))
   if (options.replaceIconToText) {
     const img = svg.querySelector('image')
     if (img) {
@@ -1407,13 +1422,13 @@ async function applyA11yTheme (svgContent, options = {}) {
     }
   }
   const rects = Array.from(svg.querySelectorAll('rect'))
-  rects.slice(0, 1).forEach(el => {
+  rects.slice(0, 1).forEach((el) => {
     el.classList.add('label')
     el.removeAttribute('fill')
   })
   const colors = getBadgeColors()
   let color = colors.red
-  rects.slice(1).forEach(el => {
+  rects.slice(1).forEach((el) => {
     color = el.getAttribute('fill') || colors.red
     el.removeAttribute('fill')
     el.classList.add('body')
@@ -1426,7 +1441,7 @@ async function applyA11yTheme (svgContent, options = {}) {
 }
 
 async function makeBadgeForCoverages (path) {
-  const json = await readFile(`${path}/coverage-summary.json`).then(str => JSON.parse(str))
+  const json = await readFile(`${path}/coverage-summary.json`).then((str) => JSON.parse(str))
   const svg = await makeBadge({
     label: 'coverage',
     message: `${json.total.lines.pct}%`,
@@ -1440,9 +1455,9 @@ async function makeBadgeForCoverages (path) {
 }
 
 async function makeBadgeForTestResult (path) {
-  const json = await readFile(`${path}/test-results.json`).then(str => JSON.parse(str))
-  const tests = (json?.suites ?? []).flatMap(suite => suite.specs)
-  const passedTests = tests.filter(test => test.ok)
+  const json = await readFile(`${path}/test-results.json`).then((str) => JSON.parse(str))
+  const tests = (json?.suites ?? []).flatMap((suite) => suite.specs)
+  const passedTests = tests.filter((test) => test.ok)
   const testAmount = tests.length
   const passedAmount = passedTests.length
   const passed = passedAmount === testAmount
@@ -1557,7 +1572,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
       return [file, {
         textWidthPx, textHeighthPx, height, width,
       }]
-    })
+    }),
   )
 
   Object.entries(inputs).forEach(([file, info]) => {
@@ -1586,7 +1601,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   const marker = graph.edgeCount() > 0 ? lineArrowMarker : ''
   const defs = marker ? `<defs>${marker}</defs>` : ''
 
-  const inputsLinesSvg = graph.edges().map(e => {
+  const inputsLinesSvg = graph.edges().map((e) => {
     const allPoints = [graph.node(e.v), ...graph.edge(e).points]
     const points = allPoints.map(({ x, y }) => `${x},${y}`).join(' ')
     return `<polyline class="outer" stroke-width="3" points="${points}"/><polyline points="${points}" marker-end="url(#arrowhead)"/><polyline points="${points}"/>`
@@ -1624,8 +1639,8 @@ async function isDockerRunning () {
 
 async function isInsideDockerContainer () {
   isInsideDockerContainer.cachedResult ??= existsSync('/.dockerenv') ||
-    (await readFile('/proc/self/cgroup').then(text => text.includes('docker')).catch(() => false)) ||
-    (await readFile('/proc/self/mountinfo').then(text => text.includes('/docker/containers/')).catch(() => false))
+    (await readFile('/proc/self/cgroup').then((text) => text.includes('docker')).catch(() => false)) ||
+    (await readFile('/proc/self/mountinfo').then((text) => text.includes('/docker/containers/')).catch(() => false))
   return isInsideDockerContainer.cachedResult
 }
 
@@ -1661,7 +1676,7 @@ async function checkGitHooks () {
 
 async function listStashedFiles () {
   const diffExec = git('diff', '--name-only', '--staged')
-  return new Set([...(await diffExec)].filter(filename => filename.trim().length > 0))
+  return new Set([...(await diffExec)].filter((filename) => filename.trim().length > 0))
 }
 
 async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {

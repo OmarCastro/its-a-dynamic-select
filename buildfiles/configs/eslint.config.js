@@ -30,11 +30,12 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      "no-unused-vars": [
-        "error",
+      'curly': 'error',
+      'no-unused-vars': [
+        'error',
         {
           ignoreRestSiblings: true,
-        }
+        },
       ],
       'unicorn/prefer-code-point': ['warn'],
       'unicorn/prefer-string-slice': ['warn'],
@@ -48,7 +49,7 @@ export default [
       'jsdoc/require-jsdoc': 0,
       'jsdoc/require-returns': 0,
       'jsdoc/tag-lines': 0,
-      'no-empty-pattern':  ["error", { "allowObjectPatternsAsParameters": true }],
+      'no-empty-pattern': ['error', { 'allowObjectPatternsAsParameters': true }],
     },
   },
   {
@@ -59,8 +60,8 @@ export default [
       'jsdoc/require-jsdoc': ['warn', { exemptEmptyFunctions: true }],
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
-      "import/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}]
-    }
+      'import/no-extraneous-dependencies': ['error', { 'devDependencies': false, 'optionalDependencies': false, 'peerDependencies': false }],
+    },
   }, {
     files: [
       '**/*.spec.js',
@@ -70,28 +71,28 @@ export default [
       'jsdoc/require-param-description': 0,
       'jsdoc/require-returns-description': 0,
       'no-unused-vars': 0,
-      'import/no-restricted-paths': ['error',{
-        "zones": [
+      'import/no-restricted-paths': ['error', {
+        'zones': [
           {
-            "target": [
-              "**/*.unit.spec.js",
-              "**/*.unit.spec.ts"
+            'target': [
+              '**/*.unit.spec.js',
+              '**/*.unit.spec.ts',
             ],
-            "from": [
-              "./test-utils/ui/**/*",
-            ]
+            'from': [
+              './test-utils/ui/**/*',
+            ],
           },
-           {
-            "target": [
-              "**/*.ui.spec.js",
-              "**/*.ui.spec.ts"
+          {
+            'target': [
+              '**/*.ui.spec.js',
+              '**/*.ui.spec.ts',
             ],
-            "from": [
-              "./test-utils/unit/**/*",
-            ]
-          }
-        ]
-      }]
-    }
+            'from': [
+              './test-utils/unit/**/*',
+            ],
+          },
+        ],
+      }],
+    },
   },
 ]
