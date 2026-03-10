@@ -35,10 +35,7 @@ export class IterableWeakMap {
    * @returns {V} - entry value of found entry with key or inserted value
    */
   getOrInsert (key, defaultValue){
-    const getResult = this.get(key)
-    if(getResult){
-      return getResult
-    }
+    if(this.has(key)){ return /** @type {V} */ (this.get(key)) }
     this.set(key, defaultValue)
     return defaultValue
   }
@@ -50,14 +47,10 @@ export class IterableWeakMap {
    * @returns {V} - entry value of found entry with key or inserted value
    */
   getOrInsertComputed (key, callback){
-    const getResult = this.get(key)
-    if(getResult){
-      return getResult
-    }
+    if(this.has(key)){ return /** @type {V} */ (this.get(key)) }
     const value = callback(key)
     this.set(key, value)
     return value
-
   }
 
   /**
