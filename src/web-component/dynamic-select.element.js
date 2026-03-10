@@ -63,7 +63,7 @@ const optionsObserverOptions = {
   attributeFilter: ['data-of-option'],
 }
 
-const mobileDetectionObserver = new MobileDetectionObserver((mutations) => {
+const mobileDetectionObserver = MobileDetectionObserver((mutations) => {
   for (const mutation of mutations) {
     const { target, isMobile } = mutation
     if (!isDynamicSelect(target)) { continue }

@@ -12,7 +12,7 @@ export const isMobile = () => isPortraitMobile() || isLandscapeMobile()
 
 /**
  * Map of created observers with its data
- * @type {IterableWeakMap<MobileDetectionObserver, MobileDetectionObserverData>}
+ * @type {IterableWeakMap<MobileDetectionObserverCallback, MobileDetectionObserverData>}
  */
 const observerData = new IterableWeakMap()
 
@@ -21,8 +21,8 @@ const observerData = new IterableWeakMap()
  */
 function updateData () {
   const isNowMobile = isMobile()
-  for (const data of observerData.values()) {
-    const { currentIsMobile, observingNodes, callback } = data
+  for (const [callback, data] of observerData.entries()) {
+    const { currentIsMobile, observingNodes } = data
     if (currentIsMobile === isNowMobile) { continue }
     data.currentIsMobile = isNowMobile
     const events = Iterator.from(observingNodes).map((element) => ({
@@ -39,43 +39,42 @@ let observeMatchMedia = () => {
   observeMatchMedia = () => {}
 }
 
-export class MobileDetectionObserver {
-  /** @type {MobileDetectionObserverData} */
-  #data
-  /**
-   * @param {MobileDetectionObserverCallback} callback - observer callback
-   */
-  constructor (callback) {
-    this.#data = {
-      callback,
-      observingNodes: new IterableWeakSet(),
-      currentIsMobile: undefined,
-    }
-    observerData.set(this, this.#data)
-  }
 
-  /**
-   * @param {Node} node - target element to observe
-   */
-  observe (node) {
-    observeMatchMedia()
-    const data = this.#data
-    if (data.currentIsMobile === undefined) {
-      data.currentIsMobile = isMobile()
+/**
+ * @param {MobileDetectionObserverCallback} callback - mutation callback
+ * @returns {MobileDetectionObserver} - observer
+ */
+export function MobileDetectionObserver (callback){
+  const data = observerData.getOrInsertComputed(callback, () => ({
+    observingNodes: new IterableWeakSet(),
+    currentIsMobile: undefined,
+  }))
+
+  return Object.freeze({
+
+    observe(node) {
+      observeMatchMedia()
+      data.currentIsMobile ??= isMobile()
+      const { currentIsMobile, observingNodes } = data
+      if(observingNodes.has(node)){ return }
+      observingNodes.add(node)
+      callback([{
+        target: node,
+        isMobile: currentIsMobile,
+      }])
     }
-    const { currentIsMobile, callback, observingNodes } = data
-    observingNodes.add(node)
-    callback([{
-      target: node,
-      isMobile: currentIsMobile,
-    }])
-  }
+
+  })
 }
+
+/**
+ * @typedef {object} MobileDetectionObserver
+ * @property {(node: Node) => void} observe - observer callback
+ */
 
 /**
  * @typedef {object} MobileDetectionObserverData
  * @property {boolean} [currentIsMobile] - flag saved on observer to determine if the mode changed
- * @property {MobileDetectionObserverCallback} callback - observer callback
  * @property {IterableWeakSet<Node>} observingNodes - observer callback
  */
 
