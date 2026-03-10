@@ -28,6 +28,39 @@ export class IterableWeakMap {
   }
 
   /**
+   * Returns the value corresponding to the specified key in this WeakMap.
+   * If the key is not present, it inserts a new entry with the key and a given default value, and returns the inserted value.
+   * @param {K} key  - key object
+   * @param {V} defaultValue  - value to insert if not found
+   * @returns {V} - entry value of found entry with key or inserted value
+   */
+  getOrInsert (key, defaultValue){
+    const getResult = this.get(key)
+    if(getResult){
+      return getResult
+    }
+    this.set(key, defaultValue)
+    return defaultValue
+  }
+
+  /**
+   * returns the value corresponding to the specified key in this WeakMap. If the key is not present, it inserts a new entry with the key and a default value computed from a given callback, and returns the inserted value
+   * @param {K} key  - key object
+   * @param {(key: K) => V} callback - A function that returns the value to insert and return if the key is not already present
+   * @returns {V} - entry value of found entry with key or inserted value
+   */
+  getOrInsertComputed (key, callback){
+    const getResult = this.get(key)
+    if(getResult){
+      return getResult
+    }
+    const value = callback(key)
+    this.set(key, value)
+    return value
+
+  }
+
+  /**
    * Removes all elements from the map.
    */
   clear () {
