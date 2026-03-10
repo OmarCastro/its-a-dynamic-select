@@ -296,7 +296,7 @@ async function runTestProcedure ({ updateSnapshots = false }) {
   logEndStage()
 }
 
-async function testInDocker ({ updateSnapshots = false }) {
+async function testInDocker ({ updateSnapshots = false } = {}) {
   const { userInfo } = await import('node:os')
   const { uid, gid } = userInfo()
   const playwrightVersion = await getPlayWrightVersion()
