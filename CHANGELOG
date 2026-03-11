@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- React to `<option>` mutations on select box 
+
 ### Fixed
 
 - Fix scroll issue when opening dialog on mobile
