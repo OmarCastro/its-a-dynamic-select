@@ -242,7 +242,7 @@ async function runTestProcedure ({ updateSnapshots = false }) {
 
   const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
   const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec,d}.{js,ts}" --exclude="src/entrypoint/node.js"'
-  const UI_COVERAGE_INCLUDES = '--include build/src-dist/dynamic-select.element.min.js'
+  const UI_COVERAGE_INCLUDES = `--include build/src-dist/${configuration.minfiedBundleDistName}`
 
   logStartStage('test', 'run tests')
 
