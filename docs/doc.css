@@ -35,7 +35,9 @@ iframe.test-frame {
     border: none;
     position: absolute;
     width: 1px;
-    pointer-events:none
+    height: 1px;
+    pointer-events:none;
+    opacity: 0
 }
 
 body {
