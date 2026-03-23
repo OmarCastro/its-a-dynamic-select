@@ -107,7 +107,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
             },
           }, { skip })
         } finally {
-          postTestCallbacks.forEach((callback) => callback())
+          postTestCallbacks.forEach(callback => callback())
           postTestCallbacks.clear()
         }
 
@@ -147,7 +147,7 @@ async function reportLogs (report) {
     const svg = await svgPromise
     body.innerHTML = svg
   } else {
-    body.replaceChildren(...report.logs.split('\n').map((log) => {
+    body.replaceChildren(...report.logs.split('\n').map(log => {
       const div = document.createElement('div')
       div.textContent = log
       return div
@@ -171,9 +171,14 @@ const createSVGResponse = async (report) => {
   const label = `${report.passed} / ${report.tested}`
   const color = report.failed > 0 ? badgeColors.red : badgeColors.green
   const { badgeUrl } = globalThis[Symbol.for('unit-test-info')]
-  badgeFetch ??= fetch(badgeUrl).then((response) => response.text())
+  badgeFetch ??= fetch(badgeUrl).then(response => response.text())
   const badgeSvg = await badgeFetch
-  return badgeSvg
-    .replaceAll('RUNNING...', label)
-    .replaceAll('--dark-fill: #05a; --light-fill: #acf;', `--dark-fill: ${color.dark}; --light-fill: ${color.light};`)
+  console.log(badgeSvg)
+
+  const result = badgeSvg
+    .replaceAll('IN BROWSER TESTS: RUNNING...', `IN BROWSER TESTS: ${label}`)
+    .replaceAll(/textLength="[0-9]+" ([^>]+)>RUNNING.../g, `letter-spacing="30" $1>${label}`)
+    .replaceAll(/--dark-fill: #[0-9a-fA-f]+; --light-fill: #[0-9a-fA-f]+;/g, `--dark-fill: ${color.dark}; --light-fill: ${color.light};`)
+  console.log(result)
+  return result
 }
