@@ -44,7 +44,7 @@ let observeMatchMedia = () => {
  * @param {MobileDetectionObserverCallback} callback - mutation callback
  * @returns {MobileDetectionObserver} - observer
  */
-export function MobileDetectionObserver (callback){
+export function MobileDetectionObserver (callback) {
   const data = observerData.getOrInsertComputed(callback, () => ({
     observingNodes: new IterableWeakSet(),
     currentIsMobile: undefined,
@@ -52,17 +52,17 @@ export function MobileDetectionObserver (callback){
 
   return Object.freeze({
 
-    observe(node) {
+    observe (node) {
       observeMatchMedia()
       data.currentIsMobile ??= isMobile()
       const { currentIsMobile, observingNodes } = data
-      if(observingNodes.has(node)){ return }
+      if (observingNodes.has(node)) { return }
       observingNodes.add(node)
       callback([{
         target: node,
         isMobile: currentIsMobile,
       }])
-    }
+    },
 
   })
 }

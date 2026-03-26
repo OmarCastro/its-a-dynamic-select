@@ -34,8 +34,8 @@ export class IterableWeakMap {
    * @param {V} defaultValue  - value to insert if not found
    * @returns {V} - entry value of found entry with key or inserted value
    */
-  getOrInsert (key, defaultValue){
-    if(this.has(key)){ return /** @type {V} */ (this.get(key)) }
+  getOrInsert (key, defaultValue) {
+    if (this.has(key)) { return /** @type {V} */ (this.get(key)) }
     this.set(key, defaultValue)
     return defaultValue
   }
@@ -46,8 +46,8 @@ export class IterableWeakMap {
    * @param {(key: K) => V} callback - A function that returns the value to insert and return if the key is not already present
    * @returns {V} - entry value of found entry with key or inserted value
    */
-  getOrInsertComputed (key, callback){
-    if(this.has(key)){ return /** @type {V} */ (this.get(key)) }
+  getOrInsertComputed (key, callback) {
+    if (this.has(key)) { return /** @type {V} */ (this.get(key)) }
     const value = callback(key)
     this.set(key, value)
     return value
