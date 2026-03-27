@@ -1,34 +1,37 @@
 /**
- * Parses CSV from a string or iterables of strings.
+ * Parses JSONL from a string or iterables of strings.
  * @overload
- * @param {string | Iterable<string>} input - CSV source.
- * @param {string} [delimiter] - CSV delimiter.
- * @returns {Generator<*>} generator that yields a parsed CSV row
+ * @param {string | Iterable<string>} input - JSONL source.
+ * @returns {Generator<*>} generator that yields a parsed json line
  * @example
- * for (const row of parseCSV("name,age\nJohn,30\nJane,25")) {
+ * for (const row of parseCSV('{"name": "John","age": 30}\n{"name": "Jane","age": 25}')) {
  *   console.log(row);
  * }
  *
  * @example
- * const chunkArray = ['name,age\n', 'John,30'];
+ * const chunkArray = ['{"name": "John","age": 30}\n', '{"name": "Jane","age": 25}'];
  * for (const row of parseCSV(chunkArray)) {
  *   console.log(row);
  * }
  */
 /**
- * Parses CSV from async string iterables.
+ * Parses JSONL from async string iterables.
  *
  * @example
  * async function* chunks() {
- *   yield 'name,age\nJo';
- *   yield 'hn,30\n';
+ *   yield '{"name": "John","age": 30}\n{"na';
+ *   yield 'me": "Jane","age": 25}\n';
  * }
  * for await (const row of parseCSV(chunks())) {
  *   console.log(row);
  * }
  * @overload
- * @param {AsyncIterable<string>} input - CSV source.
- * @returns {AsyncGenerator<*>} generator that yields a parsed CSV row
+ * @param {AsyncIterable<string>} input - JSONL source.
+ * @returns {AsyncGenerator<*>} generator that yields a parsed json line
+ */
+/**
+ * @param {string | Iterable<string> | AsyncIterable<string>} input - JSONL source.
+ * @returns {Generator<*> | AsyncGenerator<*>} generator that yields a parsed json line
  */
 export function parseJsonLines (input) {
   if (typeof input === 'string') {
@@ -43,14 +46,14 @@ export function parseJsonLines (input) {
 }
 
 /**
- * @param {unknown} object - target object
- * @returns {object is Iterable} - true if iterable, false otherwise
+ * @param {*} object - target object
+ * @returns {object is Iterable<*>} - true if iterable, false otherwise
  */
 const isIterable = (object) => typeof object?.[Symbol.iterator] === 'function'
 
 /**
- * @param {unknown} object - target object
- * @returns {object is AsyncIterable} - true if iterable, false otherwise
+ * @param {*} object - target object
+ * @returns {object is AsyncIterable<*>} - true if iterable, false otherwise
  */
 const isAsyncIterable = (object) => typeof object?.[Symbol.asyncIterator] === 'function'
 
