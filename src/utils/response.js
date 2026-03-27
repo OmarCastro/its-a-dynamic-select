@@ -69,10 +69,10 @@ function parseLinkHttpHeader (header) {
 
   const entries = Iterator.from(splitLinkEntries(header))
     .map(parseLinkHeaderEntry)
-    .filter((result) => result != null)
+    .filter(result => result != null)
     .toArray()
 
-  const byRel = ({})
+  const byRel = /** @type {LinkHeader["byRel"]} */({})
   for (const entry of entries) {
     const { params: { rel } } = entry
     if (!rel) { continue }
@@ -153,11 +153,11 @@ function parseLinkHeaderEntry (headerEntry) {
 
   const parsedParams = Object.fromEntries(
     Iterator.from(params)
-      .map((p) => p.trim())
+      .map(p => p.trim())
       .filter(Boolean)
-      .map((param) => param.match(/^([^=]+)="?([^"]+)"?$/))
-      .filter((match) => match != null)
-      .map((match) => {
+      .map(param => param.match(/^([^=]+)="?([^"]+)"?$/))
+      .filter(match => match != null)
+      .map(match => {
         const [,key, value] = match
         return [key, value]
       })

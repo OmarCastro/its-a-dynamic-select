@@ -56,7 +56,7 @@ function createDataLoaderFor (elementRef) {
  * @param {DataToFetch} dataToFetch - info for data fetch
  */
 function dispatchFetchDataEvent (element, dataToFetch) {
-  let customResponse = /** @type {unknown} */(null)
+  let customResponse = /** @type {any} */(null)
   let respondWithCalls = 0
   const event = new CustomEvent('datafetch', {
     cancelable: true,
@@ -64,6 +64,9 @@ function dispatchFetchDataEvent (element, dataToFetch) {
     bubbles: true,
     detail: {
       dataToFetch,
+      /**
+       * @param {any} data - response data to handle
+       */
       respondWith (data) {
         customResponse = data
         respondWithCalls++

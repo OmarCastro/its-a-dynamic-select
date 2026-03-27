@@ -31,6 +31,11 @@
  * @param {string} [delimiter] - CSV delimiter.
  * @returns {AsyncGenerator<{[field: string]: string}>} generator that yields a parsed CSV row
  */
+/**
+ * @param {string | Iterable<string> | AsyncIterable<string>} input - CSV source.
+ * @param {string} [delimiter] - CSV delimiter.
+ * @returns {Generator<{[field: string]: string}> | AsyncGenerator<{[field: string]: string}>} generator that yields a parsed CSV row
+ */
 export function parseCSV (input, delimiter = ',') {
   if (typeof input === 'string') {
     return parseCSVSync([input], delimiter)
@@ -44,14 +49,14 @@ export function parseCSV (input, delimiter = ',') {
 }
 
 /**
- * @param {unknown} object - target object
- * @returns {object is Iterable} - true if iterable, false otherwise
+ * @param {*} object - target object
+ * @returns {object is Iterable<*>} - true if iterable, false otherwise
  */
 const isIterable = (object) => typeof object?.[Symbol.iterator] === 'function'
 
 /**
- * @param {unknown} object - target object
- * @returns {object is AsyncIterable} - true if iterable, false otherwise
+ * @param {*} object - target object
+ * @returns {object is AsyncIterable<*>} - true if iterable, false otherwise
  */
 const isAsyncIterable = (object) => typeof object?.[Symbol.asyncIterator] === 'function'
 

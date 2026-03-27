@@ -32,6 +32,9 @@ const positionFixer = (() => {
     viewport.removeEventListener('resize', handler)
   }
 
+  /**
+   * @param {HTMLDialogElement} element - dialog element
+   */
   const updateDropdownPosition = (element) => {
     const offsetLeft = viewport.offsetLeft
     const offsetTop = viewport.offsetTop

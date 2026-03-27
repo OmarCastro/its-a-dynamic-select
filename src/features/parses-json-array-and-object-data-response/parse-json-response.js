@@ -50,7 +50,7 @@ function parseJsonArrayResponse (json, response) {
 
 /**
  *
- * @param {object} json - json object parsed from `response` body
+ * @param {any} json - json object parsed from `response` body
  * @param {Response} response - response from fetch
  * @returns {ParsedResponse} parsed response
  */

@@ -30,7 +30,7 @@ const loadStyles = computeOnce(() => {
   return sheet
 })
 
-const optionsObserver = new MutationObserver((mutations) => {
+const optionsObserver = new MutationObserver(mutations => {
   /** @type {Set<DynamicSelect>} */
   const selectsToUpdate = new Set()
   for (const mutation of mutations) {
@@ -49,7 +49,7 @@ const optionsObserver = new MutationObserver((mutations) => {
       selectsToUpdate.add(parent)
     }
   }
-  selectsToUpdate.forEach((select) => {
+  selectsToUpdate.forEach(select => {
     updateButtonContent(select)
   })
 })
@@ -63,7 +63,7 @@ const optionsObserverOptions = {
   attributeFilter: ['data-of-option'],
 }
 
-const mobileDetectionObserver = MobileDetectionObserver((mutations) => {
+const mobileDetectionObserver = MobileDetectionObserver(mutations => {
   for (const mutation of mutations) {
     const { target, isMobile } = mutation
     if (!isDynamicSelect(target)) { continue }
@@ -127,7 +127,7 @@ export class DynamicSelect extends HTMLElement {
   }
 
   get valueAsArray () {
-    let iterator = Iterator.from(this.selectedOptions).map((option) => option.value)
+    let iterator = Iterator.from(this.selectedOptions).map(option => option.value)
     if (!this.multiple) {
       iterator = iterator.take(1)
     }
@@ -136,7 +136,7 @@ export class DynamicSelect extends HTMLElement {
 
   set valueAsArray (valueAsArray) {
     if (!Array.isArray(valueAsArray)) { return }
-    Iterator.from(this.options).forEach((option) => {
+    Iterator.from(this.options).forEach(option => {
       option.selected = valueAsArray.includes(option.value)
     })
     dynamicOptionsOf(this).values = valueAsArray
@@ -145,7 +145,7 @@ export class DynamicSelect extends HTMLElement {
   get valueAsObjects () {
     let iterator = Iterator.from(this.selectedOptions)
       .map(dataObjectOfOption)
-      .map((info) => info.data)
+      .map(info => info.data)
     if (!this.multiple) {
       iterator = iterator.take(1)
     }
@@ -154,13 +154,12 @@ export class DynamicSelect extends HTMLElement {
 
   set valueAsObjects (valueAsObjects) {
     if (!Array.isArray(valueAsObjects)) { return }
-    const isValidValue = (value) => typeof value === 'string' || !isNaN(value)
     const validValueEntries = Iterator.from(valueAsObjects)
       .filter(isPlainObject)
-      .filter((obj) => isValidValue(obj.value))
-      .map((obj) => [obj.value, obj])
+      .filter(obj => typeof obj.value === 'string' || !isNaN(obj.value))
+      .map(obj => [obj.value, obj])
     const map = Object.fromEntries(validValueEntries)
-    Iterator.from(this.options).forEach((option) => {
+    Iterator.from(this.options).forEach(option => {
       const data = map[option.value]
       if (data) {
         option.selected = false
@@ -208,7 +207,7 @@ export class DynamicSelect extends HTMLElement {
 
   get selectedOptions () {
     const { options } = this
-    const result = Iterator.from(options).filter((option) => option.selected).toArray()
+    const result = Iterator.from(options).filter(option => option.selected).toArray()
     if (result.length || this.multiple) {
       return result
     }
@@ -269,16 +268,19 @@ export class DynamicSelect extends HTMLElement {
 }
 
 /**
- * Updates dropdown content based on the content in dynamic select in light DOM
- * @param {DynamicSelect} dynamicSelect - web component element reference
- * @returns {{
+ * @typedef {{
  *    ungroupedOptions: OptionData[],
  *    optionGroups: {[groupName:string]: OptionData[]}
- * }} - dropdown data
+ * }} DropdownListData
+ */
+/**
+ * Updates dropdown content based on the content in dynamic select in light DOM
+ * @param {DynamicSelect} dynamicSelect - web component element reference
+ * @returns {DropdownListData} - dropdown data
  */
 function getDropdownListData (dynamicSelect) {
   const ungroupedOptions = []
-  const optionGroups = ({})
+  const optionGroups = /** @type {DropdownListData["optionGroups"]} */({})
 
   for (const option of dynamicSelect.querySelectorAll(':scope > option')) {
     ungroupedOptions.push(dataObjectOfOption(option))
@@ -311,15 +313,15 @@ function getDropdownListData (dynamicSelect) {
 
   if (typeof searchFilter === 'string' && searchFilter.trim() !== '' && searchFilter.length >= minQueryLength) {
     const matchFilter = filterMatcher(searchFilter)
-    const filteredUngrouped = ungroupedOptions.filter((option) => matchFilter(option.text))
-    const filteredOptionGroups = ({})
+    const filteredUngrouped = ungroupedOptions.filter(option => matchFilter(option.text))
+    const filteredOptionGroups = /** @type {DropdownListData["optionGroups"]} */({})
 
     for (const [groupName, options] of Object.entries(optionGroups)) {
       if (matchFilter(groupName)) {
         filteredOptionGroups[groupName] = options
         continue
       }
-      const filteredOptions = options.filter((option) => matchFilter(option.text))
+      const filteredOptions = options.filter(option => matchFilter(option.text))
       if (filteredOptions.length > 0) {
         filteredOptionGroups[groupName] = filteredOptions
       }
@@ -346,16 +348,16 @@ function getDropdownTemplateData (dynamicSelect) {
 
   const checkedIndicatorType = dynamicSelect.multiple ? 'checkbox' : 'radio'
   const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
-  let focusIndex = dropdownOptions.findIndex((el) => el.hasAttribute('data-focused'))
+  let focusIndex = dropdownOptions.findIndex(el => el.hasAttribute('data-focused'))
   return {
-    ungroupedOptions: ungroupedOptions.map((option) => ({
+    ungroupedOptions: ungroupedOptions.map(option => ({
       ...option,
       checkedIndicatorType,
       focused: focusIndex-- === 0,
     })),
     optionGroups: Object.entries(optionGroups).map(([groupName, options]) => ({
       groupName,
-      options: options.map((option) => ({
+      options: options.map(option => ({
         ...option, checkedIndicatorType,
         focused: focusIndex-- === 0,
       })),
@@ -381,11 +383,11 @@ function updateDropdownContent (dynamicSelect) {
   const dropdownData = getDropdownTemplateData(dynamicSelect)
   const { dropdownList, option: optionTemplate, loadingNotification } = templatesOf(dynamicSelect)
   const listFragment = applyTemplate(dropdownList, dropdownData)
-  listFragment.querySelectorAll('slot[name="option"]').forEach((slot) => {
+  listFragment.querySelectorAll('slot[name="option"]').forEach(slot => {
     const data = JSON.parse(slot.dataset.value || '{}')
     slot.replaceWith(applyTemplate(optionTemplate, data))
   })
-  listFragment.querySelectorAll('slot[name="loading-notification"]').forEach((slot) => {
+  listFragment.querySelectorAll('slot[name="loading-notification"]').forEach(slot => {
     slot.replaceWith(applyTemplate(loadingNotification, dropdownData))
   })
 
@@ -411,7 +413,7 @@ function updateButtonContent (dynamicSelect) {
     selectedOption: selectedOptionsVal[0],
   }
   const button = applyTemplate(buttonTemplate, data)
-  button.querySelectorAll('slot[name="selected-option"]').forEach((slot) => {
+  button.querySelectorAll('slot[name="selected-option"]').forEach(slot => {
     const data = JSON.parse(slot.dataset.value || '{}')
     slot.replaceWith(applyTemplate(optionTemplate, data))
   })
@@ -439,7 +441,7 @@ function handleSearchInputKeyDown (event) {
     const dynamicSelect = getHostDynamicSelect(target)
     const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
     if (dropdownOptions.length <= 0) { return }
-    const focusIndex = dropdownOptions.findIndex((el) => el.hasAttribute(focusAttr))
+    const focusIndex = dropdownOptions.findIndex(el => el.hasAttribute(focusAttr))
     if (focusIndex >= 0) {
       dropdownOptions[focusIndex].removeAttribute(focusAttr)
     }
@@ -453,7 +455,7 @@ function handleSearchInputKeyDown (event) {
   } else if (code === 'Enter') {
     const dynamicSelect = getHostDynamicSelect(target)
     const dropdownOptions = [...dropdownOptionList(dynamicSelect)]
-    const focusedElement = dropdownOptions.find((el) => el.hasAttribute('data-focused'))
+    const focusedElement = dropdownOptions.find(el => el.hasAttribute('data-focused'))
     if (focusedElement instanceof HTMLLIElement) {
       const value = focusedElement.dataset.value
       if (typeof value !== 'string') { return }
@@ -472,7 +474,7 @@ function handleSelectValueButtonClick (event) {
     if (!(option instanceof HTMLElement)) { return }
     const value = option.dataset.value
     const dynamicSelect = getHostDynamicSelect(option)
-    const selectOption = dynamicSelect.selectedOptions.find((option) => option.value === value)
+    const selectOption = dynamicSelect.selectedOptions.find(option => option.value === value)
     if (selectOption == null) { return }
     selectOption.selected = false
     dynamicOptionsOf(dynamicSelect).toggleValue(selectOption.value, false)
