@@ -19,20 +19,20 @@ if (testFrame) {
 console.log(globalThis.Components)
 
 document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('pre code').forEach((el) => {
+  document.querySelectorAll('pre code').forEach(el => {
     const html = el.innerHTML
     const lines = html.split('\n')
-    const minSpaces = lines.filter((line) => line.trim() !== '').reduce((acc, line) => Math.min(line.search(/\S|$/), acc), Infinity)
-    el.innerHTML = lines.map((line) => line.slice(minSpaces)).join('\n').trim()
+    const minSpaces = lines.filter(line => line.trim() !== '').reduce((acc, line) => Math.min(line.search(/\S|$/), acc), Infinity)
+    el.innerHTML = lines.map(line => line.slice(minSpaces)).join('\n').trim()
   })
 })
 
-document.querySelectorAll('.example').forEach((element) => {
+document.querySelectorAll('.example').forEach(element => {
   const exampleObj = {}
 
   console.log('.example %o', element)
 
-  element.querySelectorAll('.example__json .editor').forEach((element) => {
+  element.querySelectorAll('.example__json .editor').forEach(element => {
     const lang = element.getAttribute('data-lang')
     if (!lang) { return }
     exampleObj[lang] = JSON.parse(element.textContent || '')
@@ -96,8 +96,8 @@ function reactElementNameChange (event) {
   const componentName = event.target.closest('.component-name-edit')
   if (componentName == null) { return }
   const newText = componentName.textContent
-  document.body.querySelectorAll('.component-name-edit').forEach((ref) => { if (componentName !== ref) { ref.textContent = newText } })
-  document.body.querySelectorAll('.component-name-ref').forEach((ref) => { ref.textContent = newText })
+  document.body.querySelectorAll('.component-name-edit').forEach(ref => { if (componentName !== ref) { ref.textContent = newText } })
+  document.body.querySelectorAll('.component-name-ref').forEach(ref => { ref.textContent = newText })
 }
 
 document.body.addEventListener('input', (event) => { reactElementNameChange(event) })
@@ -150,7 +150,7 @@ document.body.addEventListener('datafetch', (event) => {
   }
 
   if (event.target?.matches('[data-src="example-src-1-second-delay"]')) {
-    event.detail.respondWith(new Promise((resolve) => {
+    event.detail.respondWith(new Promise(resolve => {
       setTimeout(() => {
         const response = new Response(countriesCSVGroupedByContinent)
         response.headers.set('content-type', 'text/csv')

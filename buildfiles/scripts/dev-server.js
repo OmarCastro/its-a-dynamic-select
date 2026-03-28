@@ -110,7 +110,7 @@ export function Server () {
 
   return {
     listen: (port) => { server.listen(port) },
-    update: () => sessions.forEach((session) => session.write('data: reload\n\n')),
+    update: () => sessions.forEach(session => session.write('data: reload\n\n')),
   }
 }
 

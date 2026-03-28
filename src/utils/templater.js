@@ -32,7 +32,7 @@ function applyTemplateAux (currentElement, currentData) {
       if (loopPath.startsWith('$.')) {
         const data = getFromStringPath(currentData, loopPath.slice(2))
         if (Array.isArray(data)) {
-          const newContent = data.map((newData) => applyTemplate(/** @type {HTMLTemplateElement} */ (currentElement), newData))
+          const newContent = data.map(newData => applyTemplate(/** @type {HTMLTemplateElement} */ (currentElement), newData))
           currentElement.replaceWith(...newContent)
           return
         }

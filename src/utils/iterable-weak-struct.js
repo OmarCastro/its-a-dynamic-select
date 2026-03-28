@@ -290,7 +290,7 @@ function clear (struct) {
  */
 function getSize (struct) {
   const { keySet } = dataOf(struct)
-  keySet.forEach((ref) => { if (!ref.deref()) { keySet.delete(ref) } })
+  keySet.forEach(ref => { if (!ref.deref()) { keySet.delete(ref) } })
   return keySet.size
 }
 

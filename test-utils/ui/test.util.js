@@ -29,7 +29,7 @@ export const test = base.extend({
     await use(page)
     const jsCoverage = await page.coverage.stopJSCoverage()
 
-    const coverage = jsCoverage.map((entry) => {
+    const coverage = jsCoverage.map(entry => {
       const url = new URL(entry.url)
       const scriptPath = `file://${rootPath}${url.pathname}`
       return {
@@ -59,5 +59,5 @@ export const test = base.extend({
 
 export const formatted = (strings, ...values) => String.raw(
   { raw: strings },
-  ...values.map((value) => inspect(value)),
+  ...values.map(value => inspect(value)),
 )

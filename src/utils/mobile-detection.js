@@ -25,7 +25,7 @@ function updateData () {
     const { currentIsMobile, observingNodes } = data
     if (currentIsMobile === isNowMobile) { continue }
     data.currentIsMobile = isNowMobile
-    const events = Iterator.from(observingNodes).map((element) => ({
+    const events = Iterator.from(observingNodes).map(element => ({
       target: element,
       isMobile: isNowMobile,
     })).toArray()

@@ -76,7 +76,7 @@ const readFileImport = (file) => {
   }
   const seachedLocations = [
     outputFilePath, docFilePath, relativePath,
-  ].map((loc) => ' - ' + loc).join('\n')
+  ].map(loc => ' - ' + loc).join('\n')
   throw Error(`could not import file: file not found. \nhref: ${file}\nfile path: ${filePath} \nLocations seached \n${seachedLocations}`)
 }
 
@@ -91,74 +91,74 @@ const exampleCodeClass = (element) => {
   return 'keep-markup' + lineNoClass + wrapClass
 }
 
-queryAll('[p-include-html]').forEach((element) => {
+queryAll('[p-include-html]').forEach(element => {
   const ssInclude = element.getAttribute('p-include-html')
   const text = readFileImport(ssInclude)
   element.innerHTML = text
 })
 
-queryAll('script[p-include]').forEach((element) => {
+queryAll('script[p-include]').forEach(element => {
   const ssInclude = element.getAttribute('p-include')
   const text = readFileImport(ssInclude)
   element.textContent = text
 })
 
-queryAll('script.html-example').forEach((element) => {
+queryAll('script.html-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-markup ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.css-example').forEach((element) => {
+queryAll('script.css-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-css ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.json-example').forEach((element) => {
+queryAll('script.json-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-json ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.js-example').forEach((element) => {
+queryAll('script.js-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-js ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.csv-example').forEach((element) => {
+queryAll('script.csv-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-csv ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.bash-example').forEach((element) => {
+queryAll('script.bash-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="language-bash ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('script.text-example').forEach((element) => {
+queryAll('script.text-example').forEach(element => {
   const pre = document.createElement('pre')
   pre.innerHTML = exampleCode`<code class="${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
-queryAll('svg[p-include]').forEach((element) => {
+queryAll('svg[p-include]').forEach(element => {
   const ssInclude = element.getAttribute('p-include')
   const svgText = readFileImport(ssInclude)
   element.outerHTML = svgText
 })
 
-queryAll('[p-markdown]:not([p-include])').forEach((element) => {
+queryAll('[p-markdown]:not([p-include])').forEach(element => {
   const md = dedent(element.innerHTML)
     .replaceAll('\n&gt;', '\n>') // for blockquotes, innerHTML escapes ">" chars
   console.error(md)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
 })
 
-queryAll('[p-markdown][p-include]').forEach((element) => {
+queryAll('[p-markdown][p-include]').forEach(element => {
   const ssInclude = element.getAttribute('p-include')
   const md = readFileImport(ssInclude)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
@@ -166,7 +166,7 @@ queryAll('[p-markdown][p-include]').forEach((element) => {
 
 queryAll('code').forEach(highlightElement)
 
-queryAll('[p-aria-label]').forEach((element) => {
+queryAll('[p-aria-label]').forEach(element => {
   if (element.hasAttribute('title') && !element.hasAttribute('aria-label')) {
     element.setAttribute('aria-label', element.getAttribute('title'))
   }
@@ -200,12 +200,12 @@ const applySizeForElement = async (element, imagePath) => {
   element.setAttribute('height', `${size.height}`)
 }
 
-const pSizeTasks = queryAll('img[p-size]').map((element) => {
+const pSizeTasks = queryAll('img[p-size]').map(element => {
   const imageSrc = element.getAttribute('src')
   return applySizeForElement(element, imageSrc)
 })
 
-const pSizeOfTasks = queryAll('iframe[p-size-of]').map((element) => {
+const pSizeOfTasks = queryAll('iframe[p-size-of]').map(element => {
   const imageSrc = element.getAttribute('p-size-of')
   return applySizeForElement(element, imageSrc)
 })
@@ -296,7 +296,7 @@ const tocUtils = {
   },
 }
 
-queryAll('[p-toc]').forEach((element) => {
+queryAll('[p-toc]').forEach(element => {
   const ol = document.createElement('ol')
   /** @type {[HTMLElement, HTMLElement][]} */
   const path = []
@@ -310,9 +310,9 @@ queryAll('[p-toc]').forEach((element) => {
   element.replaceWith(ol)
 })
 
-queryAll('*').forEach((element) => [...element.attributes]
-  .flatMap((attr) => (attr.name.startsWith('p-') ? [attr.name] : []))
-  .forEach((name) => element.removeAttribute(name)))
+queryAll('*').forEach(element => [...element.attributes]
+  .flatMap(attr => (attr.name.startsWith('p-') ? [attr.name] : []))
+  .forEach(name => element.removeAttribute(name)))
 
 const minifiedHtml = '<!doctype html>' + minifyDOM(document.documentElement).outerHTML
 
@@ -333,7 +333,7 @@ function dedent (templateStrings, ...values) {
     match && matches.push(...match)
   }
   if (matches.length) {
-    const size = Math.min(...matches.map((value) => value.length - 1))
+    const size = Math.min(...matches.map(value => value.length - 1))
     const pattern = new RegExp(`\n[\t ]{${size}}`, 'g')
     for (let i = 0; i < strings.length; i++) {
       strings[i] = strings[i].replace(pattern, '\n')
@@ -469,6 +469,6 @@ function minifyDOM (domElement) {
 function highlightElement (domElement) {
   Prism.highlightElement(domElement, false)
   domElement.innerHTML = domElement.innerHTML.split('\n')
-    .map((line) => `<span class="line">${line}</span>`)
+    .map(line => `<span class="line">${line}</span>`)
     .join('\n')
 }

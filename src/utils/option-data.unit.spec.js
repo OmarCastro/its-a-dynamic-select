@@ -10,7 +10,7 @@ test('dataObjectOfOption - get base option data', async ({ expect, dom }) => {
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map((option) => dataObjectOfOption(option))
+  const result = [...options].map(option => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,
@@ -41,7 +41,7 @@ test('dataObjectOfOption - custom option data', async ({ expect, dom }) => {
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map((option) => dataObjectOfOption(option))
+  const result = [...options].map(option => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,
@@ -78,7 +78,7 @@ test('dataObjectOfOption - invalid custom option data will act as if it doesnt e
     </select>
   `
   const options = document.querySelectorAll('option')
-  const result = [...options].map((option) => dataObjectOfOption(option))
+  const result = [...options].map(option => dataObjectOfOption(option))
   expect(result).toEqual([{
     origin: 'option',
     selected: true,

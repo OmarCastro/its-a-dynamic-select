@@ -32,7 +32,7 @@ const primitiveExamples = [
   null,
 ]
 
-primitiveExamples.forEach((exampleInput) => {
+primitiveExamples.forEach(exampleInput => {
   test(formatted`isPlainObject - returns false for primitive of type ${typeof exampleInput}`, ({ expect }) => {
     expect(isPlainObject(exampleInput)).toBe(false)
   })
