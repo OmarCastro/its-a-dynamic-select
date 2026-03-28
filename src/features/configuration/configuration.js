@@ -8,7 +8,6 @@
  * @property {number} debounceQueryDuration - number of milliseconds for the
  *   text input to wait for updates before filtering the data
  */
-
 export const defaultValues = Object.freeze({
   minQueryLength: 3,
   debounceQueryDuration: 250,
@@ -39,8 +38,20 @@ export function configurationOf (element) {
  */
 function getConfigPositiveIntegerOrZero (element, { attribute, config }) {
   return validPositiveIntegerPlusZeroOrNull(element.getAttribute(attribute)) ??
-    validPositiveIntegerPlusZeroOrNull(element.constructor?.['config']?.[config]) ??
+    validPositiveIntegerPlusZeroOrNull(getConfigFromElementConstructor(element, config)) ??
     defaultValues[config]
+}
+
+/**
+ *
+ * @param {HTMLElement} element - target Element
+ * @param {keyof typeof defaultValues} config - config property name to search for
+ * @returns {unknown} config value
+ */
+function getConfigFromElementConstructor (element, config) {
+  const {constructor} = element
+  const configObject = Object.hasOwn(constructor, 'config') ? constructor.config : null
+  return configObject && Object.hasOwn(configObject, config) ? configObject[config] : null
 }
 
 /**

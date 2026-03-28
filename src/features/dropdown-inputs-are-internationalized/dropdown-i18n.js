@@ -46,9 +46,10 @@ const mutationObserver = new MutationObserver(records => {
     const locale = new Intl.Locale(lang)
     const language = locale.language
     const okButton = okButtonEl(target)
-    okButton.textContent = i18nButtonLabels.ok[language] ?? i18nButtonLabels.ok.default
+    const { ok, cancel } = i18nButtonLabels
+    okButton.textContent = Object.hasOwn(ok, language) ? ok[language] : ok.default
     const cancelButton = cancelButtonEl(target)
-    cancelButton.textContent = i18nButtonLabels.cancel[language] ?? i18nButtonLabels.cancel.default
+    cancelButton.textContent = Object.hasOwn(cancel, language) ? cancel[language] : cancel.default
   }
 })
 

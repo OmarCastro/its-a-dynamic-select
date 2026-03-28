@@ -296,18 +296,19 @@ function getSize (struct) {
 
 const dataOf = (() => {
   /**
-   * @type {WeakMap<WeakKey, IterableWeakMapData<never, never>>} valueMap
+   * @type {WeakMap<IterableWeakSet<any> | IterableWeakMap<WeakKey, any>, IterableWeakMapData<any, any>>}
    */
   const map = new WeakMap()
 
   /**
    * @template {WeakKey} K
    * @template V
-   * @param {IterableWeakSet<K> | IterableWeakMap<K, V>} iter - target weak struct to initialize
+   * @param {IterableWeakSet<K> | IterableWeakMap<K, V>} iter - target iterable weak struct to initialize
    * @returns {IterableWeakMapData<K, V>} target weak struct data
    */
   function init (iter) {
     const keySet = new Set()
+    /** @type {WeakMap<K, ValueRef<K,V>>} */
     const refWeakMap = new WeakMap()
     const result = {
       keySet,
@@ -320,7 +321,7 @@ const dataOf = (() => {
   /**
    * @template {WeakKey} K
    * @template V
-   * @param {IterableWeakSet<K> | IterableWeakMap<K, V>} iter - target weak struct
+   * @param {IterableWeakSet<K> | IterableWeakMap<K, V>} iter - target iterable weak struct
    * @returns {IterableWeakMapData<K, V>} target weak struct data
    */
   function getData (iter) {
@@ -332,7 +333,15 @@ const dataOf = (() => {
 /**
  * @template {WeakKey} K
  * @template V
+ * @typedef {object} ValueRef
+ * @property {WeakRef<K>} ref - reference object applied on the map
+ * @property {V} value - value on the map
+ */
+
+/**
+ * @template {WeakKey} K
+ * @template V
  * @typedef {object} IterableWeakMapData
- * @property {WeakMap<K, {ref: WeakRef<K> , value: V}>} refWeakMap - weakmap of weak refs and values
+ * @property {WeakMap<K, ValueRef<K,V>>} refWeakMap - weakmap of weak refs and values
  * @property {Set<WeakRef<K>>} keySet - iterable set of weak keys
  */
