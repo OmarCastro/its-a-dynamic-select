@@ -115,10 +115,9 @@ function customPlugin () {
         create (context) {
           return {
             ArrowFunctionExpression (node) {
-              const first = context
-                    .getSourceCode()
-                    .getFirstToken(node, node.async ? 1 : 0)
-              const before = context.getSourceCode().getTokenBefore(first)
+              const sourceCode = context.sourceCode || context.getSourceCode()
+              const first = sourceCode.getFirstToken(node, node.async ? 1 : 0)
+              const before = sourceCode.getTokenBefore(first)
 
               if (isOpenParen(first)) {
                 if (
