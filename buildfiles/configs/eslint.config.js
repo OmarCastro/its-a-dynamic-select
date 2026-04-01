@@ -1,7 +1,7 @@
 import globals from 'globals'
 import jsdoc from 'eslint-plugin-jsdoc'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
-import importPlugin from 'eslint-plugin-import'
+import importPlugin from 'eslint-plugin-import-x'
 
 export default [
   {
