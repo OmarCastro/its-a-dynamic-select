@@ -4,7 +4,8 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { window, resetDom } = await import('./fixtures/dom.unit.fixture.js')
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
   const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
-  const { gc } = await import('./fixtures/garbage-collector.unit.fixture.js')
+  const { setup: setupGCFixture } = await import('./fixtures/garbage-collector.unit.fixture.js')
+  const gc = await setupGCFixture()
 
   /**
    * @param {string} message - message to show on the report on skip

@@ -1,36 +1,39 @@
+let setupCache = null
+
 /**
- * @typedef {NodeJS.GCFunction & {status: {enabled: boolean, reason: string}}} GCFunction
+ * @returns {GarbageCollectionApi}
  */
+export async function setup(){
+  if(setupCache){ return setupCache }
+  const noopGC = async () => {}
+  const isNode = globalThis.process?.versions?.node != null
+  let gcMethod = noopGC
+  let reason = 'Garbage collection not enabled'
 
-const noopGC = async () => {}
-noopGC.status = {
-  enabled: false,
-  reason: 'Garbage collection not enabled',
-}
-/** @type {GCFunction} */
-let gcMethod = noopGC
-
-const isNode = globalThis.process?.versions?.node != null
-if (isNode) {
-  /** @type {NodeJS.GCFunction} */
-  gcMethod = async (...args) => {
+  if(isNode){
     const { setFlagsFromString } = await import('node:v8')
     const { runInNewContext } = await import('node:vm')
 
     setFlagsFromString('--expose_gc')
     const nodeGc = runInNewContext('gc')
-    gcMethod = async (...args) => await nodeGc(...args)
-    const gcEnabled = typeof nodeGc === 'function'
-    gcMethod.status = {
-      enabled: gcEnabled,
-      reason: gcMethod.enabled ? 'Garbage collection not exposed on nodeJs' : '',
+    if(typeof nodeGc === 'function'){
+      gcMethod = async () => await nodeGc({ execution: 'async', type: 'major' })
+      reason = ''
+    } else {
+      reason = 'Garbage collection not exposed on nodeJs'
     }
-    return await nodeGc(...args)
   }
-}
 
-/** @type {GCFunction} */
-export const gc = async (...args) => await gcMethod(...args)
-Object.defineProperty(gc, 'hasGC', {
-  get: function () { return gcMethod.hasGC },
-})
+  setupCache = Object.freeze({
+    garbageCollect: gcMethod,
+    enabled: typeof gcMethod === 'function' && gcMethod !== noopGC,
+    reason,
+  })
+  return setupCache
+}
+/**
+ * @typedef {object} GarbageCollectionApi
+ * @property {() => Promise<void>} garbageCollect - triggers Garbage Collection (GC) if enabled, does nothing otherwise
+ * @property {boolean} enabled - flag showing wether GC is enabled or not
+ * @property {string} reason - reason why GC is disabled; empty string value if enabled
+ */
