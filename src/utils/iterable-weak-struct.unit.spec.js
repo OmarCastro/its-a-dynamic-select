@@ -226,106 +226,104 @@ test('IterableWeakSet - has entry', ({ expect }) => {
   expect(set.has('not in map')).toBe(false)
 })
 
-const isNode = globalThis.process?.versions?.node != null
-if (isNode) {
-  test('IterableWeakMap - cleans up garbage collected entries', async ({ expect, gc }) => {
-    const map = new IterableWeakMap()
+test('IterableWeakMap - cleans up garbage collected entries', async ({ expect, gc }) => {
+  const map = new IterableWeakMap()
 
-    let key1 = { hello: 'world' }
-    const key2 = { lorem: 'ipsum' }
-    let key3 = { banana: 'land' }
+  let key1 = { hello: 'world' }
+  const key2 = { lorem: 'ipsum' }
+  let key3 = { banana: 'land' }
 
-    map.set(key1, 'test value')
-    map.set(key2, 'test value 2')
-    map.set(key3, 'test value 3')
+  map.set(key1, 'test value')
+  map.set(key2, 'test value 2')
+  map.set(key3, 'test value 3')
 
-    // compare to copies of the keys as they are going to be saved for test reporting,
-    // preventing them from being CG
-    expect([...map.entries()]).toEqual([
-      [{ ...key1 }, 'test value'],
-      [{ ...key2 }, 'test value 2'],
-      [{ ...key3 }, 'test value 3'],
-    ])
-    expect([...map.keys()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
-    expect([...map.values()]).toEqual(['test value', 'test value 2', 'test value 3'])
+  // compare to copies of the keys as they are going to be saved for test reporting,
+  // preventing them from being CG
+  expect([...map.entries()]).toEqual([
+    [{ ...key1 }, 'test value'],
+    [{ ...key2 }, 'test value 2'],
+    [{ ...key3 }, 'test value 3'],
+  ])
+  expect([...map.keys()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
+  expect([...map.values()]).toEqual(['test value', 'test value 2', 'test value 3'])
 
-    // removes key1 & key3, making its previous value ready to be CG
-    key1 = undefined
-    key3 = undefined
+  // removes key1 & key3, making its previous value ready to be CG
+  key1 = undefined
+  key3 = undefined
 
-    await gc.run()
-    expect([...map.entries()]).toEqual([[key2, 'test value 2']])
-    expect([...map.keys()]).toEqual([key2])
-    expect([...map.values()]).toEqual(['test value 2'])
-  })
+  await gc.run()
+  expect([...map.entries()]).toEqual([[key2, 'test value 2']])
+  expect([...map.keys()]).toEqual([key2])
+  expect([...map.values()]).toEqual(['test value 2'])
+})
 
-  test('IterableWeakSet - cleans up garbage collected entries', async ({ expect, gc }) => {
-    const set = new IterableWeakSet()
+test('IterableWeakSet - cleans up garbage collected entries', async ({ expect, gc }) => {
+  const set = new IterableWeakSet()
 
-    let key1 = { hello: 'world' }
-    const key2 = { lorem: 'ipsum' }
-    let key3 = { banana: 'land' }
+  let key1 = { hello: 'world' }
+  const key2 = { lorem: 'ipsum' }
+  let key3 = { banana: 'land' }
 
-    set.add(key1)
-    set.add(key2)
-    set.add(key3)
+  set.add(key1)
+  set.add(key2)
+  set.add(key3)
 
-    // compare to copies of the keys as they are going to be saved for test reporting,
-    // preventing them from being CG
-    expect([...set.entries()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
-    expect([...set.keys()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
-    expect([...set.values()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
+  // compare to copies of the keys as they are going to be saved for test reporting,
+  // preventing them from being CG
+  expect([...set.entries()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
+  expect([...set.keys()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
+  expect([...set.values()]).toEqual([{ ...key1 }, { ...key2 }, { ...key3 }])
 
-    // removes key1 & key3, making its previous value ready to be CG
-    key1 = undefined
-    key3 = undefined
+  // removes key1 & key3, making its previous value ready to be CG
+  key1 = undefined
+  key3 = undefined
 
-    await gc.run()
+  await gc.run()
 
-    expect([...set.entries()]).toEqual([key2])
-    expect([...set.keys()]).toEqual([key2])
-    expect([...set.values()]).toEqual([key2])
-  })
+  expect([...set.entries()]).toEqual([key2])
+  expect([...set.keys()]).toEqual([key2])
+  expect([...set.values()]).toEqual([key2])
+})
 
-  test('IterableWeakMap - size property updates on garbage collection', async ({ expect, gc }) => {
-    const map = new IterableWeakMap()
+test('IterableWeakMap - size property updates on garbage collection', async ({ expect, gc }) => {
+  const map = new IterableWeakMap()
 
-    let key1 = { hello: 'world' }
-    const key2 = { lorem: 'ipsum' }
-    let key3 = { banana: 'land' }
+  let key1 = { hello: 'world' }
+  const key2 = { lorem: 'ipsum' }
+  let key3 = { banana: 'land' }
 
-    map.set(key1, 'test value')
-    map.set(key2, 'test value 2')
-    map.set(key3, 'test value 3')
+  map.set(key1, 'test value')
+  map.set(key2, 'test value 2')
+  map.set(key3, 'test value 3')
 
-    expect(map.size).toBe(3)
+  expect(map.size).toBe(3)
 
-    // removes key1 & key3, making its previous value ready to be CG
-    key1 = undefined
-    key3 = undefined
+  // removes key1 & key3, making its previous value ready to be CG
+  key1 = undefined
+  key3 = undefined
 
-    await gc.run()
-    expect(map.size).toBe(1)
-  })
+  await gc.run()
+  expect(map.size).toBe(1)
+})
 
-  test('IterableWeakSet - size property updates on garbage collection', async ({ expect, gc }) => {
-    const set = new IterableWeakSet()
+test('IterableWeakSet - size property updates on garbage collection', async ({ expect, gc }) => {
+  const set = new IterableWeakSet()
 
-    let key1 = { hello: 'world' }
-    const key2 = { lorem: 'ipsum' }
-    let key3 = { banana: 'land' }
+  let key1 = { hello: 'world' }
+  const key2 = { lorem: 'ipsum' }
+  let key3 = { banana: 'land' }
 
-    set.add(key1)
-    set.add(key2)
-    set.add(key3)
+  set.add(key1)
+  set.add(key2)
+  set.add(key3)
 
-    expect(set.size).toBe(3)
-    // removes key1 & key3, making its previous value ready to be CG
-    key1 = undefined
-    key3 = undefined
+  expect(set.size).toBe(3)
+  // removes key1 & key3, making its previous value ready to be CG
+  key1 = undefined
+  key3 = undefined
 
-    await gc.run()
+  await gc.run()
 
-    expect(set.size).toBe(1)
-  })
-}
+  expect(set.size).toBe(1)
+})
+

@@ -3,6 +3,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { expect } = await import('./simple-expect.js')
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
   const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
+  const { setup: setupGCFixture } = await import('./fixtures/garbage-collector-browser.unit.fixture.js')
 
   /**
    * @param {string} message - message to show on the report on skip
@@ -75,11 +76,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   }, 250)
 
   const unitTests = []
-  const noopGC = async () => { }
-  noopGC.status = {
-    enabled: false,
-    reason: 'Garbage collection not enabled',
-  }
+
   const test = (description, testFunction) => {
     unitTests.push({
       description,
@@ -102,8 +99,11 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               return fixtureCache.timezone
             },
             get gc () {
-              skip(noopGC.status.reason)
-              return noopGC
+              fixtureCache.gc ??= setupGCFixture()
+              if(!fixtureCache.gc.enabled){
+                skip(fixtureCache.gc.reason)
+              }
+              return fixtureCache.gc
             },
           }, { skip })
         } finally {
