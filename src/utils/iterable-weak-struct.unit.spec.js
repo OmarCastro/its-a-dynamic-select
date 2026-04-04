@@ -253,7 +253,7 @@ if (isNode) {
     key1 = undefined
     key3 = undefined
 
-    await gc.garbageCollect()
+    await gc.run()
     expect([...map.entries()]).toEqual([[key2, 'test value 2']])
     expect([...map.keys()]).toEqual([key2])
     expect([...map.values()]).toEqual(['test value 2'])
@@ -280,7 +280,7 @@ if (isNode) {
     key1 = undefined
     key3 = undefined
 
-    await gc.garbageCollect()
+    await gc.run()
 
     expect([...set.entries()]).toEqual([key2])
     expect([...set.keys()]).toEqual([key2])
@@ -304,7 +304,7 @@ if (isNode) {
     key1 = undefined
     key3 = undefined
 
-    await gc.garbageCollect()
+    await gc.run()
     expect(map.size).toBe(1)
   })
 
@@ -324,7 +324,7 @@ if (isNode) {
     key1 = undefined
     key3 = undefined
 
-    await gc.garbageCollect()
+    await gc.run()
 
     expect(set.size).toBe(1)
   })

@@ -79,7 +79,7 @@ const tasks = {
     cb: () => quickRunUnitTests().then(exit),
   },
   'test:update-snapshots': {
-    description: 'quickly run unit tests of the project, showing a simple report, mostly used for precommit check',
+    description: 'update snapshot when running visual tests',
     cb: () => execTests({ updateSnapshots: true }).then(exit),
   },
   'test:in-host': {
@@ -620,6 +620,7 @@ async function preCommitCheck () {
     const testTask = quickRunUnitTests()
     const codeLint = execlintCodeOnChanged()
     const testVersionAlign = alignTestFrameworkVersion()
+
     const exitCodes = await Promise.all([testTask, codeLint, testVersionAlign])
     const exitCode = exitCodes.reduce((a, b) => a + b)
     return exitCode
@@ -1701,6 +1702,7 @@ async function executeOnStagedOnly (callback, { stageChanges = true } = {}) {
       logStage('Pop stash')
       await git('stash', 'pop', '--index')
     }
+    return returnCode
   }
   return 0
 }

@@ -5,7 +5,6 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
   const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
   const { setup: setupGCFixture } = await import('./fixtures/garbage-collector.unit.fixture.js')
-  const gc = await setupGCFixture()
 
   /**
    * @param {string} message - message to show on the report on skip
@@ -76,10 +75,13 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
           await testFunction({
             step: async (_, callback) => await callback(),
             expect,
-            gc,
             get dom () {
               resetDom()
               return window
+            },
+            get gc () {
+              fixtureCache.gc ??= setupGCFixture()
+              return fixtureCache.gc
             },
             get timezone () {
               fixtureCache.timezone ??= setupTimezoneMock()
