@@ -27,18 +27,23 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     console.log(`[unit-test] ${totalAmount} tests to run`)
     let result = '[unit-test] results: \n'
 
-    for (const { description, test } of unitTests) {
+    const tapReport = [`1..${totalAmount}`]
+    for (const [testIndex, { description, test }] of unitTests.entries()) {
+      const testNumber = testIndex + 1
       try {
         await test()
         result += `  [PASS] ${description}\n`
+        tapReport.push(`ok ${testNumber} - ${description}`)
       } catch (e) {
         if (e instanceof SkipException) {
           skippedTestAmount++
           result += `  [SKIP] ${description} : ${e.message}\n`
+          tapReport.push(`ok ${testNumber} - ${description} #SKIP ${e.message}`)
         } else {
           log(e)
           failedTestAmount++
           result += `**[FAIL] ${description}\n`
+          tapReport.push(`not ok ${testNumber} - ${description}`)
         }
       }
     }
@@ -61,6 +66,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       tested: testedAmount,
       skipped: skippedTestAmount,
       passed: testedAmount - failedTestAmount,
+      tapReport: tapReport.join('\n')
     })
   }
 
@@ -147,7 +153,8 @@ async function reportLogs (report) {
     const svg = await svgPromise
     body.innerHTML = svg
   } else {
-    body.replaceChildren(...report.logs.split('\n').map(log => {
+    const fullLogs = `${report.logs}\nTAP Report\n${report.tapReport}`
+    body.replaceChildren(...fullLogs.split('\n').map(log => {
       const div = document.createElement('div')
       div.textContent = log
       return div
