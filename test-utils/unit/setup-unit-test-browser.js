@@ -38,7 +38,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
         if (e instanceof SkipException) {
           skippedTestAmount++
           result += `  [SKIP] ${description} : ${e.message}\n`
-          tapReport.push(`ok ${testNumber} - ${description} #SKIP ${e.message}`)
+          tapReport.push(`ok ${testNumber} - ${description} # SKIP ${e.message}`)
         } else {
           log(e)
           failedTestAmount++
@@ -138,27 +138,99 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   return { test, expect }
 }
 
+const colors = {
+  green: { dark: '#060', light: '#90e59a' },
+  red: { dark: '#a00', light: '#f77' },
+  yellow: { dark: '#777700', light: '#dd4' },
+}
+
+
 /**
  * @param {object} report - test report
  * @param {string} report.logs - test logs
  * @param {number} report.failed - amount of failed tests
  * @param {number} report.passed - amount of passed tests
  * @param {number} report.total - total amount tests
+ * @param {string} report.tapReport - total amount tests
  */
 async function reportLogs (report) {
   const { body } = window.document
   const { reportType } = globalThis[Symbol.for('unit-test-info')]
   const svgPromise = createSVGResponse(report)
+  const createElement = document.createElement.bind(document)
   if (reportType === 'badge') {
     const svg = await svgPromise
     body.innerHTML = svg
   } else {
-    const fullLogs = `${report.logs}\nTAP Report\n${report.tapReport}`
-    body.replaceChildren(...fullLogs.split('\n').map(log => {
-      const div = document.createElement('div')
+
+    const tapDivs = report.tapReport.split('\n').map(line => {
+      const div = createElement('div')
+      const divClass = div.classList
+      if(line.startsWith("ok") && line.includes("# SKIP ")){
+        divClass.add("skipped")
+      } else if(line.startsWith("ok")){
+        divClass.add("passed")
+      } else if(line.startsWith("not ok")){
+        divClass.add("failed")
+      }else if(/[0-9]+\.\.[0-9]+/.test(line)){
+        divClass.add("plan")
+      }
+
+      if(line.includes("#")){
+        const [text, ...comms] = line.split("#")
+        const comments = comms.map(comm => "#" + comm).join('')
+        div.textContent = text
+        const span = createElement('span')
+        span.classList.add("comment")
+        span.textContent = comments
+        span.innerHTML = span.innerHTML.replaceAll(" SKIP ", " <b>SKIP</b> ")
+        div.append(span)
+      } else {
+        div.textContent = line
+      }
+      return div
+    })
+    const tapReportDiv = createElement('div')
+    tapReportDiv.classList.add("tap-report")
+    tapReportDiv.innerHTML = `
+      <style>
+    @scope {
+      .passed { color: ${colors.green.dark}; }
+      .skipped { color: ${colors.yellow.dark}; }
+      .failed { color: ${colors.red.dark}; }
+      .comment { color: #888; }
+      .plan { font-weight: bold }
+      @media (prefers-color-scheme: dark) {
+        .passed { color: ${colors.green.light}; }
+        .skipped { color: ${colors.yellow.light}; }
+        .failed { color: ${colors.red.light}; }
+      }
+    }
+  </style>
+    `
+    tapReportDiv.append(...tapDivs)
+
+    const logDivs = report.logs.split('\n').map(log => {
+      const div = createElement('div')
       div.textContent = log
       return div
-    }))
+    })
+
+    const logReportDiv = createElement('div')
+    logReportDiv.append(...logDivs)
+
+    const wrapIntoDetails = (summary, ...content) => {
+      const tabLogs = createElement('details')
+      tabLogs.open = true
+      const tabLogsSummary = createElement('summary')
+      tabLogsSummary.textContent = summary
+      tabLogs.append(tabLogsSummary, ...content)
+      return tabLogs
+    }
+
+    body.replaceChildren(
+      wrapIntoDetails("Logs", logReportDiv),
+      wrapIntoDetails("TAP report", tapReportDiv))
   }
   const inIframe = window.self !== window.top
   if (inIframe) {
@@ -167,16 +239,11 @@ async function reportLogs (report) {
   }
 }
 
-const badgeColors = {
-  green: { dark: '#060', light: '#90e59a' },
-  red: { dark: '#a00', light: '#f77' },
-}
-
 let badgeFetch = null
 
 const createSVGResponse = async (report) => {
   const label = `${report.passed} / ${report.tested}`
-  const color = report.failed > 0 ? badgeColors.red : badgeColors.green
+  const color = report.failed > 0 ? colors.red : colors.green
   const { badgeUrl } = globalThis[Symbol.for('unit-test-info')]
   badgeFetch ??= fetch(badgeUrl).then(response => response.text())
   const badgeSvg = await badgeFetch
