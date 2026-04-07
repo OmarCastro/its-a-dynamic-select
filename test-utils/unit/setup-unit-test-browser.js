@@ -56,8 +56,15 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     } else {
       log(`[unit-test] ${failedTestAmount} tests failed`)
     }
+
+    const timeMetrics = {
+      pageLoad: performance.timeOrigin,
+      testDuration: endTestTimestamp - startTestTimestamp,
+      testDurationSinceLoad: endTestTimestamp
+    }
+
     console.log({ ...globalThis[Symbol.for('unit-test-info')], endTestTimestamp })
-    log(`[unit-test] tests took ${endTestTimestamp - startTestTimestamp} milliseconds. ${endTestTimestamp} milliseconds since page load.`)
+    log(`[unit-test] tests took ${timeMetrics.testDuration} milliseconds. ${timeMetrics.testDurationSinceLoad} milliseconds since page load.`)
     const testedAmount = totalAmount - skippedTestAmount
     reportLogs({
       logs,
@@ -66,7 +73,8 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       tested: testedAmount,
       skipped: skippedTestAmount,
       passed: testedAmount - failedTestAmount,
-      tapReport: tapReport.join('\n')
+      tapReport: tapReport.join('\n'),
+      timeMetrics
     })
   }
 
@@ -145,14 +153,6 @@ const colors = {
 }
 
 
-/**
- * @param {object} report - test report
- * @param {string} report.logs - test logs
- * @param {number} report.failed - amount of failed tests
- * @param {number} report.passed - amount of passed tests
- * @param {number} report.total - total amount tests
- * @param {string} report.tapReport - total amount tests
- */
 async function reportLogs (report) {
   const { body } = window.document
   const { reportType } = globalThis[Symbol.for('unit-test-info')]
@@ -172,7 +172,7 @@ async function reportLogs (report) {
         divClass.add("passed")
       } else if(line.startsWith("not ok")){
         divClass.add("failed")
-      }else if(/[0-9]+\.\.[0-9]+/.test(line)){
+      } else if(/[0-9]+\.\.[0-9]+/.test(line)){
         divClass.add("plan")
       }
 
@@ -190,11 +190,13 @@ async function reportLogs (report) {
       }
       return div
     })
-    const tapReportDiv = createElement('div')
-    tapReportDiv.classList.add("tap-report")
-    tapReportDiv.innerHTML = `
+
+    const wrapLogs = (...content) => {
+        const div = createElement('div')
+    div.innerHTML = `
       <style>
     @scope {
+      font-family:monospace;
       .passed { color: ${colors.green.dark}; }
       .skipped { color: ${colors.yellow.dark}; }
       .failed { color: ${colors.red.dark}; }
@@ -208,7 +210,11 @@ async function reportLogs (report) {
     }
   </style>
     `
-    tapReportDiv.append(...tapDivs)
+    div.append(...content)
+      return div
+    }
+    const tapReportDiv = wrapLogs(...tapDivs)
+    tapReportDiv.classList.add("tap-report")
 
     const logDivs = report.logs.split('\n').map(log => {
       const div = createElement('div')
@@ -216,21 +222,46 @@ async function reportLogs (report) {
       return div
     })
 
-    const logReportDiv = createElement('div')
-    logReportDiv.append(...logDivs)
+    const logReportDiv = wrapLogs(...logDivs)
 
-    const wrapIntoDetails = (summary, ...content) => {
+    const summaryDivs = `
+Tests
+        Result: ${report.failed > 0 ? "FAIL" : "PASS"}
+        Failed: ${report.failed}
+        Passed: ${report.passed}
+      Executed: ${report.tested}
+       Skipped: ${report.skipped}
+         Total: ${report.total}
+
+Time Metrics
+
+        Full test duration: ${report.timeMetrics.testDuration} milliseconds
+  Duration since page load: ${report.timeMetrics.testDurationSinceLoad} milliseconds
+    `.split('\n').map(log => {
+      const pre = createElement('pre')
+      pre.classList.toggle("passed", log.includes("PASS"))
+      pre.classList.toggle("faild", log.includes("FAIL"))
+      pre.textContent = log || " "
+      pre.style.margin = "0"
+      return pre
+    })
+
+    const summaryReportDiv = wrapLogs(...summaryDivs)
+
+
+    const wrapIntoDetails = (summary, content, open = true) => {
       const tabLogs = createElement('details')
-      tabLogs.open = true
+      tabLogs.open = open
       const tabLogsSummary = createElement('summary')
       tabLogsSummary.textContent = summary
-      tabLogs.append(tabLogsSummary, ...content)
+      tabLogs.append(tabLogsSummary, content)
       return tabLogs
     }
-
     body.replaceChildren(
+      wrapIntoDetails("Summary", summaryReportDiv),
       wrapIntoDetails("Logs", logReportDiv),
-      wrapIntoDetails("TAP report", tapReportDiv))
+      wrapIntoDetails("TAP report", tapReportDiv)
+    )
   }
   const inIframe = window.self !== window.top
   if (inIframe) {
