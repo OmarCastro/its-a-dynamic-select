@@ -32,7 +32,7 @@ function forceGC() {
 async function initFixture(){
   const noopGC = async () => {}
   const locationParams = new URL(document.location.toString()).searchParams;
-  let reason = 'Garbage collection not enabled'
+  let reason = 'Garbage collection not enabled. Add "force-gc=true" query string to enable it by forcing GC (warning: slow and costly)'
   let gcMethod = noopGC
 
   if (typeof globalThis.gc === 'function'){
