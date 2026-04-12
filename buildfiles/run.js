@@ -21,7 +21,7 @@ To help navigate this file is divided by sections:
 */
 import process from 'node:process'
 import fs, { readFile as fsReadFile, writeFile } from 'node:fs/promises'
-import { resolve, basename, dirname, relative } from 'node:path'
+import { resolve, basename, dirname, relative, join } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
 import { execFile as baseExecFile, exec as baseExec, spawn } from 'node:child_process'
@@ -42,6 +42,9 @@ const exit = (exitCode) => {
 
 const projectPathURL = new URL('../', import.meta.url)
 const pathFromProject = (path) => new URL(path, projectPathURL).pathname
+const devToolsRelativePath = relative(projectPathURL.pathname, new URL('.', import.meta.url).pathname)
+const thisScriptRelPath = relative(projectPathURL.pathname, new URL(import.meta.url).pathname)
+const pathFromDevTools = (path) => join(devToolsRelativePath, path)
 process.chdir(pathFromProject('.'))
 let updateDevServer = () => {}
 
@@ -285,8 +288,10 @@ async function runTestProcedure ({ updateSnapshots = false }) {
 
   logStage('fix report styles')
   const files = await getFilesAsArray('reports/coverage/final')
-  const cpBase = files.filter(path => basename(path) === 'base.css').map(path => fs.cp('buildfiles/assets/coverage-report-base.css', path))
-  const cpPrettify = files.filter(path => basename(path) === 'prettify.css').map(path => fs.cp('buildfiles/assets/coverage-report-prettify.css', path))
+  const baseCSSFile = pathFromDevTools('assets/coverage-report-base.css')
+  const prettifyCSSFile = pathFromDevTools('assets/coverage-report-prettify.css')
+  const cpBase = files.filter(path => basename(path) === 'base.css').map(path => fs.cp(baseCSSFile, path))
+  const cpPrettify = files.filter(path => basename(path) === 'prettify.css').map(path => fs.cp(prettifyCSSFile, path))
   await Promise.allSettled([...cpBase, ...cpPrettify])
 
   logStage('copy reports to documentation')
@@ -303,7 +308,7 @@ async function testInDocker ({ updateSnapshots = false } = {}) {
   const imageName = 'mcr.microsoft.com/playwright:v' + playwrightVersion
   const workdir = '/playwright'
   return await runInDocker({
-    command: updateSnapshots ? 'node buildfiles/run.js test:update-snapshots' : 'node buildfiles/run.js test',
+    command: `node ${thisScriptRelPath} ${updateSnapshots ? 'test:update-snapshots' : 'test'}`,
     rmOnFinish: true,
     imageName,
     user: `${uid}:${gid}`,
@@ -385,7 +390,7 @@ async function buildTest () {
   await writeFile('reports/module-graph.svg', svg)
   logStage('build test page html')
 
-  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
+  await exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} test-page.html`)
 
   await buildUnitTests({ includeBrowser: true })
 
@@ -426,8 +431,8 @@ async function buildDocs () {
   await Promise.all([
     buildDocsJS, buildDocsStyles,
     fs.cp('docs/favicon.png', `${docsPath}/favicon.png`),
-    exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
-    exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
+    exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} index.html`),
+    exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} contributing.html`),
   ])
 
   logEndStage()
@@ -536,7 +541,7 @@ async function buildUnitTests ({ includeBrowser = false } = {}) {
       minify: true,
     })
 
-    unitTestRunnerAssets.html ??= readFile('./buildfiles/assets/unit-test-runner-page.html')
+    unitTestRunnerAssets.html ??= readFile(pathFromDevTools('assets/unit-test-runner-page.html'))
     const htmlOutputPath = outputPathNoExtension + '.html'
     const badgeOutputPath = outputPathNoExtension + '.badge.svg'
     const htmlContent = (await unitTestRunnerAssets.html)
@@ -841,7 +846,7 @@ async function lintCode ({ onlyChanged, changedFiles }, options = {}) {
 async function checkSpelling ({ onlyChanged, changedFiles }) {
   const { load } = await import('js-yaml')
 
-  const configPath = pathFromProject('./buildfiles/configs/cspell.yaml')
+  const configPath = pathFromDevTools('configs/cspell.yaml')
   const config = load(await readFile(configPath))
   const ignorePaths = config.ignorePaths ?? []
   const fileList = await listFileByLinterParams({ patterns: ['*'], ignorePatterns: ignorePaths, onlyChanged, changedFiles })
@@ -862,7 +867,7 @@ async function checkSpelling ({ onlyChanged, changedFiles }) {
   const reporter = getDefaultReporter(options)
 
   const results = await lint(fileList, {
-    config: pathFromProject('./buildfiles/configs/cspell.yaml'),
+    config: pathFromDevTools('configs/cspell.yaml'),
     cache: true,
     cacheLocation: '.tmp/cspellcache',
   }, reporter)
@@ -885,7 +890,11 @@ async function lintStyles ({ onlyChanged, changedFiles }) {
     return 0
   }
   const { default: stylelint } = await import('stylelint')
-  const result = await stylelint.lint({ files: fileList, configFile: 'buildfiles/configs/.stylelintrc.yaml', ignorePath: '.gitignore' })
+  const result = await stylelint.lint({
+    files: fileList,
+    configFile: pathFromDevTools('configs/.stylelintrc.yaml'),
+    ignorePath: '.gitignore'
+  })
   const filesLinted = result.results.length
   process.stdout.write(`linted ${filesLinted} files. `)
   const stringFormatter = await stylelint.formatters.tap
@@ -1154,7 +1163,6 @@ async function getFilesAsArray (dir) {
  */
 async function * watchDirs (...dirs) {
   const { watch } = await import('node:fs')
-  const { join } = await import('node:path')
   const nothingResolver = () => {}
   let currentResolver = nothingResolver
   let batch = {}
@@ -1192,7 +1200,6 @@ async function * watchDirs (...dirs) {
 async function listNonIgnoredFiles ({ ignorePath = '.gitignore', patterns, ignorePatterns = [] } = {}) {
   if (!listNonIgnoredFiles.cache) {
     const { minimatch } = await import('minimatch')
-    const { join } = await import('node:path')
     const { statSync, readdirSync } = await import('node:fs')
     const allIgnorePatterns = await getIgnorePatternsFromFile(ignorePath)
     const ignoreMatchers = allIgnorePatterns.map(pattern => minimatch.filter(pattern, { matchBase: true, dot: true }))
@@ -1661,7 +1668,7 @@ async function git (/** @type {string[]} */...args) {
 }
 
 async function checkGitHooks () {
-  const expectedHooksPath = 'buildfiles/git-hooks/'
+  const expectedHooksPath = pathFromDevTools('git-hooks/')
   const stdoutLines = await git('config', 'get', 'core.hooksPath').catch(() => [])
   const hooksPath = stdoutLines[0]
   if (hooksPath !== expectedHooksPath) {
