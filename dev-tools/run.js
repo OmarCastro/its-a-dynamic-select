@@ -893,7 +893,7 @@ async function lintStyles ({ onlyChanged, changedFiles }) {
   const result = await stylelint.lint({
     files: fileList,
     configFile: pathFromDevTools('configs/.stylelintrc.yaml'),
-    ignorePath: '.gitignore'
+    ignorePath: '.gitignore',
   })
   const filesLinted = result.results.length
   process.stdout.write(`linted ${filesLinted} files. `)

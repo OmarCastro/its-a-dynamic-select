@@ -2,7 +2,7 @@
 language: en
 ignorePaths: 
   - "**/*.spec.js"
-  - "**/buildfiles/**"
+  - "**/dev-tools/**"
   - "**/docs/doc.js"
   - "**/docs/*.css"
   - "**/dropdown-i18n.js"
@@ -10,7 +10,6 @@ ignorePaths:
   - "**/.gitignore"
 words:
   - hrefs # hyperlinks
-  - buildfiles # buildfiles location
   - linc # lint changed files only
   - selectbox
   - datafetch
